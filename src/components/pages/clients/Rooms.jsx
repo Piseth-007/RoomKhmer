@@ -23,9 +23,6 @@ const defaultFilters = {
 };
 
 const Rooms = () => {
-  /* =========================================================
-     STATE
-  ========================================================= */
 
   const [search, setSearch] = useState("");
 
@@ -37,10 +34,6 @@ const Rooms = () => {
 
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  /* =========================================================
-     FAVORITE
-  ========================================================= */
-
   const handleFavorite = (roomId) => {
     setFavorites((prev) => {
       if (prev.includes(roomId)) {
@@ -51,9 +44,6 @@ const Rooms = () => {
     });
   };
 
-  /* =========================================================
-     CLEAR FILTERS
-  ========================================================= */
 
   const handleClearFilters = () => {
     setFilters({
@@ -64,9 +54,6 @@ const Rooms = () => {
     setSearch("");
   };
 
-  /* =========================================================
-     FILTER + SEARCH + SORT
-  ========================================================= */
 
   const filteredRooms = useMemo(() => {
     let result = [...rooms];
@@ -213,9 +200,6 @@ const Rooms = () => {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[270px_1fr]">
-          {/* =================================================
-              DESKTOP FILTER
-          ================================================== */}
 
           <aside className="hidden lg:block">
             <div className="sticky top-24">
@@ -227,17 +211,10 @@ const Rooms = () => {
             </div>
           </aside>
 
-          {/* =================================================
-              ROOM RESULTS
-          ================================================== */}
 
           <section>
-            {/* =================================================
-                RESULTS HEADER
-            ================================================== */}
 
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              {/* Result count */}
 
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">
@@ -396,10 +373,6 @@ const Rooms = () => {
               </div>
             )}
 
-            {/* =================================================
-                ROOM GRID
-            ================================================== */}
-
             {filteredRooms.length > 0 ? (
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {filteredRooms.map((room) => (
@@ -412,9 +385,6 @@ const Rooms = () => {
                 ))}
               </div>
             ) : (
-              /* =================================================
-                 EMPTY STATE
-              ================================================== */
 
               <div className="flex min-h-105 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white px-6 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-gray-400">
@@ -443,9 +413,6 @@ const Rooms = () => {
         </div>
       </main>
 
-      {/* =====================================================
-          MOBILE FILTER DRAWER
-      ====================================================== */}
 
       {isMobileFilterOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">

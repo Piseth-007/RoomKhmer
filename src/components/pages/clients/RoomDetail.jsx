@@ -25,8 +25,10 @@ import {
 } from "lucide-react";
 
 import { rooms } from "../../../data/rooms";
-
+import RequestRoomModal from "../../common/RequestRoomModal";
 const RoomDetail = () => {
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+
   const { id } = useParams();
 
   const room = rooms.find((item) => String(item.id) === String(id));
@@ -374,19 +376,12 @@ const RoomDetail = () => {
 
               <div className="space-y-3">
                 <button
+                  onClick={() => setIsRequestModalOpen(true)}
                   type="button"
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700"
                 >
                   <MessageCircle size={18} />
                   Contact Landlord
-                </button>
-
-                <button
-                  type="button"
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 text-sm font-semibold text-blue-600 transition hover:bg-blue-100"
-                >
-                  <Wallet size={18} />
-                  Request This Room
                 </button>
               </div>
 
@@ -523,70 +518,6 @@ const RoomDetail = () => {
               </p>
             </section>
           </div>
-
-          {/* =================================================
-              LANDLORD
-          ================================================== */}
-
-          <aside>
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm lg:sticky lg:top-24">
-              <h2 className="text-lg font-bold text-gray-900">
-                About the landlord
-              </h2>
-
-              <div className="mt-5 flex items-center gap-4">
-                <img
-                  src={room.landlord.avatar}
-                  alt={room.landlord.name}
-                  className="h-14 w-14 rounded-full object-cover"
-                />
-
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="text-sm font-semibold text-gray-900">
-                      {room.landlord.name}
-                    </h3>
-
-                    <ShieldCheck size={15} className="text-emerald-500" />
-                  </div>
-
-                  <p className="mt-1 text-xs text-gray-400">
-                    {room.landlord.role}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 space-y-3">
-                <button
-                  type="button"
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gray-900 text-sm font-semibold text-white transition hover:bg-gray-800"
-                >
-                  <Phone size={17} />
-                  Call Landlord
-                </button>
-
-                <button
-                  type="button"
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                >
-                  <MessageCircle size={17} />
-                  Send Message
-                </button>
-              </div>
-
-              <div className="mt-5 border-t border-gray-100 pt-5">
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <UserRound size={14} />
-                  Identity verified
-                </div>
-
-                <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
-                  <ShieldCheck size={14} />
-                  Trusted landlord
-                </div>
-              </div>
-            </div>
-          </aside>
         </div>
       </main>
 
@@ -643,6 +574,11 @@ const RoomDetail = () => {
           </div>
         </div>
       )}
+      <RequestRoomModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        room={room}
+      />
     </div>
   );
 };

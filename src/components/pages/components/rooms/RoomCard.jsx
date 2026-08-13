@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   Bath,
   BedDouble,
@@ -9,59 +11,145 @@ import {
   Wind,
   ChevronRight,
 } from "lucide-react";
+
 import { Link } from "react-router-dom";
 
-const RoomCard = ({ room, isFavorite = false, onFavorite }) => {
+const FAVORITES_KEY = "roomkhmer_favorites";
+
+const RoomCard = ({ room, onFavorite }) => {
+  const [isFavorite, setIsFavorite] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
+
+      setIsFavorite(saved.includes(room.id));
+    } catch (error) {
+      console.error("Failed to load favorite:", error);
+    }
+  }, [room.id]);
+
+  const handleFavorite = () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
+
+      let updatedFavorites;
+
+      if (saved.includes(room.id)) {
+        updatedFavorites = saved.filter((id) => id !== room.id);
+
+        setIsFavorite(false);
+      } else {
+        updatedFavorites = [...saved, room.id];
+
+        setIsFavorite(true);
+      }
+
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedFavorites));
+      if (onFavorite) {
+        onFavorite(room.id, updatedFavorites);
+      }
+    } catch (error) {
+      console.error("Failed to update favorite:", error);
+    }
+  };
+
+  const getFacilityIcon = (facility) => {
+    const value = facility.toLowerCase();
+
+    if (value.includes("wifi")) {
+      return Wifi;
+    }
+
+    if (value.includes("air") || value.includes("ac")) {
+      return Wind;
+    }
+
+    if (value.includes("parking") || value.includes("car")) {
+      return Car;
+    }
+
+    if (value.includes("bathroom") || value.includes("bath")) {
+      return Bath;
+    }
+
+    return null;
+  };
+
   return (
     <article
       className="
-        group flex h-full flex-col
-        overflow-hidden rounded-2xl
-        border border-gray-100
+        group
+        flex
+        h-full
+        flex-col
+        overflow-hidden
+        rounded-2xl
+        border
+        border-gray-100
         bg-white
         shadow-sm
-        transition-all duration-300
+        transition-all
+        duration-300
         hover:-translate-y-1
         hover:shadow-xl
       "
     >
-      {/* =====================================================
-          IMAGE
-      ====================================================== */}
-
       <div className="relative h-57.5 shrink-0 overflow-hidden sm:h-60">
-        <img
-          src={room.image}
-          alt={room.title}
+        <Link to={`/rooms/${room.id}`} className="block h-full">
+          <img
+            src={room.images}
+            alt={room.title}
+            className="
+              h-full
+              w-full
+              object-cover
+              transition-transform
+              duration-500
+              group-hover:scale-105
+            "
+          />
+        </Link>
+        <div
           className="
-            h-full w-full
-            object-cover
-            transition-transform duration-500
-            group-hover:scale-105
+            pointer-events-none
+            absolute
+            inset-0
+            bg-linear-to-t
+            from-black/20
+            via-transparent
+            to-transparent
           "
         />
-
-        {/* Image overlay */}
-
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent" />
-
-        {/* ================= FEATURED ================= */}
-
         {room.featured && (
-          <span className="absolute left-4 top-4 rounded-full bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
+          <span
+            className="
+              absolute
+              left-4
+              top-4
+              rounded-full
+              bg-blue-600
+              px-3
+              py-1.5
+              text-[11px]
+              font-semibold
+              text-white
+              shadow-sm
+            "
+          >
             Featured
           </span>
         )}
 
-        {/* ================= VERIFIED ================= */}
-
         {room.verified && (
           <div
             className="
-              absolute bottom-4 left-4
+              absolute
+              bottom-4
+              left-4
               rounded-full
               bg-white/95
-              px-3 py-1.5
+              px-3
+              py-1.5
               text-[11px]
               font-semibold
               text-emerald-600
@@ -73,22 +161,31 @@ const RoomCard = ({ room, isFavorite = false, onFavorite }) => {
           </div>
         )}
 
-        {/* ================= FAVORITE ================= */}
-
         <button
           type="button"
-          onClick={() => onFavorite?.(room.id)}
+          onClick={handleFavorite}
           aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          aria-pressed={isFavorite}
           className={`
-            absolute right-4 top-4
-            flex h-11 w-11
-            items-center justify-center
+            absolute
+            right-4
+            top-4
+            flex
+            h-11
+            w-11
+            items-center
+            justify-center
             rounded-full
             bg-white/95
             shadow-md
             backdrop-blur
-            transition-all duration-200
+            transition-all
+            duration-200
             hover:scale-105
+            focus:outline-none
+            focus:ring-4
+            focus:ring-blue-500/20
+
             ${isFavorite ? "text-red-500" : "text-gray-500 hover:text-red-500"}
           `}
         >
@@ -100,18 +197,16 @@ const RoomCard = ({ room, isFavorite = false, onFavorite }) => {
         </button>
       </div>
 
-      {/* =====================================================
-          CONTENT
-      ====================================================== */}
-
       <div className="flex flex-1 flex-col p-5">
-        {/* =================================================
-            TITLE + RATING
-        ================================================== */}
-
-        <div className="flex min-h-13.75 items-start justify-between gap-3">
-          {/* Title */}
-
+        <div
+          className="
+            flex
+            min-h-13.75
+            items-start
+            justify-between
+            gap-3
+          "
+        >
           <div className="min-w-0">
             <h3
               className="
@@ -126,14 +221,29 @@ const RoomCard = ({ room, isFavorite = false, onFavorite }) => {
               {room.title}
             </h3>
 
-            <p className="mt-0.5 line-clamp-1 text-xs text-gray-400">
-              {room.englishTitle}
-            </p>
+            {room.englishTitle && (
+              <p
+                className="
+                  mt-0.5
+                  line-clamp-1
+                  text-xs
+                  text-gray-400
+                "
+              >
+                {room.englishTitle}
+              </p>
+            )}
           </div>
 
-          {/* Rating */}
-
-          <div className="flex shrink-0 items-center gap-1 pt-1">
+          <div
+            className="
+              flex
+              shrink-0
+              items-center
+              gap-1
+              pt-1
+            "
+          >
             <Star
               size={16}
               strokeWidth={1.8}
@@ -145,11 +255,6 @@ const RoomCard = ({ room, isFavorite = false, onFavorite }) => {
             </span>
           </div>
         </div>
-
-        {/* =================================================
-            LOCATION
-        ================================================== */}
-
         <div className="mt-3 flex items-center gap-2">
           <MapPin
             size={17}
@@ -162,10 +267,6 @@ const RoomCard = ({ room, isFavorite = false, onFavorite }) => {
           </span>
         </div>
 
-        {/* =================================================
-            ROOM TYPE + BATHROOM
-        ================================================== */}
-
         <div className="mt-4 flex min-h-9 flex-wrap gap-2">
           {room.roomType && (
             <span
@@ -174,15 +275,17 @@ const RoomCard = ({ room, isFavorite = false, onFavorite }) => {
                 items-center
                 gap-1.5
                 rounded-lg
-                border border-gray-100
+                border
+                border-gray-100
                 bg-gray-50
-                px-3 py-2
+                px-3
+                py-2
                 text-[11px]
                 font-medium
                 text-gray-500
               "
             >
-              <BedDouble size={14} />
+              <BedDouble size={14} strokeWidth={1.8} />
 
               {room.roomType}
             </span>
@@ -195,47 +298,27 @@ const RoomCard = ({ room, isFavorite = false, onFavorite }) => {
                 items-center
                 gap-1.5
                 rounded-lg
-                border border-gray-100
+                border
+                border-gray-100
                 bg-gray-50
-                px-3 py-2
+                px-3
+                py-2
                 text-[11px]
                 font-medium
                 text-gray-500
               "
             >
-              <Bath size={14} />
+              <Bath size={14} strokeWidth={1.8} />
 
               {room.bathroom}
             </span>
           )}
         </div>
 
-        {/* =================================================
-            FACILITIES
-        ================================================== */}
-
         <div className="mt-3 min-h-18">
           <div className="flex flex-wrap gap-2">
             {room.facilities?.slice(0, 4).map((facility) => {
-              const value = facility.toLowerCase();
-
-              let Icon = null;
-
-              if (value.includes("wifi")) {
-                Icon = Wifi;
-              }
-
-              if (value.includes("air") || value.includes("ac")) {
-                Icon = Wind;
-              }
-
-              if (value.includes("parking")) {
-                Icon = Car;
-              }
-
-              if (value.includes("bathroom")) {
-                Icon = Bath;
-              }
+              const Icon = getFacilityIcon(facility);
 
               return (
                 <span
@@ -248,13 +331,14 @@ const RoomCard = ({ room, isFavorite = false, onFavorite }) => {
                       border
                       border-gray-100
                       bg-white
-                      px-3 py-2
+                      px-3
+                      py-2
                       text-[11px]
                       font-medium
                       text-gray-500
                     "
                 >
-                  {Icon && <Icon size={14} />}
+                  {Icon && <Icon size={14} strokeWidth={1.8} />}
 
                   {facility}
                 </span>
@@ -263,25 +347,45 @@ const RoomCard = ({ room, isFavorite = false, onFavorite }) => {
           </div>
         </div>
 
-        {/* =================================================
-            BOTTOM
-        ================================================== */}
-
-        <div className="mt-auto border-t border-gray-100 pt-5">
-          <div className="flex items-center justify-between gap-3">
-            {/* Price */}
-
+        <div
+          className="
+            mt-auto
+            border-t
+            border-gray-100
+            pt-5
+          "
+        >
+          <div
+            className="
+              flex
+              items-center
+              justify-between
+              gap-3
+            "
+          >
             <div className="flex items-baseline">
-              <span className="text-[22px] font-bold tracking-tight text-gray-900">
+              <span
+                className="
+                  text-[22px]
+                  font-bold
+                  tracking-tight
+                  text-gray-900
+                "
+              >
                 ${room.price}
               </span>
 
-              <span className="ml-1.5 text-xs font-medium text-gray-400">
+              <span
+                className="
+                  ml-1.5
+                  text-xs
+                  font-medium
+                  text-gray-400
+                "
+              >
                 / month
               </span>
             </div>
-
-            {/* View Room */}
 
             <Link
               to={`/rooms/${room.id}`}
