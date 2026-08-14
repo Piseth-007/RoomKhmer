@@ -71,10 +71,6 @@ const RoomDetail = () => {
     );
   }
 
-  /* =========================================================
-     IMAGE NAVIGATION
-  ========================================================= */
-
   const nextImage = () => {
     setActiveImage((current) =>
       current === room.images.length - 1 ? 0 : current + 1,
@@ -86,10 +82,6 @@ const RoomDetail = () => {
       current === 0 ? room.images.length - 1 : current - 1,
     );
   };
-
-  /* =========================================================
-     FACILITY ICON
-  ========================================================= */
 
   const getFacilityIcon = (facility) => {
     const value = facility.toLowerCase();
@@ -119,10 +111,6 @@ const RoomDetail = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* =====================================================
-          BREADCRUMB
-      ====================================================== */}
-
       <div className="border-b border-gray-100 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 text-xs text-gray-400">
@@ -145,15 +133,7 @@ const RoomDetail = () => {
         </div>
       </div>
 
-      {/* =====================================================
-          MAIN CONTENT
-      ====================================================== */}
-
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        {/* =================================================
-            BACK BUTTON
-        ================================================== */}
-
         <Link
           to="/rooms"
           className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-blue-600"
@@ -282,10 +262,6 @@ const RoomDetail = () => {
             </div>
           </div>
 
-          {/* =================================================
-              ROOM SUMMARY CARD
-          ================================================== */}
-
           <aside>
             <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm lg:sticky lg:top-24">
               {/* Badge */}
@@ -402,10 +378,6 @@ const RoomDetail = () => {
           </aside>
         </div>
 
-        {/* =====================================================
-            ROOM INFORMATION
-        ====================================================== */}
-
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px]">
           {/* =================================================
               LEFT
@@ -415,9 +387,7 @@ const RoomDetail = () => {
             {/* ABOUT */}
 
             <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
-              <h2 className="text-xl font-bold text-gray-900">
-                About this room
-              </h2>
+              <h2 className="text-xl font-bold text-gray-900">អំពីបន្ទប់នេះ</h2>
 
               <p className="mt-4 text-sm leading-7 text-gray-500">
                 {room.description}
@@ -427,9 +397,11 @@ const RoomDetail = () => {
             {/* FACILITIES */}
 
             <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
-              <h2 className="text-xl font-bold text-gray-900">Facilities</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                សម្ភារៈ និងបរិក្ខារ
+              </h2>
 
-              <p className="mt-1 text-xs text-gray-400">សម្ភារៈ និងបរិក្ខារ</p>
+              <p className="mt-1 text-xs text-gray-400">Facilities</p>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 {room.facilities.map((facility) => {
@@ -456,11 +428,11 @@ const RoomDetail = () => {
             {/* RULES */}
 
             <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
-              <h2 className="text-xl font-bold text-gray-900">House Rules</h2>
-
-              <p className="mt-1 text-xs text-gray-400">
+              <h2 className="text-xl font-bold text-gray-900">
                 ច្បាប់សម្រាប់ការស្នាក់នៅ
-              </p>
+              </h2>
+
+              <p className="mt-1 text-xs text-gray-400">House Rules</p>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {room.rules.map((rule) => (
@@ -478,7 +450,7 @@ const RoomDetail = () => {
             {/* LOCATION */}
 
             <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
-              <h2 className="text-xl font-bold text-gray-900">Location</h2>
+              <h2 className="text-xl font-bold text-gray-900">ទីតាំង</h2>
 
               <div className="mt-4 flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">

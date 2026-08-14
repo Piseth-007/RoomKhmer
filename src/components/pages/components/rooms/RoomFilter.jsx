@@ -37,13 +37,13 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
 
   return (
     <aside className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-      {/* ================= HEADER ================= */}
-
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Filters</h2>
+          <h2 className="text-base font-semibold text-gray-900">
+            ចម្រាញ់បន្ទប់
+          </h2>
 
-          <p className="mt-0.5 text-xs text-gray-400">ចម្រាញ់បន្ទប់</p>
+          <p className="mt-0.5 text-xs text-gray-400">Filters</p>
         </div>
 
         <button
@@ -55,13 +55,11 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
           Clear
         </button>
       </div>
-
       {/* ================= LOCATION ================= */}
-
       <div className="mt-6">
-        <label className="text-sm font-semibold text-gray-800">Location</label>
+        <label className="text-sm font-semibold text-gray-800">ទីតាំង</label>
 
-        <p className="mt-0.5 text-xs text-gray-400">ទីតាំង</p>
+        <p className="mt-0.5 text-xs text-gray-400">Location</p>
 
         <div className="mt-3 space-y-2.5">
           {[
@@ -90,9 +88,7 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
           ))}
         </div>
       </div>
-
       {/* ================= PRICE ================= */}
-
       <div className="mt-7 border-t border-gray-100 pt-6">
         <div className="flex items-center justify-between">
           <div>
@@ -123,13 +119,13 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
           <span>$500+</span>
         </div>
       </div>
-
       {/* ================= ROOM TYPE ================= */}
-
       <div className="mt-7 border-t border-gray-100 pt-6">
-        <label className="text-sm font-semibold text-gray-800">Room Type</label>
+        <label className="text-sm font-semibold text-gray-800">
+          ប្រភេទបន្ទប់
+        </label>
 
-        <p className="mt-0.5 text-xs text-gray-400">ប្រភេទបន្ទប់</p>
+        <p className="mt-0.5 text-xs text-gray-400">Room Type</p>
 
         <div className="mt-3 space-y-2.5">
           {["All Types", "Single Room", "Studio", "Shared Room"].map((type) => (
@@ -151,15 +147,13 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
           ))}
         </div>
       </div>
-
       {/* ================= FACILITIES ================= */}
-
       <div className="mt-7 border-t border-gray-100 pt-6">
         <label className="text-sm font-semibold text-gray-800">
-          Facilities
+          សម្ភារៈបរិក្ខារ
         </label>
 
-        <p className="mt-0.5 text-xs text-gray-400">សម្ភារៈបរិក្ខារ</p>
+        <p className="mt-0.5 text-xs text-gray-400">Facilities</p>
 
         <div className="mt-3 space-y-3">
           {[
@@ -202,9 +196,7 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
           })}
         </div>
       </div>
-
       {/* ================= APPLY ================= */}
-
       <button
         type="button"
         className="mt-7 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700"

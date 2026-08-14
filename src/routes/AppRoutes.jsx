@@ -13,6 +13,7 @@ import RoomDetail from "../components/pages/clients/RoomDetail";
 import Locations from "../components/pages/clients/Locations";
 import About from "../components/pages/clients/About";
 import ForgotPassword from "../components/pages/auth/ForgotPassword";
+import ResetPassword from "../components/pages/auth/ResetPassword";
 import Contact from "../components/pages/clients/Contact";
 import Favorites from "../components/pages/clients/Favorites";
 import NotFound from "../components/pages/NotFound";
@@ -80,6 +81,7 @@ const AppRoutes = () => (
     <Route path="/auth" element={<AuthLayout />}>
       <Route path="login" element={<Login />} />
       <Route path="forgot-password" element={<ForgotPassword />} />
+      <Route path="reset-password" element={<ResetPassword />} />
       <Route path="register" element={<Register />} />
     </Route>
     {/* ================= Landlord ===============*/}

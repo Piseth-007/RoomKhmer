@@ -101,20 +101,11 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* =====================================================
-          HERO
-      ====================================================== */}
-
       <section className="relative overflow-hidden bg-white">
-        {/* Background decoration */}
-
         <div className="pointer-events-none absolute -right-40 -top-40 h-125 w-125 rounded-full bg-blue-50 blur-3xl" />
-
         <div className="pointer-events-none absolute -bottom-40 -left-40 h-100 w-100 rounded-full bg-indigo-50 blur-3xl" />
 
         <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 sm:pb-20 lg:px-8">
-          {/* Breadcrumb */}
-
           <div className="mb-10 flex items-center gap-2 text-xs text-gray-400">
             <Link to="/" className="transition hover:text-blue-600">
               Home
@@ -233,10 +224,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* =====================================================
-          OUR MISSION
-      ====================================================== */}
-
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           {/* Image */}
@@ -258,7 +245,7 @@ const About = () => {
               </div>
 
               <p className="mt-3 text-sm font-bold text-gray-900">
-                បង្កើតសម្រាប់និស្សិត​   
+                បង្កើតសម្រាប់និស្សិត​
               </p>
 
               <p className="mt-1 text-xs leading-5 text-gray-400">
@@ -334,11 +321,11 @@ const About = () => {
             </span>
 
             <h2 className="mt-3 text-3xl font-bold text-gray-900 sm:text-4xl">
-              Find your room in three steps
+              ស្វែងរកបន្ទប់បានងាយស្រួលក្នុង ៣ ជំហាន
             </h2>
 
             <p className="mt-3 text-sm font-medium text-gray-400">
-              ស្វែងរកបន្ទប់បានងាយស្រួលក្នុង ៣ ជំហាន
+              Find your room in three steps
             </p>
           </div>
 
@@ -397,8 +384,8 @@ const About = () => {
               </h2>
 
               <p className="mt-4 text-sm leading-7 text-gray-500">
-                RoomKhmer is designed to make renting simpler, clearer, and more
-                comfortable for both students and landlords.
+                RoomKhmer ត្រូវបានរចនាឡើងដើម្បីធ្វើឱ្យការជួលកាន់តែសាមញ្ញ
+                ច្បាស់លាស់ និងមានផាសុកភាពសម្រាប់ទាំងសិស្ស និងម្ចាស់ផ្ទះ។
               </p>
 
               <Link
@@ -409,9 +396,6 @@ const About = () => {
                 <ArrowRight size={16} />
               </Link>
             </div>
-
-            {/* Values */}
-
             <div className="grid gap-4 sm:grid-cols-2">
               {values.map((value) => {
                 const Icon = value.icon;
@@ -480,7 +464,7 @@ const About = () => {
                   to="/rooms"
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
                 >
-                  Browse Rooms
+                  ស្វែងរកបន្ទប់
                   <ArrowRight size={16} />
                 </Link>
 
@@ -488,7 +472,7 @@ const About = () => {
                   to="/locations"
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/30 px-6 text-sm font-semibold text-white transition hover:bg-white/10"
                 >
-                  Explore Locations
+                  បង្ហាញទីតាំង
                   <MapPin size={16} />
                 </Link>
               </div>

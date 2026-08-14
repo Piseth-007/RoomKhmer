@@ -1,21 +1,65 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, Mail, ShieldCheck } from "lucide-react";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../../../firebase/config";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const friendlyError = (code) => {
+    if (code === "auth/invalid-email") {
+      return "Please enter a valid email address.";
+    }
+
+    if (code === "auth/too-many-requests") {
+      return "Too many attempts. Please wait a bit and try again.";
+    }
+
+    if (code === "auth/network-request-failed") {
+      return "Network error. Check your connection and try again.";
+    }
+
+    return "Something went wrong. Please try again.";
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email.trim()) {
       return;
     }
 
-    // Temporary frontend behavior.
-    // Later this will call Laravel API.
-    setSubmitted(true);
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      // handleCodeInApp + url makes Firebase send a link that opens our own
+      // /auth/reset-password page (with the action code in the query
+      // string) instead of a generic Firebase-hosted page.
+      await sendPasswordResetEmail(auth, email.trim(), {
+        url: `${window.location.origin}/auth/reset-password`,
+        handleCodeInApp: true,
+      });
+
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Password reset request failed:", err);
+
+      // Deliberately do NOT reveal whether the email exists — treat
+      // "no account" the same as success so this can't be used to check
+      // which emails are registered.
+      if (err.code === "auth/user-not-found") {
+        setSubmitted(true);
+      } else {
+        setError(friendlyError(err.code));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -56,6 +100,16 @@ const ForgotPassword = () => {
                   account and we'll send you a link to reset your password.
                 </p>
               </div>
+
+              {/* =================================================
+                  ERROR
+              ================================================== */}
+
+              {error && (
+                <div className="mt-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                  {error}
+                </div>
+              )}
 
               {/* =================================================
                   FORM
@@ -123,6 +177,7 @@ const ForgotPassword = () => {
 
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="
                     mt-5
                     flex
@@ -143,9 +198,16 @@ const ForgotPassword = () => {
                     focus:outline-none
                     focus:ring-4
                     focus:ring-blue-500/20
+
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
                   "
                 >
-                  Send Reset Link
+                  {isSubmitting ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    "Send Reset Link"
+                  )}
                 </button>
               </form>
 

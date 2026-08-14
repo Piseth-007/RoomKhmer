@@ -1,9 +1,3 @@
-// src/context/AuthContext.jsx
-//
-// Central place for authentication state and actions. Wrap the app with
-// <AuthProvider> once (done in main.jsx) and then call useAuth() anywhere
-// to read the current user or trigger login/register/logout.
-
 import { createContext, useContext, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
@@ -58,10 +52,6 @@ export function AuthProvider({ children }) {
     setProfile(data);
   };
 
-  // ============================================================
-  // ACTIONS
-  // ============================================================
-
   const register = async ({ name, email, phone, password, role }) => {
     const credential = await createUserWithEmailAndPassword(
       auth,
@@ -92,7 +82,6 @@ export function AuthProvider({ children }) {
     const ref = doc(db, "users", credential.user.uid);
     const snapshot = await getDoc(ref);
 
-    // First time this Google account signs in, create their profile doc.
     if (!snapshot.exists()) {
       await createProfile(credential.user, { role: "student" });
     } else {
@@ -107,9 +96,6 @@ export function AuthProvider({ children }) {
     return signOut(auth);
   };
 
-  // ============================================================
-  // WATCH AUTH STATE
-  // ============================================================
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {

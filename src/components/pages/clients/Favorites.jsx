@@ -19,10 +19,6 @@ const FAVORITES_KEY = "roomkhmer_favorites";
 const Favorites = () => {
   const [favoriteIds, setFavoriteIds] = useState([]);
 
-  /* =========================================================
-     LOAD FAVORITES
-  ========================================================= */
-
   useEffect(() => {
     try {
       const savedFavorites =
@@ -36,17 +32,9 @@ const Favorites = () => {
     }
   }, []);
 
-  /* =========================================================
-     FAVORITE ROOMS
-  ========================================================= */
-
   const favoriteRooms = useMemo(() => {
     return rooms.filter((room) => favoriteIds.includes(room.id));
   }, [favoriteIds]);
-
-  /* =========================================================
-     REMOVE FAVORITE
-  ========================================================= */
 
   const removeFavorite = (roomId) => {
     const updatedFavorites = favoriteIds.filter((id) => id !== roomId);
@@ -56,10 +44,6 @@ const Favorites = () => {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedFavorites));
   };
 
-  /* =========================================================
-     CLEAR ALL
-  ========================================================= */
-
   const clearAllFavorites = () => {
     setFavoriteIds([]);
 
@@ -68,20 +52,12 @@ const Favorites = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* =====================================================
-          HERO
-      ====================================================== */}
-
       <section className="relative overflow-hidden bg-white">
-        {/* Background decoration */}
-
         <div className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-blue-50 blur-3xl" />
 
         <div className="pointer-events-none absolute -bottom-32 -left-32 h-72 w-72 rounded-full bg-indigo-50 blur-3xl" />
 
         <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-10 sm:px-6 sm:pb-14 lg:px-8">
-          {/* Breadcrumb */}
-
           <div className="mb-8 flex items-center gap-2 text-xs text-gray-400">
             <Link to="/" className="transition hover:text-blue-600">
               Home
@@ -92,8 +68,6 @@ const Favorites = () => {
             <span className="font-medium text-gray-600">Favorites</span>
           </div>
 
-          {/* Heading */}
-
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
@@ -103,11 +77,11 @@ const Favorites = () => {
 
                 <div>
                   <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-                    Favorite Rooms
+                    បន្ទប់ដែលអ្នកចូលចិត្ត
                   </h1>
 
                   <p className="mt-1 text-sm font-medium text-blue-600">
-                    បន្ទប់ដែលអ្នកចូលចិត្ត
+                    Favorite Rooms
                   </p>
                 </div>
               </div>
@@ -133,17 +107,9 @@ const Favorites = () => {
         </div>
       </section>
 
-      {/* =====================================================
-          CONTENT
-      ====================================================== */}
-
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {favoriteRooms.length > 0 ? (
           <>
-            {/* =================================================
-                TOOLBAR
-            ================================================== */}
-
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">
@@ -293,11 +259,11 @@ const Favorites = () => {
             {/* Text */}
 
             <h2 className="mt-7 text-2xl font-bold text-gray-900">
-              No favorite rooms yet
+              មិនទាន់មានបន្ទប់ដែលអ្នកចូលចិត្តទេ
             </h2>
 
             <p className="mt-2 text-sm font-medium text-blue-600">
-              មិនទាន់មានបន្ទប់ដែលអ្នកចូលចិត្តទេ
+              No favorite rooms yet
             </p>
 
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-gray-400">
@@ -327,7 +293,7 @@ const Favorites = () => {
               "
             >
               <Search size={17} />
-              Explore Rooms
+              ស្វែងរកបន្ទប់
             </Link>
 
             {/* Small info */}
@@ -342,10 +308,6 @@ const Favorites = () => {
     </div>
   );
 };
-
-/* =========================================================
-   FAVORITE ROOM CARD
-========================================================= */
 
 const FavoriteRoomCard = ({ room, onRemove }) => {
   return (
@@ -367,10 +329,6 @@ const FavoriteRoomCard = ({ room, onRemove }) => {
         hover:shadow-xl
       "
     >
-      {/* =====================================================
-          IMAGE
-      ====================================================== */}
-
       <div className="relative h-57.5 shrink-0 overflow-hidden">
         <Link to={`/rooms/${room.id}`} className="block h-full">
           <img
@@ -387,19 +345,13 @@ const FavoriteRoomCard = ({ room, onRemove }) => {
           />
         </Link>
 
-        {/* Gradient */}
-
         <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/30 via-transparent to-transparent" />
-
-        {/* Featured */}
 
         {room.featured && (
           <span className="absolute left-4 top-4 rounded-full bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
             Featured
           </span>
         )}
-
-        {/* Remove */}
 
         <button
           type="button"
@@ -427,18 +379,12 @@ const FavoriteRoomCard = ({ room, onRemove }) => {
           <Heart size={19} className="fill-current" />
         </button>
 
-        {/* Verified */}
-
         {room.verified && (
           <div className="absolute bottom-4 left-4 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-semibold text-emerald-600 shadow-sm">
             Verified
           </div>
         )}
       </div>
-
-      {/* =====================================================
-          CONTENT
-      ====================================================== */}
 
       <div className="flex flex-1 flex-col p-5">
         {/* Title + Rating */}

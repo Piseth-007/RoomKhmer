@@ -23,7 +23,6 @@ const defaultFilters = {
 };
 
 const Rooms = () => {
-
   const [search, setSearch] = useState("");
 
   const [filters, setFilters] = useState(defaultFilters);
@@ -44,7 +43,6 @@ const Rooms = () => {
     });
   };
 
-
   const handleClearFilters = () => {
     setFilters({
       ...defaultFilters,
@@ -54,12 +52,8 @@ const Rooms = () => {
     setSearch("");
   };
 
-
   const filteredRooms = useMemo(() => {
     let result = [...rooms];
-
-    /* ---------------- SEARCH ---------------- */
-
     const searchValue = search.trim().toLowerCase();
 
     if (searchValue) {
@@ -79,25 +73,16 @@ const Rooms = () => {
       });
     }
 
-    /* ---------------- LOCATION ---------------- */
-
     if (filters.location !== "All Locations") {
       result = result.filter((room) => room.location === filters.location);
     }
-
-    /* ---------------- PRICE ---------------- */
-
     result = result.filter(
       (room) => Number(room.price) <= Number(filters.maxPrice),
     );
 
-    /* ---------------- ROOM TYPE ---------------- */
-
     if (filters.roomType !== "All Types") {
       result = result.filter((room) => room.roomType === filters.roomType);
     }
-
-    /* ---------------- FACILITIES ---------------- */
 
     if (filters.facilities.length > 0) {
       result = result.filter((room) => {
@@ -106,8 +91,6 @@ const Rooms = () => {
         );
       });
     }
-
-    /* ---------------- SORT ---------------- */
 
     if (sortBy === "price-low") {
       result.sort((a, b) => Number(a.price) - Number(b.price));
@@ -142,10 +125,6 @@ const Rooms = () => {
     return result;
   }, [search, filters, sortBy]);
 
-  /* =========================================================
-     ACTIVE FILTER COUNT
-  ========================================================= */
-
   const activeFilterCount =
     (filters.location !== "All Locations" ? 1 : 0) +
     (filters.maxPrice < 500 ? 1 : 0) +
@@ -172,12 +151,12 @@ const Rooms = () => {
             </h1>
 
             <p className="mt-2 text-sm font-medium text-gray-500 sm:text-base">
-              Find your perfect room in Phnom Penh
+              ស្វែងរកបន្ទប់ជួលតាមទីតាំង តម្លៃ ប្រភេទបន្ទប់
+              និងសម្ភារៈដែលអ្នកត្រូវការ។
             </p>
 
             <p className="mt-2 text-sm leading-6 text-gray-400">
-              ស្វែងរកបន្ទប់ជួលតាមទីតាំង តម្លៃ ប្រភេទបន្ទប់
-              និងសម្ភារៈដែលអ្នកត្រូវការ។
+              Find your perfect room in Phnom Penh
             </p>
           </div>
 
@@ -200,7 +179,6 @@ const Rooms = () => {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[270px_1fr]">
-
           <aside className="hidden lg:block">
             <div className="sticky top-24">
               <RoomFilter
@@ -211,11 +189,8 @@ const Rooms = () => {
             </div>
           </aside>
 
-
           <section>
-
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">
                   {filteredRooms.length}{" "}
@@ -385,7 +360,6 @@ const Rooms = () => {
                 ))}
               </div>
             ) : (
-
               <div className="flex min-h-105 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white px-6 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-gray-400">
                   <Search size={28} />
@@ -412,7 +386,6 @@ const Rooms = () => {
           </section>
         </div>
       </main>
-
 
       {isMobileFilterOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">

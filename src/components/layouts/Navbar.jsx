@@ -27,11 +27,6 @@ export default function Navbar() {
     name: profile?.name || currentUser?.displayName || "Guest",
     email: currentUser?.email || "",
   };
-
-  // ==========================================
-  // NAVIGATION LINKS
-  // ==========================================
-
   const navLinks = [
     {
       name: "ទំព័រដើម",
@@ -54,19 +49,9 @@ export default function Navbar() {
       path: "/about",
     },
   ];
-
-  // ==========================================
-  // CLOSE MOBILE MENU
-  // ==========================================
-
   const closeMenu = () => {
     setIsOpen(false);
   };
-
-  // ==========================================
-  // LOGOUT
-  // ==========================================
-
   const handleLogout = async () => {
     setIsProfileOpen(false);
     setIsOpen(false);
@@ -82,23 +67,12 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-md">
-      {/* =====================================================
-          MAIN HEADER
-      ====================================================== */}
-
-      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* =====================================================
-            LOGO
-        ====================================================== */}
-
+      <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" onClick={closeMenu} className="flex items-center gap-3">
-          {/* Logo Icon */}
 
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
             <House size={21} strokeWidth={2.2} />
           </div>
-
-          {/* Logo Text */}
 
           <div className="leading-tight">
             <h1 className="text-lg font-bold tracking-tight text-gray-900">
@@ -106,7 +80,7 @@ export default function Navbar() {
             </h1>
 
             <p className="hidden text-[11px] text-gray-400 sm:block">
-              Find your room in Phnom Penh
+              ស្វែងរកបន្ទប់នៅទីក្រុងភ្នំពេញ
             </p>
           </div>
         </Link>
