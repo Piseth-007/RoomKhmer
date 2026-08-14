@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Eye,
@@ -12,12 +12,18 @@ import {
   User,
   UserPlus,
 } from "lucide-react";
+import { useAuth } from "../../../context/AuthContext";
 
 const Register = () => {
+  const navigate = useNavigate();
+  const { register, loginWithGoogle } = useAuth();
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [role, setRole] = useState("student");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -36,16 +42,68 @@ const Register = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const friendlyError = (code) => {
+    if (code === "auth/email-already-in-use") {
+      return "An account with this email already exists.";
+    }
+
+    if (code === "auth/weak-password") {
+      return "Password should be at least 6 characters.";
+    }
+
+    if (code === "auth/invalid-email") {
+      return "Please enter a valid email address.";
+    }
+
+    return "Something went wrong. Please try again.";
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Register data:", {
-      ...formData,
-      role,
-    });
+    setError("");
 
-    // Later:
-    // connect this to Laravel register API
+    if (formData.password !== formData.password_confirmation) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await register({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        role,
+      });
+
+      navigate(role === "landlord" ? "/landlord" : "/");
+    } catch (err) {
+      console.error("Registration failed:", err);
+
+      setError(friendlyError(err.code));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      await loginWithGoogle();
+
+      navigate("/");
+    } catch (err) {
+      console.error("Google sign up failed:", err);
+
+      setError(friendlyError(err.code));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -77,6 +135,14 @@ const Register = () => {
               ចូលរួមជាមួយ RoomKhmer ដើម្បីស្វែងរកបន្ទប់
             </p>
           </div>
+
+          {/* ================= ERROR ================= */}
+
+          {error && (
+            <div className="mb-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
 
           {/* ================= FORM ================= */}
 
@@ -367,13 +433,20 @@ const Register = () => {
 
             <button
               type="submit"
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md active:scale-[0.99]"
+              disabled={isSubmitting}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <span>បង្កើតគណនី</span>
+              {isSubmitting ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <>
+                  <span>បង្កើតគណនី</span>
 
-              <span className="text-blue-200">Register</span>
+                  <span className="text-blue-200">Register</span>
 
-              <ArrowRight size={17} />
+                  <ArrowRight size={17} />
+                </>
+              )}
             </button>
           </form>
 
@@ -391,7 +464,9 @@ const Register = () => {
 
           <button
             type="button"
-            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:border-gray-300"
+            onClick={handleGoogleSignup}
+            disabled={isSubmitting}
+            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
               <path

@@ -1,10 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Eye, EyeOff, Lock, LogIn, Mail } from "lucide-react";
+import { useAuth } from "../../../context/AuthContext";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { login, loginWithGoogle } = useAuth();
+
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     email: "",
@@ -20,16 +26,56 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const friendlyError = (code) => {
+    if (code === "auth/invalid-credential" || code === "auth/wrong-password") {
+      return "Incorrect email or password.";
+    }
+
+    if (code === "auth/user-not-found") {
+      return "No account found with that email.";
+    }
+
+    if (code === "auth/too-many-requests") {
+      return "Too many attempts. Please try again later.";
+    }
+
+    return "Something went wrong. Please try again.";
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Login data:", {
-      ...formData,
-      rememberMe,
-    });
+    setError("");
+    setIsSubmitting(true);
 
-    // Later:
-    // connect this to your Laravel API
+    try {
+      await login(formData.email, formData.password);
+
+      navigate("/");
+    } catch (err) {
+      console.error("Login failed:", err);
+
+      setError(friendlyError(err.code));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      await loginWithGoogle();
+
+      navigate("/");
+    } catch (err) {
+      console.error("Google login failed:", err);
+
+      setError(friendlyError(err.code));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -61,6 +107,14 @@ const Login = () => {
               ចូលគណនីរបស់អ្នក ដើម្បីស្វែងរកបន្ទប់
             </p>
           </div>
+
+          {/* ================= ERROR ================= */}
+
+          {error && (
+            <div className="mb-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
 
           {/* ================= FORM ================= */}
 
@@ -171,13 +225,20 @@ const Login = () => {
 
             <button
               type="submit"
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md active:scale-[0.99]"
+              disabled={isSubmitting}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <span>ចូលគណនី</span>
+              {isSubmitting ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <>
+                  <span>ចូលគណនី</span>
 
-              <span className="text-blue-200">Login</span>
+                  <span className="text-blue-200">Login</span>
 
-              <ArrowRight size={17} />
+                  <ArrowRight size={17} />
+                </>
+              )}
             </button>
           </form>
 
@@ -195,7 +256,9 @@ const Login = () => {
 
           <button
             type="button"
-            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:border-gray-300"
+            onClick={handleGoogleLogin}
+            disabled={isSubmitting}
+            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {/* Google SVG */}
             <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">

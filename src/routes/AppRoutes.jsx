@@ -35,6 +35,7 @@ import AdminBookings from "../components/pages/admin/AdminBookings";
 import AdminReports from "../components/pages/admin/AdminReports";
 import AdminProfile from "../components/pages/admin/AdminProfile";
 import AdminSettings from "../components/pages/admin/AdminSettings";
+import ProtectedRoute from "../components/common/ProtectedRoute";
 
 const AppRoutes = () => (
   <Routes>
@@ -47,9 +48,30 @@ const AppRoutes = () => (
       <Route path="locations" element={<Locations />} />
       <Route path="about" element={<About />} />
       <Route path="contact" element={<Contact />} />
-      <Route path="favorites" element={<Favorites />} />
-      <Route path="profile" element={<Profile />} />
-      <Route path="bookings" element={<Bookings />} />
+      <Route
+        path="favorites"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <Favorites />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="profile"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="bookings"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <Bookings />
+          </ProtectedRoute>
+        }
+      />
     </Route>
     <Route path="*" element={<NotFound />} />
 
@@ -61,7 +83,14 @@ const AppRoutes = () => (
       <Route path="register" element={<Register />} />
     </Route>
     {/* ================= Landlord ===============*/}
-    <Route path="/landlord" element={<LandlordLayout />}>
+    <Route
+      path="/landlord"
+      element={
+        <ProtectedRoute allowedRoles={["landlord"]}>
+          <LandlordLayout />
+        </ProtectedRoute>
+      }
+    >
       <Route index element={<LandlordDashboard />} />
       <Route path="rooms" element={<LandlordRooms />} />
       <Route path="rooms/create" element={<CreateRoom />} />
@@ -71,7 +100,14 @@ const AppRoutes = () => (
       <Route path="profile" element={<LandlordProfile />} />
       <Route path="settings" element={<LandlordSettings />} />
     </Route>
-    <Route path="/admin" element={<AdminLayout />}>
+    <Route
+      path="/admin"
+      element={
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <AdminLayout />
+        </ProtectedRoute>
+      }
+    >
       <Route index element={<AdminDashboard />} />
       <Route path="rooms" element={<AdminRooms />} />
       <Route path="users" element={<AdminUsers />} />

@@ -12,23 +12,20 @@ import {
   LogOut,
 } from "lucide-react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const navigate = useNavigate();
+  const { currentUser, profile, logout } = useAuth();
 
-  // ==========================================
-  // TEMPORARY USER
-  // Later connect this with your authentication
-  // ==========================================
-
-  const isLoggedIn = true;
+  const isLoggedIn = Boolean(currentUser);
 
   const user = {
-    name: "Leang Piseth",
-    email: "leangpiseth@gmail.com",
+    name: profile?.name || currentUser?.displayName || "Guest",
+    email: currentUser?.email || "",
   };
 
   // ==========================================
@@ -70,13 +67,15 @@ export default function Navbar() {
   // LOGOUT
   // ==========================================
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsProfileOpen(false);
     setIsOpen(false);
 
-    // Later:
-    // localStorage.removeItem("token");
-    // localStorage.removeItem("user");
+    try {
+      await logout();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
 
     navigate("/auth/login");
   };
