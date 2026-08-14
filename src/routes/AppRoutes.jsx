@@ -27,44 +27,60 @@ import EditRoom from "../components/pages/landlord/EditRoom";
 import LandlordEarnings from "../components/pages/landlord/LandlordEarnings";
 import LandlordProfile from "../components/pages/landlord/LandlordProfile";
 import LandlordSettings from "../components/pages/landlord/LandlordSettings";
+import AdminLayout from "../layouts/AdminLayout";
+import AdminDashboard from "../components/pages/admin/AdminDashboard";
+import AdminRooms from "../components/pages/admin/AdminRooms";
+import AdminUsers from "../components/pages/admin/AdminUsers";
+import AdminBookings from "../components/pages/admin/AdminBookings";
+import AdminReports from "../components/pages/admin/AdminReports";
+import AdminProfile from "../components/pages/admin/AdminProfile";
+import AdminSettings from "../components/pages/admin/AdminSettings";
 
-const AppRoutes = () => {
-  return (
-    <Routes>
-      {/* ================= CLIENT ================= */}
+const AppRoutes = () => (
+  <Routes>
+    {/* ================= CLIENT ================= */}
 
-      <Route path="/" element={<ClientLayouts />}>
-        <Route index element={<Home />} />
-        <Route path="rooms" element={<Rooms />} />
-        <Route path="rooms/:id" element={<RoomDetail />} />
-        <Route path="locations" element={<Locations />} />
-        <Route path="about" element={<About />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="favorites" element={<Favorites />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="bookings" element={<Bookings />} />
-      </Route>
-      <Route path="*" element={<NotFound />} />
+    <Route path="/" element={<ClientLayouts />}>
+      <Route index element={<Home />} />
+      <Route path="rooms" element={<Rooms />} />
+      <Route path="rooms/:id" element={<RoomDetail />} />
+      <Route path="locations" element={<Locations />} />
+      <Route path="about" element={<About />} />
+      <Route path="contact" element={<Contact />} />
+      <Route path="favorites" element={<Favorites />} />
+      <Route path="profile" element={<Profile />} />
+      <Route path="bookings" element={<Bookings />} />
+    </Route>
+    <Route path="*" element={<NotFound />} />
 
-      {/* ================= AUTH ================= */}
+    {/* ================= AUTH ================= */}
 
-      <Route path="/auth" element={<AuthLayout />}>
-        <Route path="login" element={<Login />} />
-        <Route path="forgot-password" element={<ForgotPassword />} />
-        <Route path="register" element={<Register />} />
-      </Route>
-      <Route path="/landlord" element={<LandlordLayout />}>
-        <Route index element={<LandlordDashboard />} />
-        <Route path="rooms" element={<LandlordRooms />} />
-        <Route path="rooms/create" element={<CreateRoom />} />
-        <Route path="rooms/:id/edit" element={<EditRoom/>}/>
-        <Route path="bookings" element={<LandlordBookings/>}/>
-        <Route path="earnings" element={<LandlordEarnings/>}/>
-        <Route path="profile" element={<LandlordProfile/>}/>
-        <Route path="settings" element={<LandlordSettings/>}/>
-      </Route>
-    </Routes>
-  );
-};
+    <Route path="/auth" element={<AuthLayout />}>
+      <Route path="login" element={<Login />} />
+      <Route path="forgot-password" element={<ForgotPassword />} />
+      <Route path="register" element={<Register />} />
+    </Route>
+    {/* ================= Landlord ===============*/}
+    <Route path="/landlord" element={<LandlordLayout />}>
+      <Route index element={<LandlordDashboard />} />
+      <Route path="rooms" element={<LandlordRooms />} />
+      <Route path="rooms/create" element={<CreateRoom />} />
+      <Route path="rooms/:id/edit" element={<EditRoom />} />
+      <Route path="bookings" element={<LandlordBookings />} />
+      <Route path="earnings" element={<LandlordEarnings />} />
+      <Route path="profile" element={<LandlordProfile />} />
+      <Route path="settings" element={<LandlordSettings />} />
+    </Route>
+    <Route path="/admin" element={<AdminLayout />}>
+      <Route index element={<AdminDashboard />} />
+      <Route path="rooms" element={<AdminRooms />} />
+      <Route path="users" element={<AdminUsers />} />
+      <Route path="bookings" element={<AdminBookings />} />
+      <Route path="reports" element={<AdminReports />} />
+      <Route path="profile" element={<AdminProfile />} />
+      <Route path="settings" element={<AdminSettings />} />
+    </Route>
+  </Routes>
+);
 
 export default AppRoutes;

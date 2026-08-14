@@ -41,7 +41,7 @@ export default function LandlordNavbar() {
 
         <div className="pl-12 lg:pl-0">
           <h1 className="text-lg font-bold text-gray-900">
-            Landlord Dashboard
+            ផ្ទាំងគ្រប់គ្រងម្ចាស់ផ្ទះ
           </h1>
 
           <p className="hidden text-xs text-gray-400 sm:block">
