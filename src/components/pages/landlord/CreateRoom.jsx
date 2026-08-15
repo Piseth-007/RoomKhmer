@@ -16,13 +16,13 @@ import {
   CookingPot,
   Check,
 } from "lucide-react";
+import { auth, db, storage } from "../../../firebase/config";
 
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 export default function CreateRoom() {
   const navigate = useNavigate();
-
-  // ============================================================
-  // FORM DATA
-  // ============================================================
 
   const [formData, setFormData] = useState({
     name: "",
@@ -31,17 +31,12 @@ export default function CreateRoom() {
     location: "",
     address: "",
     description: "",
-    bedrooms: "1",
-    bathrooms: "1",
+    bedrooms: 1,
+    bathrooms: 1,
     area: "",
     availableFrom: "",
     rules: "",
   });
-
-  // ============================================================
-  // AMENITIES
-  // ============================================================
-
   const [amenities, setAmenities] = useState({
     wifi: false,
     airConditioning: false,
@@ -51,19 +46,11 @@ export default function CreateRoom() {
     furnished: false,
   });
 
-  // ============================================================
-  // IMAGES
-  // ============================================================
-
   const [images, setImages] = useState([]);
 
   const [errors, setErrors] = useState({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // ============================================================
-  // HANDLE INPUT
-  // ============================================================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,20 +69,12 @@ export default function CreateRoom() {
     }
   };
 
-  // ============================================================
-  // HANDLE AMENITY
-  // ============================================================
-
   const handleAmenity = (name) => {
     setAmenities((current) => ({
       ...current,
       [name]: !current[name],
     }));
   };
-
-  // ============================================================
-  // HANDLE IMAGE UPLOAD
-  // ============================================================
 
   const handleImages = (e) => {
     const files = Array.from(e.target.files);
@@ -111,10 +90,6 @@ export default function CreateRoom() {
     setImages((current) => [...current, ...newImages]);
   };
 
-  // ============================================================
-  // REMOVE IMAGE
-  // ============================================================
-
   const removeImage = (id) => {
     setImages((current) => {
       const image = current.find((item) => item.id === id);
@@ -126,10 +101,6 @@ export default function CreateRoom() {
       return current.filter((item) => item.id !== id);
     });
   };
-
-  // ============================================================
-  // VALIDATION
-  // ============================================================
 
   const validate = () => {
     const newErrors = {};
@@ -165,57 +136,79 @@ export default function CreateRoom() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // ============================================================
-  // SUBMIT
-  // ============================================================
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validate()) {
-      window.scrollTo({
+      window.scroll({
         top: 0,
         behavior: "smooth",
       });
-
       return;
     }
-
+    const user = auth.currentUser;
+    if (!user) {
+      alert("please login before create rooms");
+      navigate("/login");
+      return;
+    }
     setIsSubmitting(true);
+    try {
+      const imageUrls = [];
 
-    // ========================================================
-    // TEMPORARY
-    // Later replace this with Laravel API request
-    // ========================================================
+      for (const image of images) {
+        const file = image.file;
+        console.log("Uploading:", file.name);
+        console.log("File size:", file.size);
+        console.log("File type:", file.type);
 
-    const roomData = {
-      ...formData,
-      price: Number(formData.price),
-      bedrooms: Number(formData.bedrooms),
-      bathrooms: Number(formData.bathrooms),
-      amenities,
-      images: images.map((image) => image.file),
-      status: "pending",
-    };
+        const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
 
-    console.log("Room submitted:", roomData);
+        const imageRef = ref(storage, `rooms/${user.uid}/${fileName}`);
 
-    // Simulate API request
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+        await uploadBytes(imageRef, file);
 
-    setIsSubmitting(false);
+        const imageUrl = await getDownloadURL(imageRef);
 
-    alert("Room submitted successfully! It is now waiting for admin approval.");
-
-    navigate("/landlord/rooms");
+        imageUrls.push(imageUrl);
+      }
+      const roomData = {
+        landlordId: user.uid,
+        name: formData.name.trim(),
+        type: formData.type,
+        price: Number(formData.price),
+        location: formData.location,
+        address: formData.address.trim(),
+        description: formData.description.trim(),
+        bedrooms: Number(formData.bedrooms),
+        bathrooms: Number(formData.bathrooms),
+        area: Number(formData.area) || 0,
+        availableFrom: formData.availableFrom || null,
+        rules: formData.rules
+          .split("\n")
+          .map((rule) => rule.trim())
+          .filter(Boolean),
+        amenities,
+        images: imageUrls,
+        status: "pending",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      const roomRef = await addDoc(collection(db, "rooms"), roomData);
+      console.log("Create room successfully", roomRef.id);
+      alert(
+        "Room submitted successfully! It is now waiting for admin approval.",
+      );
+      navigate("/landlord/rooms");
+    } catch (error) {
+      console.log("Error create room", error);
+      alert(error.message || "Failed to create room. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="mx-auto max-w-5xl">
-      {/* ======================================================
-          HEADER
-      ======================================================= */}
-
       <div className="mb-6">
         <Link
           to="/landlord/rooms"

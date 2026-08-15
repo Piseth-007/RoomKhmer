@@ -55,7 +55,7 @@ const Locations = () => {
             <span className="font-medium text-gray-600">Locations</span>
           </div>
 
-          {/* Hero content */}
+          
 
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
@@ -107,9 +107,6 @@ const Locations = () => {
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-              Explore Phnom Penh
-            </p>
 
             <h2 className="mt-1 text-2xl font-bold text-gray-900">
               ទីតាំង​ ពេញនិយម
@@ -129,7 +126,7 @@ const Locations = () => {
           </Link>
         </div>
 
-        {/*Card */}
+      
         {filteredLocations.length > 0 ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredLocations.map((location) => (
@@ -148,20 +145,18 @@ const Locations = () => {
 
                   <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent" />
 
-                  {/* Location icon */}
 
                   <div className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl bg-white/95 text-blue-600 shadow-sm">
                     <MapPin size={17} />
                   </div>
 
-                  {/* Room count */}
 
                   <div className="absolute bottom-4 left-4 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-semibold text-gray-700 shadow-sm">
                     {location.roomCount} បន្ទប់
                   </div>
                 </div>
 
-                {/* Content */}
+              
 
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-3">
@@ -185,7 +180,7 @@ const Locations = () => {
                     {location.description}
                   </p>
 
-                  {/* Bottom info */}
+                
 
                   <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
                     <div>
@@ -208,9 +203,6 @@ const Locations = () => {
             ))}
           </div>
         ) : (
-          /* =================================================
-              EMPTY STATE
-          ================================================== */
 
           <div className="flex min-h-87.5 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white px-6 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-50 text-gray-400">
@@ -262,10 +254,10 @@ const Locations = () => {
 
               <div className="mt-7 space-y-4">
                 {[
-                  "Close to universities",
-                  "Easy access to transportation",
-                  "Affordable rooms",
-                  "Nearby shops and restaurants",
+                  "ជិតសាកលវីទ្យាល័យ",
+                  "ងាយស្រួលទៅដល់ការដឹកជញ្ជូន",
+                  "បន្ទប់ស្អាត",
+                  "ជិតផ្សារនិងភោជនីយដ្ឋាន",
                 ].map((item) => (
                   <div key={item} className="flex items-center gap-3">
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-500/15 text-blue-400">
@@ -281,7 +273,7 @@ const Locations = () => {
                 to="/rooms"
                 className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
               >
-                Explore rooms
+                ស្វែងរកបន្ទប់
                 <ArrowRight size={16} />
               </Link>
             </div>

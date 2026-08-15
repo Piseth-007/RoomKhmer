@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { auth } from "../../../firebase/config";
+import { getLandlordRooms } from "../../../services/roomService";
 import {
   Search,
   Plus,
@@ -21,68 +23,35 @@ export default function LandlordRooms() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [openMenu, setOpenMenu] = useState(null);
 
-  // ============================================================
-  // TEMPORARY DATA
-  // Later this will come from Laravel API
-  // ============================================================
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+  const loadRooms = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-  const [rooms, setRooms] = useState([
-    {
-      id: 1,
-      name: "Modern Private Room",
-      location: "Toul Kork, Phnom Penh",
-      price: 180,
-      type: "Private Room",
-      tenants: 1,
-      image:
-        "https://images.unsplash.com/photo-1560185008-b033106af5c3?auto=format&fit=crop&w=800&q=80",
-      status: "rented",
-    },
-    {
-      id: 2,
-      name: "Cozy Student Room",
-      location: "Sen Sok, Phnom Penh",
-      price: 150,
-      type: "Single Room",
-      tenants: 0,
-      image:
-        "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80",
-      status: "available",
-    },
-    {
-      id: 3,
-      name: "Modern Studio",
-      location: "BKK1, Phnom Penh",
-      price: 250,
-      type: "Studio",
-      tenants: 0,
-      image:
-        "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80",
-      status: "pending",
-    },
-    {
-      id: 4,
-      name: "Budget Student Room",
-      location: "Mean Chey, Phnom Penh",
-      price: 120,
-      type: "Single Room",
-      tenants: 0,
-      image:
-        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80",
-      status: "approved",
-    },
-    {
-      id: 5,
-      name: "Luxury Apartment Room",
-      location: "Chamkarmon, Phnom Penh",
-      price: 350,
-      type: "Apartment",
-      tenants: 0,
-      image:
-        "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80",
-      status: "rejected",
-    },
-  ]);
+      const user = auth.currentUser;
+
+      if (!user) {
+        setError("You are not logged in.");
+        return;
+      }
+
+      const data = await getLandlordRooms(user.uid);
+
+      setRooms(data);
+    } catch (error) {
+      console.error(error);
+      setError("Failed to load rooms.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadRooms();
+}, []);
 
   // ============================================================
   // FILTER ROOMS

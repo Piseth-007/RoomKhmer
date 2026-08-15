@@ -379,12 +379,8 @@ const RoomDetail = () => {
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px]">
-          {/* =================================================
-              LEFT
-          ================================================== */}
 
           <div className="space-y-8">
-            {/* ABOUT */}
 
             <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
               <h2 className="text-xl font-bold text-gray-900">អំពីបន្ទប់នេះ</h2>
@@ -394,14 +390,11 @@ const RoomDetail = () => {
               </p>
             </section>
 
-            {/* FACILITIES */}
 
             <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
               <h2 className="text-xl font-bold text-gray-900">
                 សម្ភារៈ និងបរិក្ខារ
               </h2>
-
-              <p className="mt-1 text-xs text-gray-400">Facilities</p>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 {room.facilities.map((facility) => {
@@ -432,7 +425,7 @@ const RoomDetail = () => {
                 ច្បាប់សម្រាប់ការស្នាក់នៅ
               </h2>
 
-              <p className="mt-1 text-xs text-gray-400">House Rules</p>
+            
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {room.rules.map((rule) => (
@@ -447,7 +440,6 @@ const RoomDetail = () => {
               </div>
             </section>
 
-            {/* LOCATION */}
 
             <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
               <h2 className="text-xl font-bold text-gray-900">ទីតាំង</h2>

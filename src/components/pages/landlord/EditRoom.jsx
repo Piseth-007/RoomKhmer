@@ -61,9 +61,7 @@ export default function EditRoom() {
     },
   ]);
 
-  // ============================================================
-  // AMENITIES
-  // ============================================================
+
 
   const [amenities, setAmenities] = useState({
     wifi: true,
@@ -75,10 +73,6 @@ export default function EditRoom() {
   });
 
   const [isSaving, setIsSaving] = useState(false);
-
-  // ============================================================
-  // FORM CHANGE
-  // ============================================================
 
   const handleChange = (e) => {
     const { name, value } = e.target;

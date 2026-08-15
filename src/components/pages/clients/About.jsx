@@ -79,7 +79,7 @@ const About = () => {
       title: "Search",
       khmer: "ស្វែងរក",
       description:
-        "Search for rooms based on your preferred location, price, room type, and facilities.",
+        "ស្វែងរកបន្ទប់ដោយផ្អែកលើទីតាំង តម្លៃ ប្រភេទបន្ទប់ និងគ្រឿងបរិក្ខារដែលអ្នកពេញចិត្ត។",
     },
     {
       number: "02",
@@ -87,7 +87,7 @@ const About = () => {
       title: "Explore",
       khmer: "ស្វែងយល់",
       description:
-        "View room photos, prices, facilities, locations, and landlord information.",
+        "មើលរូបថតបន្ទប់ តម្លៃ គ្រឿងបរិក្ខារ ទីតាំង និងព័ត៌មានម្ចាស់ផ្ទះ។",
     },
     {
       number: "03",
@@ -95,7 +95,7 @@ const About = () => {
       title: "Connect",
       khmer: "ទាក់ទង",
       description:
-        "Contact the landlord and ask questions before deciding to rent the room.",
+        "ទាក់ទងម្ចាស់ផ្ទះ ហើយសួរសំណួរមុនពេលសម្រេចចិត្តជួលបន្ទប់។",
     },
   ];
 
@@ -159,7 +159,6 @@ const About = () => {
               </div>
             </div>
 
-            {/* Image */}
 
             <div className="relative">
               <div className="overflow-hidden rounded-3xl">
@@ -170,7 +169,7 @@ const About = () => {
                 />
               </div>
 
-              {/* Floating card */}
+              
 
               <div className="absolute -bottom-5 left-5 rounded-2xl border border-gray-100 bg-white p-4 shadow-xl sm:-left-5 sm:p-5">
                 <div className="flex items-center gap-3">
@@ -194,9 +193,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* =====================================================
-          STATS
-      ====================================================== */}
 
       <section className="border-y border-gray-100 bg-white">
         <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-gray-100 sm:grid-cols-4 px-4 sm:px-6 lg:px-8">
@@ -309,9 +305,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* =====================================================
-          HOW IT WORKS
-      ====================================================== */}
 
       <section className="bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
@@ -348,12 +341,10 @@ const About = () => {
                   </div>
 
                   <h3 className="mt-6 text-lg font-bold text-gray-900">
-                    {step.title}
+                    {step.khmer}
                   </h3>
 
-                  <p className="mt-1 text-xs font-medium text-blue-600">
-                    {step.khmer}
-                  </p>
+
 
                   <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-gray-400">
                     {step.description}
@@ -410,13 +401,9 @@ const About = () => {
                     </div>
 
                     <h3 className="mt-5 text-base font-bold text-gray-900">
-                      {value.title}
-                    </h3>
-
-                    <p className="mt-1 text-xs font-medium text-blue-600">
                       {value.khmer}
-                    </p>
-
+                    </h3>
+                  
                     <p className="mt-3 text-sm leading-6 text-gray-400">
                       {value.description}
                     </p>

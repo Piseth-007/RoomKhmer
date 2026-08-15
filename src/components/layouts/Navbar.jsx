@@ -104,21 +104,14 @@ export default function Navbar() {
             >
               {({ isActive }) => (
                 <div className="flex flex-col items-center leading-tight">
-                  {/* Khmer */}
-
                   <span className="font-medium">{link.name}</span>
-
-                  {/* English */}
-
                   <span
                     className={`text-[10px] ${
                       isActive ? "text-blue-400" : "text-gray-400"
-                    }`}
+                    }`} 
                   >
-                    {link.english}
+                    
                   </span>
-
-                  {/* Active underline */}
 
                   {isActive && (
                     <span className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full bg-blue-600" />
