@@ -16,11 +16,10 @@ import {
   CookingPot,
   Check,
 } from "lucide-react";
-import { auth, db, storage } from "../../../firebase/config";
-
+import { auth, db } from "../../../firebase/config";
+import imageCompression from "browser-image-compression";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 export default function CreateRoom() {
   const navigate = useNavigate();
 
@@ -135,42 +134,64 @@ export default function CreateRoom() {
 
     return Object.keys(newErrors).length === 0;
   };
+  const uploadImageToCloudinary = async (file) => {
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
+    if (!cloudName || !uploadPreset) {
+      throw new Error("Cloudinary configuration is missing");
+    }
+
+    const data = new FormData();
+
+    data.append("file", file);
+    data.append("upload_preset", uploadPreset);
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      {
+        method: "POST",
+        body: data,
+      },
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error("Cloudinary error:", result);
+      throw new Error(result?.error?.message || "Cloudinary upload failed");
+    }
+
+    return result.secure_url;
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) {
+      console.log("❌ Validation failed");
+
       window.scroll({
         top: 0,
         behavior: "smooth",
       });
+
       return;
     }
+
     const user = auth.currentUser;
+
     if (!user) {
-      alert("please login before create rooms");
+      console.log("❌ No logged-in user");
+      alert("Please login before creating rooms");
       navigate("/login");
       return;
     }
+
+    console.log("✅ User:", user.uid);
+
     setIsSubmitting(true);
+
     try {
-      const imageUrls = [];
-
-      for (const image of images) {
-        const file = image.file;
-        console.log("Uploading:", file.name);
-        console.log("File size:", file.size);
-        console.log("File type:", file.type);
-
-        const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-
-        const imageRef = ref(storage, `rooms/${user.uid}/${fileName}`);
-
-        await uploadBytes(imageRef, file);
-
-        const imageUrl = await getDownloadURL(imageRef);
-
-        imageUrls.push(imageUrl);
-      }
+      const imageUrls = await uploadImages(images);
       const roomData = {
         landlordId: user.uid,
         name: formData.name.trim(),
@@ -183,28 +204,76 @@ export default function CreateRoom() {
         bathrooms: Number(formData.bathrooms),
         area: Number(formData.area) || 0,
         availableFrom: formData.availableFrom || null,
+
         rules: formData.rules
           .split("\n")
           .map((rule) => rule.trim())
           .filter(Boolean),
+
         amenities,
         images: imageUrls,
+
         status: "pending",
+
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
+
+      console.log("📦 Room data:", roomData);
+
+      console.log("⏳ addDoc started...");
+
       const roomRef = await addDoc(collection(db, "rooms"), roomData);
-      console.log("Create room successfully", roomRef.id);
+
+      console.log("✅ Firestore room created:", roomRef.id);
+
       alert(
         "Room submitted successfully! It is now waiting for admin approval.",
       );
+
       navigate("/landlord/rooms");
     } catch (error) {
-      console.log("Error create room", error);
+      console.error("❌ CREATE ROOM ERROR");
+      console.error("Error:", error);
+      console.error("Code:", error.code);
+      console.error("Message:", error.message);
+
       alert(error.message || "Failed to create room. Please try again.");
     } finally {
+      console.log("========== CREATE ROOM FINISHED ==========");
       setIsSubmitting(false);
     }
+  };
+  const uploadImages = async (images) => {
+    console.log(`📤 Uploading ${images.length} images...`);
+
+    const uploadPromises = images.map(async (image, index) => {
+      console.log(`📸 Processing image ${index + 1}:`, image.file.name);
+
+      const compressedFile = await imageCompression(image.file, {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 1600,
+        useWebWorker: true,
+      });
+
+      console.log(
+        `📦 Image ${index + 1}:`,
+        `${(image.file.size / 1024 / 1024).toFixed(2)} MB →`,
+        `${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`,
+      );
+
+      const url = await uploadImageToCloudinary(compressedFile);
+
+      console.log(`✅ Image ${index + 1} uploaded`);
+
+      return url;
+    });
+
+    const urls = await Promise.all(uploadPromises);
+
+    console.log("🎉 All images uploaded:", urls);
+
+    return urls;
   };
 
   return (

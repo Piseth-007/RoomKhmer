@@ -1,6 +1,18 @@
-import { Bath, Car, ChevronDown, RotateCcw, Wifi, Wind } from "lucide-react";
+import {
+  Bath,
+  Car,
+  ChevronDown,
+  CookingPot,
+  RotateCcw,
+  Wifi,
+  Wind,
+  Armchair,
+} from "lucide-react";
 
 const RoomFilter = ({ filters, setFilters, onClear }) => {
+  // =========================
+  // LOCATION
+  // =========================
   const handleLocationChange = (location) => {
     setFilters((prev) => ({
       ...prev,
@@ -8,6 +20,9 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
     }));
   };
 
+  // =========================
+  // ROOM TYPE
+  // =========================
   const handleRoomTypeChange = (type) => {
     setFilters((prev) => ({
       ...prev,
@@ -15,6 +30,9 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
     }));
   };
 
+  // =========================
+  // AMENITIES
+  // =========================
   const handleFacilityChange = (facility) => {
     setFilters((prev) => {
       const exists = prev.facilities.includes(facility);
@@ -28,6 +46,9 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
     });
   };
 
+  // =========================
+  // PRICE
+  // =========================
   const handlePriceChange = (value) => {
     setFilters((prev) => ({
       ...prev,
@@ -37,6 +58,9 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
 
   return (
     <aside className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+      {/* =========================
+          HEADER
+      ========================== */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-semibold text-gray-900">
@@ -55,7 +79,10 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
           Clear
         </button>
       </div>
-      {/* ================= LOCATION ================= */}
+
+      {/* =========================
+          LOCATION
+      ========================== */}
       <div className="mt-6">
         <label className="text-sm font-semibold text-gray-800">ទីតាំង</label>
 
@@ -88,7 +115,10 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
           ))}
         </div>
       </div>
-      {/* ================= PRICE ================= */}
+
+      {/* =========================
+          PRICE
+      ========================== */}
       <div className="mt-7 border-t border-gray-100 pt-6">
         <div className="flex items-center justify-between">
           <div>
@@ -119,7 +149,10 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
           <span>$500+</span>
         </div>
       </div>
-      {/* ================= ROOM TYPE ================= */}
+
+      {/* =========================
+          ROOM TYPE
+      ========================== */}
       <div className="mt-7 border-t border-gray-100 pt-6">
         <label className="text-sm font-semibold text-gray-800">
           ប្រភេទបន្ទប់
@@ -128,63 +161,97 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
         <p className="mt-0.5 text-xs text-gray-400">Room Type</p>
 
         <div className="mt-3 space-y-2.5">
-          {["All Types", "Single Room", "Studio", "Shared Room"].map((type) => (
+          {[
+            {
+              value: "All Types",
+              label: "All Types",
+            },
+            {
+              value: "private",
+              label: "Private Room",
+            },
+            {
+              value: "studio",
+              label: "Studio",
+            },
+            {
+              value: "shared",
+              label: "Shared Room",
+            },
+          ].map((type) => (
             <label
-              key={type}
+              key={type.value}
               className="flex cursor-pointer items-center gap-3"
             >
               <input
                 type="radio"
                 name="roomType"
-                value={type}
-                checked={filters.roomType === type}
-                onChange={() => handleRoomTypeChange(type)}
+                value={type.value}
+                checked={filters.roomType === type.value}
+                onChange={() => handleRoomTypeChange(type.value)}
                 className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
               />
 
-              <span className="text-sm text-gray-600">{type}</span>
+              <span className="text-sm text-gray-600">{type.label}</span>
             </label>
           ))}
         </div>
       </div>
-      {/* ================= FACILITIES ================= */}
+
+      {/* =========================
+          AMENITIES
+      ========================== */}
       <div className="mt-7 border-t border-gray-100 pt-6">
         <label className="text-sm font-semibold text-gray-800">
           សម្ភារៈបរិក្ខារ
         </label>
 
-        <p className="mt-0.5 text-xs text-gray-400">Facilities</p>
+        <p className="mt-0.5 text-xs text-gray-400">Amenities</p>
 
         <div className="mt-3 space-y-3">
           {[
             {
+              value: "wifi",
               name: "WiFi",
               icon: Wifi,
             },
             {
+              value: "airConditioning",
               name: "Air Conditioning",
               icon: Wind,
             },
             {
+              value: "parking",
               name: "Parking",
               icon: Car,
             },
             {
+              value: "privateBathroom",
               name: "Private Bathroom",
               icon: Bath,
+            },
+            {
+              value: "kitchen",
+              name: "Kitchen",
+              icon: CookingPot,
+            },
+            {
+              value: "furnished",
+              name: "Furnished",
+              icon: Armchair,
             },
           ].map((facility) => {
             const Icon = facility.icon;
 
             return (
               <label
-                key={facility.name}
+                key={facility.value}
                 className="flex cursor-pointer items-center gap-3"
               >
                 <input
                   type="checkbox"
-                  checked={filters.facilities.includes(facility.name)}
-                  onChange={() => handleFacilityChange(facility.name)}
+                  checked={filters.facilities.includes(facility.value)}
+                  onChange={() => handleFacilityChange(facility.value)}
                   className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
 
@@ -196,7 +263,10 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
           })}
         </div>
       </div>
-      {/* ================= APPLY ================= */}
+
+      {/* =========================
+          APPLY
+      ========================== */}
       <button
         type="button"
         className="mt-7 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700"

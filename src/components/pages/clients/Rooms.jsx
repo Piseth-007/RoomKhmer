@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   ArrowUpDown,
   ChevronDown,
@@ -8,12 +8,12 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
+import { db } from "../../../firebase/config";
 import RoomCard from "../../pages/components/rooms/RoomCard";
 import RoomFilter from "../../pages/components/rooms/RoomFilter";
 import RoomSearch from "../../pages/components/rooms/RoomSearch";
-
-import { rooms } from "../../../data/rooms";
 
 const defaultFilters = {
   location: "All Locations",
@@ -23,16 +23,47 @@ const defaultFilters = {
 };
 
 const Rooms = () => {
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [search, setSearch] = useState("");
-
   const [filters, setFilters] = useState(defaultFilters);
-
   const [sortBy, setSortBy] = useState("recommended");
-
   const [favorites, setFavorites] = useState([]);
-
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  useEffect(() => {
+    const loadApprovedRooms = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
+        const q = query(
+          collection(db, "rooms"),
+          where("status", "==", "approved"),
+        );
+
+        const snapshot = await getDocs(q);
+
+        const firestoreRooms = snapshot.docs.map((roomDoc) => ({
+          id: roomDoc.id,
+          ...roomDoc.data(),
+        }));
+
+        console.log("✅ Approved rooms:", firestoreRooms);
+
+        setRooms(firestoreRooms);
+      } catch (err) {
+        console.error("❌ Error loading approved rooms:", err);
+
+        setError(err.message || "Failed to load rooms.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadApprovedRooms();
+  }, []);
   const handleFavorite = (roomId) => {
     setFavorites((prev) => {
       if (prev.includes(roomId)) {
@@ -54,17 +85,21 @@ const Rooms = () => {
 
   const filteredRooms = useMemo(() => {
     let result = [...rooms];
+
     const searchValue = search.trim().toLowerCase();
 
+    // =========================
+    // SEARCH
+    // =========================
     if (searchValue) {
       result = result.filter((room) => {
         const searchableText = [
-          room.title,
-          room.englishTitle,
+          room.name,
+          room.type,
           room.location,
-          room.city,
-          room.roomType,
-          ...(room.facilities || []),
+          room.address,
+          room.description,
+          ...(Array.isArray(room.rules) ? room.rules : []),
         ]
           .join(" ")
           .toLowerCase();
@@ -73,25 +108,43 @@ const Rooms = () => {
       });
     }
 
+    // =========================
+    // LOCATION
+    // =========================
     if (filters.location !== "All Locations") {
       result = result.filter((room) => room.location === filters.location);
     }
+
+    // =========================
+    // PRICE
+    // =========================
     result = result.filter(
-      (room) => Number(room.price) <= Number(filters.maxPrice),
+      (room) => Number(room.price || 0) <= Number(filters.maxPrice),
     );
 
+    // =========================
+    // ROOM TYPE
+    // =========================
     if (filters.roomType !== "All Types") {
-      result = result.filter((room) => room.roomType === filters.roomType);
+      result = result.filter((room) => room.type === filters.roomType);
     }
 
+    // =========================
+    // FACILITIES
+    // =========================
     if (filters.facilities.length > 0) {
       result = result.filter((room) => {
-        return filters.facilities.every((requiredFacility) =>
-          room.facilities?.includes(requiredFacility),
+        const amenities = room.amenities || {};
+
+        return filters.facilities.every(
+          (facility) => amenities[facility] === true,
         );
       });
     }
 
+    // =========================
+    // SORT
+    // =========================
     if (sortBy === "price-low") {
       result.sort((a, b) => Number(a.price) - Number(b.price));
     }
@@ -100,30 +153,18 @@ const Rooms = () => {
       result.sort((a, b) => Number(b.price) - Number(a.price));
     }
 
-    if (sortBy === "rating") {
-      result.sort((a, b) => Number(b.rating) - Number(a.rating));
-    }
-
     if (sortBy === "newest") {
-      result.sort((a, b) => Number(b.id) - Number(a.id));
-    }
-
-    if (sortBy === "recommended") {
       result.sort((a, b) => {
-        if (a.featured && !b.featured) {
-          return -1;
-        }
+        const dateA = a.createdAt?.seconds || 0;
 
-        if (!a.featured && b.featured) {
-          return 1;
-        }
+        const dateB = b.createdAt?.seconds || 0;
 
-        return Number(b.rating) - Number(a.rating);
+        return dateB - dateA;
       });
     }
 
     return result;
-  }, [search, filters, sortBy]);
+  }, [rooms, search, filters, sortBy]);
 
   const activeFilterCount =
     (filters.location !== "All Locations" ? 1 : 0) +
@@ -172,11 +213,6 @@ const Rooms = () => {
           </div>
         </div>
       </section>
-
-      {/* =====================================================
-          CONTENT
-      ====================================================== */}
-
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[270px_1fr]">
           <aside className="hidden lg:block">
@@ -202,11 +238,7 @@ const Rooms = () => {
                 </p>
               </div>
 
-              {/* Right controls */}
-
               <div className="flex items-center gap-2">
-                {/* Mobile filter */}
-
                 <button
                   type="button"
                   onClick={() => setIsMobileFilterOpen(true)}
@@ -253,17 +285,12 @@ const Rooms = () => {
               </div>
             </div>
 
-            {/* =================================================
-                ACTIVE FILTERS
-            ================================================== */}
 
             {(search || activeFilterCount > 0) && (
               <div className="mb-6 flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-xs font-medium text-gray-400">
                   Active:
                 </span>
-
-                {/* Search */}
 
                 {search && (
                   <button
@@ -275,8 +302,6 @@ const Rooms = () => {
                     <X size={13} />
                   </button>
                 )}
-
-                {/* Location */}
 
                 {filters.location !== "All Locations" && (
                   <button
@@ -295,7 +320,6 @@ const Rooms = () => {
                   </button>
                 )}
 
-                {/* Room type */}
 
                 {filters.roomType !== "All Types" && (
                   <button
@@ -313,8 +337,6 @@ const Rooms = () => {
                     <X size={13} />
                   </button>
                 )}
-
-                {/* Facilities */}
 
                 {filters.facilities.map((facility) => (
                   <button

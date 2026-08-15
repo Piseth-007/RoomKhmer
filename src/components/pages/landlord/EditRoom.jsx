@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+
 import {
   ArrowLeft,
   Upload,
@@ -18,50 +19,26 @@ import {
   Save,
 } from "lucide-react";
 
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+
+import { auth, db } from "../../../firebase/config";
 export default function EditRoom() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-
   const [formData, setFormData] = useState({
-    name: "Modern Private Room",
-    type: "private",
-    price: "180",
-    location: "Toul Kork",
-    address: "Street 315, Toul Kork, Phnom Penh",
-    description:
-      "A comfortable and modern private room located in Toul Kork. The room is suitable for students and young professionals.",
-    bedrooms: "1",
-    bathrooms: "1",
-    area: "25",
-    availableFrom: "2026-08-20",
-    rules:
-      "No smoking inside the room.\nKeep common areas clean.\nQuiet hours after 10 PM.",
+    name: "",
+    type: "",
+    price: "",
+    location: "",
+    address: "",
+    description: "",
+    bedrooms: "",
+    bathrooms: "",
+    area: "",
+    availableFrom: "",
+    rules: "",
   });
-
-  
-  const [images, setImages] = useState([
-    {
-      id: "existing-1",
-      preview:
-        "https://images.unsplash.com/photo-1560185008-b033106af5c3?auto=format&fit=crop&w=800&q=80",
-      existing: true,
-    },
-    {
-      id: "existing-2",
-      preview:
-        "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80",
-      existing: true,
-    },
-    {
-      id: "existing-3",
-      preview:
-        "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80",
-      existing: true,
-    },
-  ]);
-
-
 
   const [amenities, setAmenities] = useState({
     wifi: true,
@@ -72,7 +49,12 @@ export default function EditRoom() {
     furnished: true,
   });
 
+  const [images, setImages] = useState([]);
+
   const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [roomStatus, setRoomStatus] = useState("pending");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,21 +64,12 @@ export default function EditRoom() {
       [name]: value,
     }));
   };
-
-  // ============================================================
-  // AMENITY
-  // ============================================================
-
   const handleAmenity = (name) => {
     setAmenities((current) => ({
       ...current,
       [name]: !current[name],
     }));
   };
-
-  // ============================================================
-  // ADD IMAGES
-  // ============================================================
 
   const handleImages = (e) => {
     const files = Array.from(e.target.files);
@@ -112,67 +85,244 @@ export default function EditRoom() {
 
     setImages((current) => [...current, ...newImages]);
 
-    // Allow selecting the same file again
     e.target.value = "";
   };
 
-  // ============================================================
-  // REMOVE IMAGE
-  // ============================================================
-
-  const removeImage = (id) => {
+  const removeImage = (imageId) => {
     setImages((current) => {
-      const image = current.find((item) => item.id === id);
+      const image = current.find((item) => item.id === imageId);
 
-      if (image && !image.existing) {
+      if (image && !image.existing && image.preview) {
         URL.revokeObjectURL(image.preview);
       }
 
-      return current.filter((item) => item.id !== id);
+      return current.filter((item) => item.id !== imageId);
     });
   };
+  const uploadImageToCloudinary = async (file) => {
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-  // ============================================================
-  // SAVE
-  // ============================================================
+    if (!cloudName || !uploadPreset) {
+      throw new Error("Cloudinary configuration is missing.");
+    }
+
+    const data = new FormData();
+
+    data.append("file", file);
+    data.append("upload_preset", uploadPreset);
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      {
+        method: "POST",
+        body: data,
+      },
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error("Cloudinary error:", result);
+
+      throw new Error(result?.error?.message || "Failed to upload image.");
+    }
+
+    return result.secure_url;
+  };
+  const getFinalImageUrls = async () => {
+    const imageUrls = [];
+
+    for (const image of images) {
+      if (image.existing && image.url) {
+        imageUrls.push(image.url);
+        continue;
+      }
+
+      if (image.file) {
+        console.log("📤 Uploading new image:", image.file.name);
+
+        const url = await uploadImageToCloudinary(image.file);
+
+        console.log("✅ New image uploaded:", url);
+
+        imageUrls.push(url);
+      }
+    }
+
+    return imageUrls;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert("Please login first.");
+      return;
+    }
+
+    if (!id) {
+      alert("Room ID is missing.");
+      return;
+    }
+
     setIsSaving(true);
 
-    const roomData = {
-      id,
-      ...formData,
-      price: Number(formData.price),
-      bedrooms: Number(formData.bedrooms),
-      bathrooms: Number(formData.bathrooms),
-      amenities,
-      images,
+    try {
+      console.log("========== EDIT ROOM START ==========");
+
+      // Get current room
+      const roomRef = doc(db, "rooms", id);
+
+      const roomSnap = await getDoc(roomRef);
+
+      if (!roomSnap.exists()) {
+        throw new Error("Room not found.");
+      }
+
+      const existingRoom = roomSnap.data();
+
+      // Security check
+      if (existingRoom.landlordId !== user.uid) {
+        throw new Error("You don't have permission to edit this room.");
+      }
+
+      // Upload new images and keep existing images
+      console.log("📸 Processing images...");
+
+      const imageUrls = await getFinalImageUrls();
+
+      console.log("✅ Final images:", imageUrls);
+
+      const updatedData = {
+        name: formData.name.trim(),
+        type: formData.type,
+        price: Number(formData.price),
+        location: formData.location,
+        address: formData.address.trim(),
+        description: formData.description.trim(),
+
+        bedrooms: Number(formData.bedrooms),
+        bathrooms: Number(formData.bathrooms),
+        area: Number(formData.area) || 0,
+
+        availableFrom: formData.availableFrom || null,
+
+        rules: formData.rules
+          .split("\n")
+          .map((rule) => rule.trim())
+          .filter(Boolean),
+
+        amenities,
+
+        images: imageUrls,
+
+        updatedAt: serverTimestamp(),
+      };
+
+      console.log("📦 Updating Firestore:", updatedData);
+
+      await updateDoc(roomRef, updatedData);
+
+      console.log("✅ Room updated successfully");
+
+      alert("Room updated successfully!");
+
+      navigate("/landlord/rooms");
+    } catch (error) {
+      console.error("❌ EDIT ROOM ERROR");
+      console.error("Code:", error.code);
+      console.error("Message:", error.message);
+      console.error(error);
+
+      alert(error.message || "Failed to update room.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  useEffect(() => {
+    const loadRoom = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const user = auth.currentUser;
+
+        if (!user) {
+          setError("You are not logged in.");
+          return;
+        }
+
+        if (!id) {
+          setError("Room ID is missing.");
+          return;
+        }
+
+        const roomRef = doc(db, "rooms", id);
+        const roomSnap = await getDoc(roomRef);
+
+        if (!roomSnap.exists()) {
+          setError("Room not found.");
+          return;
+        }
+
+        const room = roomSnap.data();
+        console.log(room);
+        setRoomStatus(room.status || "pending");
+
+        // Security check on frontend
+        if (room.landlordId !== user.uid) {
+          setError("You don't have permission to edit this room.");
+          return;
+        }
+
+        setFormData({
+          name: room.name || "",
+          type: room.type || "",
+          price: room.price ?? "",
+          location: room.location || "",
+          address: room.address || "",
+          description: room.description || "",
+          bedrooms: room.bedrooms ?? "",
+          bathrooms: room.bathrooms ?? "",
+          area: room.area ?? "",
+          availableFrom: room.availableFrom || "",
+          rules: Array.isArray(room.rules)
+            ? room.rules.join("\n")
+            : room.rules || "",
+        });
+
+        setAmenities({
+          wifi: room.amenities?.wifi || false,
+          airConditioning: room.amenities?.airConditioning || false,
+          parking: room.amenities?.parking || false,
+          privateBathroom: room.amenities?.privateBathroom || false,
+          kitchen: room.amenities?.kitchen || false,
+          furnished: room.amenities?.furnished || false,
+        });
+        setImages(
+          (room.images || []).map((url, index) => ({
+            id: `existing-${index}-${Date.now()}`,
+            preview: url,
+            url,
+            existing: true,
+          })),
+        );
+      } catch (err) {
+        console.error("Error loading room:", err);
+        setError(err.message || "Failed to load room.");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // ========================================================
-    // TEMPORARY
-    // Later replace with Firebase update()
-    // ========================================================
-
-    console.log("Updated room:", roomData);
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    setIsSaving(false);
-
-    alert("Room updated successfully!");
-
-    navigate("/landlord/rooms");
-  };
+    loadRoom();
+  }, [id]);
 
   return (
     <div className="mx-auto max-w-5xl">
-      {/* ======================================================
-          HEADER
-      ======================================================= */}
-
       <div className="mb-6">
         <Link
           to="/landlord/rooms"
@@ -191,21 +341,21 @@ export default function EditRoom() {
             </p>
           </div>
 
-          <span className="w-fit rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-600">
-            Approved
+          <span
+            className={`w-fit rounded-full px-3 py-1.5 text-xs font-semibold ${
+              roomStatus === "approved"
+                ? "bg-green-50 text-green-600"
+                : roomStatus === "rejected"
+                  ? "bg-red-50 text-red-600"
+                  : "bg-yellow-50 text-yellow-600"
+            }`}
+          >
+            {roomStatus}
           </span>
         </div>
       </div>
 
-      {/* ======================================================
-          FORM
-      ======================================================= */}
-
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* ====================================================
-            IMAGES
-        ===================================================== */}
-
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
             icon={<ImagePlus size={19} />}
@@ -227,15 +377,11 @@ export default function EditRoom() {
                   className="h-full w-full object-cover"
                 />
 
-                {/* Main photo */}
-
                 {index === 0 && (
                   <span className="absolute left-2 top-2 rounded-full bg-blue-600 px-2 py-1 text-[9px] font-semibold text-white">
                     Main Photo
                   </span>
                 )}
-
-                {/* Remove */}
 
                 <button
                   type="button"
@@ -246,8 +392,6 @@ export default function EditRoom() {
                 </button>
               </div>
             ))}
-
-            {/* Add Image */}
 
             <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 text-gray-400 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600">
               <input
@@ -264,10 +408,6 @@ export default function EditRoom() {
             </label>
           </div>
         </section>
-
-        {/* ====================================================
-            BASIC INFORMATION
-        ===================================================== */}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader

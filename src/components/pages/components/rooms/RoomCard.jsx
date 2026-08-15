@@ -10,6 +10,8 @@ import {
   Wifi,
   Wind,
   ChevronRight,
+  CookingPot,
+  Armchair,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
@@ -18,6 +20,7 @@ const FAVORITES_KEY = "roomkhmer_favorites";
 
 const RoomCard = ({ room, onFavorite }) => {
   const [isFavorite, setIsFavorite] = useState(false);
+
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
@@ -45,6 +48,7 @@ const RoomCard = ({ room, onFavorite }) => {
       }
 
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedFavorites));
+
       if (onFavorite) {
         onFavorite(room.id, updatedFavorites);
       }
@@ -53,27 +57,54 @@ const RoomCard = ({ room, onFavorite }) => {
     }
   };
 
-  const getFacilityIcon = (facility) => {
-    const value = facility.toLowerCase();
+  // =========================
+  // AMENITY ICON
+  // =========================
+  const getAmenityIcon = (amenity) => {
+    switch (amenity) {
+      case "wifi":
+        return Wifi;
 
-    if (value.includes("wifi")) {
-      return Wifi;
+      case "airConditioning":
+        return Wind;
+
+      case "parking":
+        return Car;
+
+      case "privateBathroom":
+        return Bath;
+
+      case "kitchen":
+        return CookingPot;
+
+      case "furnished":
+        return Armchair;
+
+      default:
+        return null;
     }
-
-    if (value.includes("air") || value.includes("ac")) {
-      return Wind;
-    }
-
-    if (value.includes("parking") || value.includes("car")) {
-      return Car;
-    }
-
-    if (value.includes("bathroom") || value.includes("bath")) {
-      return Bath;
-    }
-
-    return null;
   };
+
+  // =========================
+  // AMENITY LABEL
+  // =========================
+  const getAmenityLabel = (amenity) => {
+    const labels = {
+      wifi: "WiFi",
+      airConditioning: "Air Conditioning",
+      parking: "Parking",
+      privateBathroom: "Private Bathroom",
+      kitchen: "Kitchen",
+      furnished: "Furnished",
+    };
+
+    return labels[amenity] || amenity;
+  };
+
+  // Only display enabled amenities
+  const enabledAmenities = Object.entries(room.amenities || {})
+    .filter(([, enabled]) => enabled === true)
+    .map(([name]) => name);
 
   return (
     <article
@@ -94,21 +125,32 @@ const RoomCard = ({ room, onFavorite }) => {
         hover:shadow-xl
       "
     >
+      {/* =========================
+          IMAGE
+      ========================== */}
       <div className="relative h-57.5 shrink-0 overflow-hidden sm:h-60">
         <Link to={`/rooms/${room.id}`} className="block h-full">
-          <img
-            src={room.images}
-            alt={room.title}
-            className="
-              h-full
-              w-full
-              object-cover
-              transition-transform
-              duration-500
-              group-hover:scale-105
-            "
-          />
+          {room.images?.[0] ? (
+            <img
+              src={room.images[0]}
+              alt={room.name || "Room"}
+              className="
+                h-full
+                w-full
+                object-cover
+                transition-transform
+                duration-500
+                group-hover:scale-105
+              "
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm text-gray-400">
+              No image available
+            </div>
+          )}
         </Link>
+
+        {/* Gradient */}
         <div
           className="
             pointer-events-none
@@ -120,6 +162,8 @@ const RoomCard = ({ room, onFavorite }) => {
             to-transparent
           "
         />
+
+        {/* Featured */}
         {room.featured && (
           <span
             className="
@@ -140,7 +184,8 @@ const RoomCard = ({ room, onFavorite }) => {
           </span>
         )}
 
-        {room.verified && (
+        {/* Approved / Verified */}
+        {room.status === "approved" && (
           <div
             className="
               absolute
@@ -161,6 +206,7 @@ const RoomCard = ({ room, onFavorite }) => {
           </div>
         )}
 
+        {/* Favorite */}
         <button
           type="button"
           onClick={handleFavorite}
@@ -197,7 +243,11 @@ const RoomCard = ({ room, onFavorite }) => {
         </button>
       </div>
 
+      {/* =========================
+          CONTENT
+      ========================== */}
       <div className="flex flex-1 flex-col p-5">
+        {/* Title + Rating */}
         <div
           className="
             flex
@@ -218,43 +268,49 @@ const RoomCard = ({ room, onFavorite }) => {
                 text-gray-900
               "
             >
-              {room.title}
+              {room.name}
             </h3>
 
-            {room.englishTitle && (
+            {room.type && (
               <p
                 className="
                   mt-0.5
                   line-clamp-1
                   text-xs
+                  capitalize
                   text-gray-400
                 "
               >
-                {room.englishTitle}
+                {room.type} room
               </p>
             )}
           </div>
 
-          <div
-            className="
-              flex
-              shrink-0
-              items-center
-              gap-1
-              pt-1
-            "
-          >
-            <Star
-              size={16}
-              strokeWidth={1.8}
-              className="fill-yellow-500 text-yellow-500"
-            />
+          {/* Rating */}
+          {room.rating && (
+            <div
+              className="
+                flex
+                shrink-0
+                items-center
+                gap-1
+                pt-1
+              "
+            >
+              <Star
+                size={16}
+                strokeWidth={1.8}
+                className="fill-yellow-500 text-yellow-500"
+              />
 
-            <span className="text-sm font-semibold text-gray-700">
-              {room.rating}
-            </span>
-          </div>
+              <span className="text-sm font-semibold text-gray-700">
+                {room.rating}
+              </span>
+            </div>
+          )}
         </div>
+
+        {/* Location */}
         <div className="mt-3 flex items-center gap-2">
           <MapPin
             size={17}
@@ -267,8 +323,11 @@ const RoomCard = ({ room, onFavorite }) => {
           </span>
         </div>
 
+        {/* =========================
+            BASIC INFO
+        ========================== */}
         <div className="mt-4 flex min-h-9 flex-wrap gap-2">
-          {room.roomType && (
+          {room.type && (
             <span
               className="
                 inline-flex
@@ -282,16 +341,17 @@ const RoomCard = ({ room, onFavorite }) => {
                 py-2
                 text-[11px]
                 font-medium
+                capitalize
                 text-gray-500
               "
             >
               <BedDouble size={14} strokeWidth={1.8} />
 
-              {room.roomType}
+              {room.type}
             </span>
           )}
 
-          {room.bathroom && (
+          {room.bathrooms !== undefined && (
             <span
               className="
                 inline-flex
@@ -309,20 +369,44 @@ const RoomCard = ({ room, onFavorite }) => {
               "
             >
               <Bath size={14} strokeWidth={1.8} />
+              {room.bathrooms} {room.bathrooms === 1 ? "Bathroom" : "Bathrooms"}
+            </span>
+          )}
 
-              {room.bathroom}
+          {room.bedrooms !== undefined && (
+            <span
+              className="
+                inline-flex
+                items-center
+                gap-1.5
+                rounded-lg
+                border
+                border-gray-100
+                bg-gray-50
+                px-3
+                py-2
+                text-[11px]
+                font-medium
+                text-gray-500
+              "
+            >
+              <BedDouble size={14} strokeWidth={1.8} />
+              {room.bedrooms} {room.bedrooms === 1 ? "Bedroom" : "Bedrooms"}
             </span>
           )}
         </div>
 
+        {/* =========================
+            AMENITIES
+        ========================== */}
         <div className="mt-3 min-h-18">
           <div className="flex flex-wrap gap-2">
-            {room.facilities?.slice(0, 4).map((facility) => {
-              const Icon = getFacilityIcon(facility);
+            {enabledAmenities.slice(0, 4).map((amenity) => {
+              const Icon = getAmenityIcon(amenity);
 
               return (
                 <span
-                  key={facility}
+                  key={amenity}
                   className="
                       inline-flex
                       items-center
@@ -340,13 +424,16 @@ const RoomCard = ({ room, onFavorite }) => {
                 >
                   {Icon && <Icon size={14} strokeWidth={1.8} />}
 
-                  {facility}
+                  {getAmenityLabel(amenity)}
                 </span>
               );
             })}
           </div>
         </div>
 
+        {/* =========================
+            PRICE
+        ========================== */}
         <div
           className="
             mt-auto

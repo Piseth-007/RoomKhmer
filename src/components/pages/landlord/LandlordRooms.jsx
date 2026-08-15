@@ -1,6 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { auth } from "../../../firebase/config";
 import { getLandlordRooms } from "../../../services/roomService";
+import { deleteDoc, doc } from "firebase/firestore";
+import { db } from "../../../firebase/config";
 import {
   Search,
   Plus,
@@ -27,31 +29,31 @@ export default function LandlordRooms() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   useEffect(() => {
-  const loadRooms = async () => {
-    try {
-      setLoading(true);
-      setError("");
+    const loadRooms = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-      const user = auth.currentUser;
+        const user = auth.currentUser;
 
-      if (!user) {
-        setError("You are not logged in.");
-        return;
+        if (!user) {
+          setError("You are not logged in.");
+          return;
+        }
+
+        const data = await getLandlordRooms(user.uid);
+
+        setRooms(data);
+      } catch (error) {
+        console.error(error);
+        setError("Failed to load rooms.");
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const data = await getLandlordRooms(user.uid);
-
-      setRooms(data);
-    } catch (error) {
-      console.error(error);
-      setError("Failed to load rooms.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  loadRooms();
-}, []);
+    loadRooms();
+  }, []);
 
   // ============================================================
   // FILTER ROOMS
@@ -71,19 +73,26 @@ export default function LandlordRooms() {
   }, [rooms, search, statusFilter]);
 
   // ============================================================
-  // DELETE ROOM
-  // ============================================================
-
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this room?",
     );
 
     if (!confirmed) return;
 
-    setRooms((currentRooms) => currentRooms.filter((room) => room.id !== id));
+    try {
+      await deleteDoc(doc(db, "rooms", id));
 
-    setOpenMenu(null);
+      setRooms((currentRooms) => currentRooms.filter((room) => room.id !== id));
+
+      setOpenMenu(null);
+
+      alert("Room deleted successfully.");
+    } catch (error) {
+      console.error("Delete room error:", error);
+
+      alert(error.message || "Failed to delete room.");
+    }
   };
 
   // ============================================================
@@ -233,9 +242,7 @@ export default function LandlordRooms() {
   );
 }
 
-/* ============================================================
-   ROOM STAT
-============================================================ */
+
 
 function RoomStat({ icon, label, value, className }) {
   return (
@@ -253,9 +260,6 @@ function RoomStat({ icon, label, value, className }) {
   );
 }
 
-/* ============================================================
-   ROOM CARD
-============================================================ */
 
 function RoomCard({ room, openMenu, setOpenMenu, onDelete }) {
   return (
@@ -265,7 +269,7 @@ function RoomCard({ room, openMenu, setOpenMenu, onDelete }) {
 
         <div className="relative h-52 w-full shrink-0 sm:h-auto sm:w-48">
           <img
-            src={room.image}
+            src={room.images?.[0]}
             alt={room.name}
             className="h-full w-full object-cover"
           />

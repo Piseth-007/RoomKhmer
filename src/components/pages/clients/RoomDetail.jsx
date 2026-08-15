@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import {
@@ -23,27 +23,79 @@ import {
   Wind,
   X,
 } from "lucide-react";
+import { doc, getDoc } from "firebase/firestore";
 
-import { rooms } from "../../../data/rooms";
+import { db } from "../../../firebase/config";
 import RequestRoomModal from "../../common/RequestRoomModal";
 const RoomDetail = () => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
   const { id } = useParams();
 
-  const room = rooms.find((item) => String(item.id) === String(id));
+  const [room, setRoom] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    const loadRoom = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
+        if (!id) {
+          setError("Room ID is missing.");
+          return;
+        }
+
+        const roomRef = doc(db, "rooms", id);
+        const roomSnap = await getDoc(roomRef);
+
+        if (!roomSnap.exists()) {
+          setError("Room not found.");
+          return;
+        }
+
+        const roomData = {
+          id: roomSnap.id,
+          ...roomSnap.data(),
+        };
+
+        if (roomData.status !== "approved") {
+          setError("This room is not available.");
+          return;
+        }
+
+        console.log("✅ Room detail:", roomData);
+
+        setRoom(roomData);
+      } catch (err) {
+        console.error("❌ Error loading room:", err);
+
+        setError(err.message || "Failed to load room.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRoom();
+  }, [id]);
   const [activeImage, setActiveImage] = useState(0);
 
   const [isFavorite, setIsFavorite] = useState(false);
 
   const [showAllImages, setShowAllImages] = useState(false);
 
-  /* =========================================================
-     ROOM NOT FOUND
-  ========================================================= */
+  if (loading) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
 
-  if (!room) {
+          <p className="mt-4 text-sm text-gray-500">Loading room...</p>
+        </div>
+      </div>
+    );
+  }
+  if (!room || error) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center bg-slate-50 px-4">
         <div className="text-center">
@@ -56,7 +108,7 @@ const RoomDetail = () => {
           </h1>
 
           <p className="mt-2 text-sm text-gray-500">
-            បន្ទប់នេះមិនមាន ឬត្រូវបានលុបចេញហើយ។
+            {error || "This room does not exist."}
           </p>
 
           <Link
@@ -157,16 +209,10 @@ const RoomDetail = () => {
             <div className="group relative overflow-hidden rounded-2xl bg-gray-100">
               <img
                 src={room.images[activeImage]}
-                alt={room.title}
+                alt={room.name}
                 className="h-90 w-full object-cover sm:h-120 lg:h-135"
               />
-
-              {/* Gradient */}
-
               <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent" />
-
-              {/* Verified */}
-
               {room.verified && (
                 <div className="absolute left-5 top-5 flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-2 text-xs font-semibold text-emerald-600 shadow-sm">
                   <ShieldCheck size={15} />
@@ -209,8 +255,6 @@ const RoomDetail = () => {
                 </button>
               )}
 
-              {/* Next */}
-
               {room.images.length > 1 && (
                 <button
                   type="button"
@@ -220,8 +264,6 @@ const RoomDetail = () => {
                   <ChevronRight size={20} />
                 </button>
               )}
-
-              {/* Image count */}
 
               <button
                 type="button"
@@ -275,10 +317,10 @@ const RoomDetail = () => {
               {/* Title */}
 
               <h1 className="mt-4 text-2xl font-bold leading-tight text-gray-900">
-                {room.title}
+                {room.name}
               </h1>
 
-              <p className="mt-1 text-sm text-gray-400">{room.englishTitle}</p>
+              <p className="mt-1 text-sm text-gray-400">{room.type}</p>
 
               {/* Rating */}
 
@@ -303,7 +345,7 @@ const RoomDetail = () => {
 
                 <div>
                   <p className="text-sm font-medium text-gray-700">
-                    {room.location}, {room.city}
+                    {room.location}
                   </p>
 
                   <p className="mt-0.5 text-xs text-gray-400">{room.address}</p>
@@ -331,7 +373,7 @@ const RoomDetail = () => {
                   </div>
 
                   <p className="mt-2 text-sm font-semibold text-gray-800">
-                    {room.roomType}
+                    {room.type}
                   </p>
                 </div>
 
@@ -347,8 +389,6 @@ const RoomDetail = () => {
                   </p>
                 </div>
               </div>
-
-              {/* Buttons */}
 
               <div className="space-y-3">
                 <button
@@ -379,9 +419,7 @@ const RoomDetail = () => {
         </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px]">
-
           <div className="space-y-8">
-
             <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
               <h2 className="text-xl font-bold text-gray-900">អំពីបន្ទប់នេះ</h2>
 
@@ -390,31 +428,35 @@ const RoomDetail = () => {
               </p>
             </section>
 
-
             <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
               <h2 className="text-xl font-bold text-gray-900">
                 សម្ភារៈ និងបរិក្ខារ
               </h2>
-
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {room.facilities.map((facility) => {
-                  const Icon = getFacilityIcon(facility);
+                {Object.entries(room.amenities || {})
+                  .filter(([, enabled]) => enabled)
+                  .map(([facility]) => {
+                    const Icon = getFacilityIcon(facility);
 
-                  return (
-                    <div
-                      key={facility}
-                      className="flex items-center gap-3 rounded-xl border border-gray-100 p-3"
-                    >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                        <Icon size={17} />
+                    const label = facility
+                      .replace(/([A-Z])/g, " $1")
+                      .replace(/^./, (char) => char.toUpperCase());
+
+                    return (
+                      <div
+                        key={facility}
+                        className="flex items-center gap-3 rounded-xl border border-gray-100 p-3"
+                      >
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                          <Icon size={17} />
+                        </div>
+
+                        <span className="text-sm font-medium text-gray-700">
+                          {label}
+                        </span>
                       </div>
-
-                      <span className="text-sm font-medium text-gray-700">
-                        {facility}
-                      </span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             </section>
 
@@ -424,8 +466,6 @@ const RoomDetail = () => {
               <h2 className="text-xl font-bold text-gray-900">
                 ច្បាប់សម្រាប់ការស្នាក់នៅ
               </h2>
-
-            
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {room.rules.map((rule) => (
@@ -439,7 +479,6 @@ const RoomDetail = () => {
                 ))}
               </div>
             </section>
-
 
             <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
               <h2 className="text-xl font-bold text-gray-900">ទីតាំង</h2>
@@ -485,10 +524,6 @@ const RoomDetail = () => {
         </div>
       </main>
 
-      {/* =====================================================
-          IMAGE LIGHTBOX
-      ====================================================== */}
-
       {showAllImages && (
         <div className="fixed inset-0 z-100 bg-black/90 p-4">
           {/* Close */}
@@ -506,7 +541,7 @@ const RoomDetail = () => {
           <div className="flex h-full items-center justify-center">
             <img
               src={room.images[activeImage]}
-              alt={room.title}
+              alt={room.name}
               className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain"
             />
           </div>
