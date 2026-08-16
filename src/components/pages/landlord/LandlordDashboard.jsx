@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useState } from "react";
+
 import {
   House,
   CalendarDays,
@@ -8,23 +10,276 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  MoreHorizontal,
   MapPin,
+  CircleCheck,
+  AlertCircle,
 } from "lucide-react";
+
 import { Link } from "react-router-dom";
 
+import { collection, getDocs, query, where } from "firebase/firestore";
+
+import { onAuthStateChanged } from "firebase/auth";
+
+import { auth, db } from "../../../firebase/config";
+
 export default function LandlordDashboard() {
-  // ============================================================
-  // TEMPORARY DASHBOARD DATA
-  // Later this will come from your Laravel API
-  // ============================================================
+  const [rooms, setRooms] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [payments, setPayments] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let unsubscribe;
+
+    const loadDashboard = async (user) => {
+      try {
+        setLoading(true);
+        setError("");
+
+        if (!user) {
+          setError("Please login as a landlord.");
+          setLoading(false);
+          return;
+        }
+
+        const landlordId = user.uid;
+
+        const roomsQuery = query(
+          collection(db, "rooms"),
+          where("landlordId", "==", landlordId),
+        );
+
+        const roomsSnapshot = await getDocs(roomsQuery);
+
+        const landlordRooms = roomsSnapshot.docs.map((roomDoc) => {
+          const data = roomDoc.data();
+
+          return {
+            id: roomDoc.id,
+            ...data,
+            name:
+              data.name || data.title || data.englishTitle || "Untitled Room",
+            location: data.location || data.address || "Unknown Location",
+            price: Number(data.price || data.monthlyRent || 0),
+            images: Array.isArray(data.images) ? data.images : [],
+            status: data.status || "pending",
+            landlordId: data.landlordId || "",
+          };
+        });
+
+        setRooms(landlordRooms);
+
+        const bookingsQuery = query(
+          collection(db, "bookings"),
+          where("landlordId", "==", landlordId),
+        );
+
+        const bookingsSnapshot = await getDocs(bookingsQuery);
+
+        const landlordBookings = bookingsSnapshot.docs.map((bookingDoc) => {
+          const data = bookingDoc.data();
+
+          return {
+            id: bookingDoc.id,
+            ...data,
+
+            tenant:
+              data.tenantName ||
+              data.tenant ||
+              data.userName ||
+              data.name ||
+              "Unknown Tenant",
+
+            tenantId: data.tenantId || "",
+
+            tenantEmail: data.tenantEmail || data.email || "",
+
+            tenantPhone: data.tenantPhone || data.phone || "",
+
+            room:
+              data.roomName || data.room || data.roomTitle || "Unknown Room",
+
+            roomId: data.roomId || "",
+
+            landlordId: data.landlordId || "",
+
+            location: data.location || data.roomLocation || "",
+
+            monthlyRent: Number(
+              data.monthlyRent || data.price || data.amount || 0,
+            ),
+
+            rentalMonths: Number(data.rentalMonths || 1),
+
+            totalRent: Number(data.totalRent || data.total || 0),
+
+            status: data.status || "pending",
+
+            date: data.createdAt || data.bookingDate || data.date || null,
+
+            moveInDate: data.moveInDate || data.startDate || "",
+
+            endDate: data.endDate || "",
+          };
+        });
+
+        setBookings(landlordBookings);
+
+        const paymentsQuery = query(
+          collection(db, "payments"),
+          where("landlordId", "==", landlordId),
+        );
+
+        const paymentsSnapshot = await getDocs(paymentsQuery);
+
+        const landlordPayments = paymentsSnapshot.docs.map((paymentDoc) => {
+          const data = paymentDoc.data();
+
+          return {
+            id: paymentDoc.id,
+            ...data,
+
+            amount: Number(data.amount || 0),
+
+            status: data.status || "pending",
+
+            periodNumber: Number(data.periodNumber || 1),
+
+            tenantId: data.tenantId || "",
+
+            bookingId: data.bookingId || "",
+
+            roomId: data.roomId || "",
+
+            landlordId: data.landlordId || "",
+          };
+        });
+
+        setPayments(landlordPayments);
+      } catch (err) {
+        console.error("Dashboard Firebase error:", err);
+
+        setError(
+          err.code
+            ? `${err.code}: ${err.message}`
+            : err.message || "Failed to load dashboard.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    unsubscribe = onAuthStateChanged(auth, (user) => {
+      loadDashboard(user);
+    });
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, []);
+
+  const totalRooms = rooms.length;
+
+  const occupiedRooms = rooms.filter(
+    (room) => room.status === "rented" || room.status === "occupied",
+  ).length;
+
+  const availableRooms = rooms.filter(
+    (room) => room.status === "available" || room.status === "approved",
+  ).length;
+
+  const pendingRooms = rooms.filter((room) => room.status === "pending").length;
+
+  const totalBookings = bookings.length;
+
+  const pendingBookings = bookings.filter(
+    (booking) => booking.status === "pending",
+  ).length;
+
+  const confirmedBookings = bookings.filter(
+    (booking) => booking.status === "confirmed" || booking.status === "active",
+  ).length;
+
+  const completedBookings = bookings.filter(
+    (booking) => booking.status === "completed",
+  ).length;
+
+  const paidPayments = payments.filter((payment) => payment.status === "paid");
+
+  const pendingPayments = payments.filter(
+    (payment) => payment.status === "pending",
+  );
+
+  const totalEarnings = paidPayments.reduce(
+    (total, payment) => total + Number(payment.amount || 0),
+    0,
+  );
+
+  const pendingPaymentAmount = pendingPayments.reduce(
+    (total, payment) => total + Number(payment.amount || 0),
+    0,
+  );
+
+  const paidPaymentCount = paidPayments.length;
+
+  const pendingPaymentCount = pendingPayments.length;
+
+  const currentMonthEarnings = useMemo(() => {
+    const now = new Date();
+
+    const currentYear = now.getFullYear();
+
+    const currentMonth = now.getMonth();
+
+    return paidPayments
+      .filter((payment) => {
+        const paidDate = getDate(payment.paidAt);
+
+        if (!paidDate) {
+          return true;
+        }
+
+        return (
+          paidDate.getFullYear() === currentYear &&
+          paidDate.getMonth() === currentMonth
+        );
+      })
+      .reduce((total, payment) => total + Number(payment.amount || 0), 0);
+  }, [paidPayments]);
+
+  const tenants = useMemo(() => {
+    const unique = new Set();
+
+    bookings.forEach((booking) => {
+      const key = booking.tenantId || booking.tenantEmail || booking.tenant;
+
+      if (key) {
+        unique.add(key);
+      }
+    });
+
+    return unique.size;
+  }, [bookings]);
+
+  const recentBookings = useMemo(() => {
+    return [...bookings]
+      .sort((a, b) => {
+        return getTime(b.date) - getTime(a.date);
+      })
+      .slice(0, 5);
+  }, [bookings]);
 
   const stats = [
     {
       title: "បន្ទប់របស់ខ្ញុំ",
       english: "My Rooms",
-      value: "12",
-      description: "8 occupied",
+      value: totalRooms,
+      description: `${occupiedRooms} occupied`,
       icon: House,
       iconBg: "bg-blue-50",
       iconColor: "text-blue-600",
@@ -32,8 +287,8 @@ export default function LandlordDashboard() {
     {
       title: "ការកក់",
       english: "Bookings",
-      value: "24",
-      description: "3 pending",
+      value: totalBookings,
+      description: `${pendingBookings} pending`,
       icon: CalendarDays,
       iconBg: "bg-purple-50",
       iconColor: "text-purple-600",
@@ -41,8 +296,8 @@ export default function LandlordDashboard() {
     {
       title: "ចំណូលខែនេះ",
       english: "Monthly Earnings",
-      value: "$2,450",
-      description: "+12.5% this month",
+      value: `$${currentMonthEarnings.toLocaleString()}`,
+      description: `$${totalEarnings.toLocaleString()} total paid`,
       icon: Wallet,
       iconBg: "bg-green-50",
       iconColor: "text-green-600",
@@ -50,105 +305,51 @@ export default function LandlordDashboard() {
     {
       title: "អ្នកជួល",
       english: "Tenants",
-      value: "18",
-      description: "2 new tenants",
+      value: tenants,
+      description: "Unique tenants",
       icon: Users,
       iconBg: "bg-orange-50",
       iconColor: "text-orange-600",
     },
   ];
 
-  // ============================================================
-  // RECENT BOOKINGS
-  // ============================================================
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
 
-  const recentBookings = [
-    {
-      id: "BK-00125",
-      tenant: "Sokha Chan",
-      room: "Modern Private Room",
-      location: "Toul Kork",
-      date: "Aug 12, 2026",
-      amount: "$180",
-      status: "pending",
-    },
-    {
-      id: "BK-00124",
-      tenant: "Dara Kim",
-      room: "Cozy Student Room",
-      location: "Sen Sok",
-      date: "Aug 11, 2026",
-      amount: "$150",
-      status: "confirmed",
-    },
-    {
-      id: "BK-00123",
-      tenant: "Vanna Lim",
-      room: "Single Room",
-      location: "Mean Chey",
-      date: "Aug 10, 2026",
-      amount: "$130",
-      status: "confirmed",
-    },
-    {
-      id: "BK-00122",
-      tenant: "Sreypov Sok",
-      room: "Modern Studio",
-      location: "BKK1",
-      date: "Aug 09, 2026",
-      amount: "$250",
-      status: "cancelled",
-    },
-  ];
-
-  // ============================================================
-  // ROOM DATA
-  // ============================================================
-
-  const rooms = [
-    {
-      id: 1,
-      name: "Modern Private Room",
-      location: "Toul Kork, Phnom Penh",
-      price: 180,
-      status: "rented",
-    },
-    {
-      id: 2,
-      name: "Cozy Student Room",
-      location: "Sen Sok, Phnom Penh",
-      price: 150,
-      status: "available",
-    },
-    {
-      id: 3,
-      name: "Modern Studio",
-      location: "BKK1, Phnom Penh",
-      price: 250,
-      status: "pending",
-    },
-  ];
+          <p className="mt-4 text-sm text-gray-500">
+            Loading landlord dashboard...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* ========================================================
-          WELCOME HEADER
-      ========================================================= */}
+      {error && (
+        <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-4">
+          <AlertCircle size={18} className="mt-0.5 shrink-0 text-red-500" />
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">សួស្តី Piseth</h1>
+          <div>
+            <p className="text-sm font-semibold text-red-700">
+              Dashboard Error
+            </p>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Welcome back! Here's what's happening with your rooms.
-          </p>
+            <p className="mt-1 text-xs text-red-600">{error}</p>
+          </div>
         </div>
+      )}
 
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">សួស្តី Piseth</h1>
+
+        <p className="mt-1 text-sm text-gray-500">
+          Welcome back! Here's what's happening with your rooms.
+        </p>
       </div>
-
-      {/* ========================================================
-          STATISTICS
-      ========================================================= */}
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => {
@@ -159,19 +360,10 @@ export default function LandlordDashboard() {
               key={stat.title}
               className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
-              <div className="flex items-start justify-between">
-                <div
-                  className={`flex h-11 w-11 items-center justify-center rounded-xl ${stat.iconBg} ${stat.iconColor}`}
-                >
-                  <Icon size={21} />
-                </div>
-
-                <button
-                  type="button"
-                  className="text-gray-400 transition hover:text-gray-700"
-                >
-                  <MoreHorizontal size={19} />
-                </button>
+              <div
+                className={`flex h-11 w-11 items-center justify-center rounded-xl ${stat.iconBg} ${stat.iconColor}`}
+              >
+                <Icon size={21} />
               </div>
 
               <p className="mt-5 text-sm text-gray-500">{stat.title}</p>
@@ -180,7 +372,7 @@ export default function LandlordDashboard() {
                 {stat.value}
               </p>
 
-              <div className="mt-2 flex items-center gap-1">
+              <div className="mt-2 flex flex-wrap items-center gap-1">
                 <span className="text-xs text-gray-400">{stat.english}</span>
 
                 <span className="text-xs text-gray-300">•</span>
@@ -194,97 +386,128 @@ export default function LandlordDashboard() {
         })}
       </div>
 
-      {/* ========================================================
-          MAIN CONTENT
-      ========================================================= */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <PaymentSummary
+          title="Total Earnings"
+          value={`$${totalEarnings.toLocaleString()}`}
+          description="All paid payments"
+          icon={<Wallet size={18} />}
+          className="bg-green-50 text-green-600"
+        />
+
+        <PaymentSummary
+          title="Pending Payments"
+          value={`$${pendingPaymentAmount.toLocaleString()}`}
+          description={`${pendingPaymentCount} payment(s) pending`}
+          icon={<Clock size={18} />}
+          className="bg-yellow-50 text-yellow-600"
+        />
+
+        <PaymentSummary
+          title="Paid Payments"
+          value={paidPaymentCount}
+          description={`${completedBookings} completed booking(s)`}
+          icon={<CheckCircle size={18} />}
+          className="bg-blue-50 text-blue-600"
+        />
+      </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        {/* ======================================================
-            EARNINGS CHART
-        ======================================================= */}
-
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm xl:col-span-2">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-gray-900">ចំណូល</h2>
 
-              <p className="mt-1 text-xs text-gray-400">
-                Earnings Overview · Last 6 months
+              <p className="mt-1 text-xs text-gray-400">Earnings Overview</p>
+            </div>
+
+            <Link
+              to="/landlord/earnings"
+              className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700"
+            >
+              View Earnings
+              <ArrowUpRight size={14} />
+            </Link>
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            <div className="rounded-xl bg-green-50 p-4">
+              <p className="text-xs text-green-600">Total Paid</p>
+
+              <p className="mt-1 text-xl font-bold text-green-700">
+                ${totalEarnings.toLocaleString()}
               </p>
             </div>
 
-            <select className="w-fit rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-600 outline-none focus:border-blue-500">
-              <option>Last 6 months</option>
+            <div className="rounded-xl bg-yellow-50 p-4">
+              <p className="text-xs text-yellow-600">Pending</p>
 
-              <option>Last 12 months</option>
-
-              <option>This year</option>
-            </select>
+              <p className="mt-1 text-xl font-bold text-yellow-700">
+                ${pendingPaymentAmount.toLocaleString()}
+              </p>
+            </div>
           </div>
-
-          {/* Chart */}
 
           <div className="mt-8">
             <div className="flex h-56 items-end gap-3 sm:gap-5">
               {[
                 {
                   month: "Mar",
-                  value: "$1.5k",
-                  height: 45,
+                  value: 0,
                 },
                 {
                   month: "Apr",
-                  value: "$1.8k",
-                  height: 58,
+                  value: 0,
                 },
                 {
                   month: "May",
-                  value: "$1.6k",
-                  height: 50,
+                  value: 0,
                 },
                 {
                   month: "Jun",
-                  value: "$2.1k",
-                  height: 68,
+                  value: 0,
                 },
                 {
                   month: "Jul",
-                  value: "$2.0k",
-                  height: 63,
+                  value: 0,
                 },
                 {
                   month: "Aug",
-                  value: "$2.45k",
-                  height: 88,
+                  value: currentMonthEarnings,
                 },
-              ].map((item) => (
-                <div
-                  key={item.month}
-                  className="flex h-full flex-1 flex-col items-center justify-end gap-2"
-                >
-                  <span className="text-[10px] font-medium text-gray-500">
-                    {item.value}
-                  </span>
+              ].map((item) => {
+                const max = Math.max(currentMonthEarnings, 1);
 
+                const height =
+                  item.value > 0 ? Math.max(12, (item.value / max) * 80) : 5;
+
+                return (
                   <div
-                    className="w-full max-w-12 rounded-t-lg bg-blue-500 transition hover:bg-blue-600"
-                    style={{
-                      height: `${item.height}%`,
-                    }}
-                  />
+                    key={item.month}
+                    className="flex h-full flex-1 flex-col items-center justify-end gap-2"
+                  >
+                    <span className="text-[10px] font-medium text-gray-500">
+                      {item.value > 0
+                        ? `$${item.value.toLocaleString()}`
+                        : "$0"}
+                    </span>
 
-                  <span className="text-[10px] text-gray-400">
-                    {item.month}
-                  </span>
-                </div>
-              ))}
+                    <div
+                      className="w-full max-w-12 rounded-t-lg bg-blue-500 transition hover:bg-blue-600"
+                      style={{
+                        height: `${height}%`,
+                      }}
+                    />
+
+                    <span className="text-[10px] text-gray-400">
+                      {item.month}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
-
-        {/* ======================================================
-            QUICK ACTIONS
-        ======================================================= */}
 
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-gray-900">Quick Actions</h2>
@@ -325,20 +548,12 @@ export default function LandlordDashboard() {
         </div>
       </div>
 
-      {/* ========================================================
-          RECENT BOOKINGS
-      ========================================================= */}
-
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-        {/* Header */}
-
-        <div className="flex flex-col gap-3 border-b border-gray-100 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="flex items-center justify-between border-b border-gray-100 p-5 sm:p-6">
           <div>
             <h2 className="text-lg font-bold text-gray-900">ការកក់ថ្មីៗ</h2>
 
-            <p className="mt-1 text-xs text-gray-400">
-              Recent booking requests
-            </p>
+            <p className="mt-1 text-xs text-gray-400">Recent bookings</p>
           </div>
 
           <Link
@@ -349,10 +564,6 @@ export default function LandlordDashboard() {
             <ArrowUpRight size={16} />
           </Link>
         </div>
-
-        {/* ======================================================
-            DESKTOP TABLE
-        ======================================================= */}
 
         <div className="hidden overflow-x-auto md:block">
           <table className="w-full">
@@ -375,7 +586,7 @@ export default function LandlordDashboard() {
                 </th>
 
                 <th className="px-6 py-4 text-xs font-medium text-gray-400">
-                  Amount
+                  Monthly Rent
                 </th>
 
                 <th className="px-6 py-4 text-xs font-medium text-gray-400">
@@ -397,29 +608,41 @@ export default function LandlordDashboard() {
                   </td>
 
                   <td className="px-6 py-4">
-                    <span className="text-sm text-gray-700">
-                      {booking.tenant}
-                    </span>
+                    <div>
+                      <p className="text-sm text-gray-700">{booking.tenant}</p>
+
+                      {booking.tenantEmail && (
+                        <p className="mt-1 text-[10px] text-gray-400">
+                          {booking.tenantEmail}
+                        </p>
+                      )}
+                    </div>
                   </td>
 
                   <td className="px-6 py-4">
                     <div>
                       <p className="text-sm text-gray-700">{booking.room}</p>
 
-                      <div className="mt-1 flex items-center gap-1 text-xs text-gray-400">
-                        <MapPin size={12} />
-                        {booking.location}
-                      </div>
+                      {booking.location && (
+                        <div className="mt-1 flex items-center gap-1 text-xs text-gray-400">
+                          <MapPin size={12} />
+                          {booking.location}
+                        </div>
+                      )}
                     </div>
                   </td>
 
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    {booking.date}
+                    {formatDate(booking.date)}
                   </td>
 
                   <td className="px-6 py-4">
                     <span className="text-sm font-semibold text-gray-800">
-                      {booking.amount}
+                      ${Number(booking.monthlyRent || 0).toLocaleString()}
+                    </span>
+
+                    <span className="ml-1 text-[10px] text-gray-400">
+                      /month
                     </span>
                   </td>
 
@@ -428,13 +651,20 @@ export default function LandlordDashboard() {
                   </td>
                 </tr>
               ))}
+
+              {recentBookings.length === 0 && (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="px-6 py-12 text-center text-sm text-gray-400"
+                  >
+                    No bookings yet.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-
-        {/* ======================================================
-            MOBILE BOOKING CARDS
-        ======================================================= */}
 
         <div className="space-y-3 p-4 md:hidden">
           {recentBookings.map((booking) => (
@@ -457,21 +687,23 @@ export default function LandlordDashboard() {
               <div className="mt-4 flex items-center justify-between">
                 <div className="flex items-center gap-1 text-xs text-gray-400">
                   <CalendarDays size={13} />
-                  {booking.date}
+                  {formatDate(booking.date)}
                 </div>
 
                 <span className="text-sm font-bold text-gray-800">
-                  {booking.amount}
+                  ${Number(booking.monthlyRent || 0).toLocaleString()}
                 </span>
               </div>
             </div>
           ))}
+
+          {recentBookings.length === 0 && (
+            <p className="py-8 text-center text-sm text-gray-400">
+              No bookings yet.
+            </p>
+          )}
         </div>
       </div>
-
-      {/* ========================================================
-          MY ROOMS PREVIEW
-      ========================================================= */}
 
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-gray-100 p-5 sm:p-6">
@@ -489,52 +721,88 @@ export default function LandlordDashboard() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 divide-y md:grid-cols-3 md:divide-x md:divide-y-0">
-          {rooms.map((room) => (
-            <div key={room.id} className="p-5 transition hover:bg-gray-50">
-              <div className="flex items-start justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                  <House size={19} />
+        {rooms.length > 0 ? (
+          <div className="grid grid-cols-1 divide-y md:grid-cols-3 md:divide-x md:divide-y-0">
+            {rooms.slice(0, 3).map((room) => (
+              <div key={room.id} className="p-5 transition hover:bg-gray-50">
+                <div className="flex items-start justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <House size={19} />
+                  </div>
+
+                  <RoomStatus status={room.status} />
                 </div>
 
-                <RoomStatus status={room.status} />
+                <h3 className="mt-4 text-sm font-bold text-gray-900">
+                  {room.name}
+                </h3>
+
+                <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
+                  <MapPin size={13} />
+                  {room.location}
+                </div>
+
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="text-sm font-bold text-gray-900">
+                    ${room.price.toLocaleString()}
+                    <span className="text-xs font-normal text-gray-400">
+                      /month
+                    </span>
+                  </p>
+
+                  <Link
+                    to={`/landlord/rooms/${room.id}/edit`}
+                    className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                  >
+                    Manage
+                  </Link>
+                </div>
               </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-12 text-center">
+            <House size={30} className="mx-auto text-gray-300" />
 
-              <h3 className="mt-4 text-sm font-bold text-gray-900">
-                {room.name}
-              </h3>
+            <p className="mt-3 text-sm text-gray-500">
+              You don't have any rooms yet.
+            </p>
 
-              <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
-                <MapPin size={13} />
-                {room.location}
-              </div>
-
-              <div className="mt-4 flex items-center justify-between">
-                <p className="text-sm font-bold text-gray-900">
-                  ${room.price}
-                  <span className="text-xs font-normal text-gray-400">
-                    /month
-                  </span>
-                </p>
-
-                <Link
-                  to={`/landlord/rooms/${room.id}/edit`}
-                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
-                >
-                  Manage
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
+            <Link
+              to="/landlord/rooms/create"
+              className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-600"
+            >
+              <Plus size={16} />
+              Add your first room
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-/* ============================================================
-   QUICK ACTION
-============================================================ */
+function PaymentSummary({ title, value, description, icon, className }) {
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${className}`}
+        >
+          {icon}
+        </div>
+
+        <div>
+          <p className="text-xs text-gray-400">{title}</p>
+
+          <p className="mt-1 text-lg font-bold text-gray-900">{value}</p>
+        </div>
+      </div>
+
+      <p className="mt-3 text-[10px] text-gray-400">{description}</p>
+    </div>
+  );
+}
 
 function QuickAction({ to, icon, title, subtitle }) {
   return (
@@ -560,14 +828,16 @@ function QuickAction({ to, icon, title, subtitle }) {
   );
 }
 
-/* ============================================================
-   BOOKING STATUS
-============================================================ */
-
 function BookingStatus({ status }) {
   const config = {
     confirmed: {
       label: "Confirmed",
+      icon: CheckCircle,
+      className: "bg-green-50 text-green-600",
+    },
+
+    active: {
+      label: "Active",
       icon: CheckCircle,
       className: "bg-green-50 text-green-600",
     },
@@ -583,6 +853,18 @@ function BookingStatus({ status }) {
       icon: XCircle,
       className: "bg-red-50 text-red-500",
     },
+
+    rejected: {
+      label: "Rejected",
+      icon: XCircle,
+      className: "bg-red-50 text-red-500",
+    },
+
+    completed: {
+      label: "Completed",
+      icon: CircleCheck,
+      className: "bg-purple-50 text-purple-600",
+    },
   };
 
   const current = config[status] || config.pending;
@@ -594,15 +876,10 @@ function BookingStatus({ status }) {
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${current.className}`}
     >
       <Icon size={13} />
-
       {current.label}
     </span>
   );
 }
-
-/* ============================================================
-   ROOM STATUS
-============================================================ */
 
 function RoomStatus({ status }) {
   const config = {
@@ -611,7 +888,17 @@ function RoomStatus({ status }) {
       className: "bg-green-50 text-green-600",
     },
 
+    occupied: {
+      label: "Occupied",
+      className: "bg-green-50 text-green-600",
+    },
+
     available: {
+      label: "Available",
+      className: "bg-blue-50 text-blue-600",
+    },
+
+    approved: {
       label: "Available",
       className: "bg-blue-50 text-blue-600",
     },
@@ -619,6 +906,11 @@ function RoomStatus({ status }) {
     pending: {
       label: "Pending",
       className: "bg-yellow-50 text-yellow-600",
+    },
+
+    rejected: {
+      label: "Rejected",
+      className: "bg-red-50 text-red-500",
     },
   };
 
@@ -631,4 +923,66 @@ function RoomStatus({ status }) {
       {current.label}
     </span>
   );
+}
+
+function getDate(value) {
+  if (!value) {
+    return null;
+  }
+
+  if (value?.toDate) {
+    return value.toDate();
+  }
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const date = new Date(value);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  return null;
+}
+
+function getTime(value) {
+  if (!value) {
+    return 0;
+  }
+
+  if (value?.toMillis) {
+    return value.toMillis();
+  }
+
+  if (value?.toDate) {
+    return value.toDate().getTime();
+  }
+
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
+  if (typeof value === "string") {
+    const time = new Date(value).getTime();
+
+    return Number.isNaN(time) ? 0 : time;
+  }
+
+  return 0;
+}
+
+function formatDate(value) {
+  const date = getDate(value);
+
+  if (!date) {
+    return "-";
+  }
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
 }

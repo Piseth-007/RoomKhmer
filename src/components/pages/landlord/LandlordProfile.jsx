@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import {
   User,
   Camera,
@@ -12,30 +13,212 @@ import {
   Wallet,
   Save,
   CheckCircle,
+  AlertCircle,
 } from "lucide-react";
+
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
+
+import { onAuthStateChanged, updateProfile } from "firebase/auth";
+
+import { auth, db } from "../../../firebase/config";
+
+const uploadToCloudinary = async (file) => {
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+  if (!cloudName || !uploadPreset) {
+    throw new Error("Cloudinary configuration is missing.");
+  }
+
+  const formData = new FormData();
+
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || "Cloudinary upload failed.");
+  }
+
+  if (!data.secure_url) {
+    throw new Error("Cloudinary did not return an image URL.");
+  }
+
+  return data.secure_url;
+};
 
 export default function LandlordProfile() {
   const fileInputRef = useRef(null);
 
+  const previewUrlRef = useRef(null);
+
   const [profile, setProfile] = useState({
-    name: "Leang Piseth",
-    email: "piseth@example.com",
-    phone: "012 345 678",
-    gender: "Male",
-    dateOfBirth: "2005-08-15",
-    address: "Toul Kork, Phnom Penh",
-    bio: "I provide clean, comfortable and affordable rooms for students and young professionals in Phnom Penh.",
+    name: "",
+    email: "",
+    phone: "",
+    gender: "",
+    dateOfBirth: "",
+    address: "",
+    bio: "",
   });
 
-  const [profileImage, setProfileImage] = useState(null);
+  const [profileImage, setProfileImage] = useState("");
+
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const [loading, setLoading] = useState(true);
 
   const [isSaving, setIsSaving] = useState(false);
 
   const [saved, setSaved] = useState(false);
 
-  // ============================================================
-  // HANDLE INPUT
-  // ============================================================
+  const [error, setError] = useState("");
+
+  const [stats, setStats] = useState({
+    rooms: 0,
+    bookings: 0,
+    earnings: 0,
+  });
+
+  const [userRole, setUserRole] = useState("");
+
+  useEffect(() => {
+    let unsubscribe;
+
+    const loadProfile = async (user) => {
+      try {
+        setLoading(true);
+        setError("");
+
+        if (!user) {
+          setError("Please login first.");
+          return;
+        }
+
+        const userRef = doc(db, "users", user.uid);
+
+        const userSnap = await getDoc(userRef);
+
+        let firestoreData = {};
+
+        if (userSnap.exists()) {
+          firestoreData = userSnap.data();
+        }
+
+        const role = firestoreData.role || "";
+
+        setUserRole(role);
+
+        setProfile({
+          name: firestoreData.name || user.displayName || "",
+
+          email: firestoreData.email || user.email || "",
+
+          phone: firestoreData.phone || "",
+
+          gender: firestoreData.gender || "",
+
+          dateOfBirth: firestoreData.dateOfBirth || "",
+
+          address: firestoreData.address || "",
+
+          bio: firestoreData.bio || "",
+        });
+
+        const savedPhoto = firestoreData.photoURL || user.photoURL || "";
+
+        setProfileImage(savedPhoto);
+
+        await loadStatistics(user.uid);
+      } catch (err) {
+        console.error("Load profile error:", err);
+
+        setError(getFirebaseError(err, "Failed to load profile."));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    unsubscribe = onAuthStateChanged(auth, (user) => {
+      loadProfile(user);
+    });
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
+  }, []);
+
+  const loadStatistics = async (uid) => {
+    try {
+      const roomsQuery = query(
+        collection(db, "rooms"),
+        where("landlordId", "==", uid),
+      );
+
+      const bookingsQuery = query(
+        collection(db, "bookings"),
+        where("landlordId", "==", uid),
+      );
+
+      const paymentsQuery = query(
+        collection(db, "payments"),
+        where("landlordId", "==", uid),
+      );
+
+      const [roomsSnapshot, bookingsSnapshot, paymentsSnapshot] =
+        await Promise.all([
+          getDocs(roomsQuery),
+          getDocs(bookingsQuery),
+          getDocs(paymentsQuery),
+        ]);
+
+      const earnings = paymentsSnapshot.docs
+        .map((item) => item.data())
+        .filter((payment) => payment.status === "paid")
+        .reduce((total, payment) => total + Number(payment.amount || 0), 0);
+
+      setStats({
+        rooms: roomsSnapshot.size,
+
+        bookings: bookingsSnapshot.size,
+
+        earnings,
+      });
+    } catch (err) {
+      console.error("Load statistics error:", err);
+
+      setStats({
+        rooms: 0,
+        bookings: 0,
+        earnings: 0,
+      });
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,50 +229,163 @@ export default function LandlordProfile() {
     }));
 
     setSaved(false);
+    setError("");
   };
-
-  // ============================================================
-  // PROFILE IMAGE
-  // ============================================================
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file.");
+
+      e.target.value = "";
+
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Profile image must be smaller than 5MB.");
+
+      e.target.value = "";
+
+      return;
+    }
+
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
 
     const preview = URL.createObjectURL(file);
 
-    setProfileImage(preview);
-    setSaved(false);
-  };
+    previewUrlRef.current = preview;
 
-  // ============================================================
-  // SAVE
-  // ============================================================
+    setSelectedImage(file);
+
+    setProfileImage(preview);
+
+    setSaved(false);
+    setError("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setIsSaving(true);
-    setSaved(false);
+    try {
+      setIsSaving(true);
+      setSaved(false);
+      setError("");
 
-    // Temporary
-    // Later replace with Firebase updateDoc()
+      const user = auth.currentUser;
 
-    console.log("Updated landlord profile:", profile);
+      if (!user) {
+        throw new Error("Please login first.");
+      }
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      const userRef = doc(db, "users", user.uid);
 
-    setIsSaving(false);
-    setSaved(true);
+      const existingSnap = await getDoc(userRef);
+
+      const existingData = existingSnap.exists() ? existingSnap.data() : {};
+
+      const existingRole = existingData.role || userRole || "";
+
+      let photoURL = existingData.photoURL || user.photoURL || "";
+
+      if (selectedImage) {
+        photoURL = await uploadToCloudinary(selectedImage);
+      }
+
+      await updateProfile(user, {
+        displayName: profile.name.trim(),
+
+        photoURL,
+      });
+
+      const profileData = {
+        uid: user.uid,
+
+        name: profile.name.trim(),
+
+        email: user.email || profile.email || "",
+
+        phone: profile.phone.trim(),
+
+        gender: profile.gender,
+
+        dateOfBirth: profile.dateOfBirth,
+
+        address: profile.address.trim(),
+
+        bio: profile.bio.trim(),
+
+        photoURL,
+
+        updatedAt: serverTimestamp(),
+      };
+
+      if (existingRole) {
+        profileData.role = existingRole;
+      }
+
+      if (!existingSnap.exists()) {
+        profileData.createdAt = serverTimestamp();
+      }
+
+      await setDoc(userRef, profileData, {
+        merge: true,
+      });
+
+      setProfileImage(photoURL);
+
+      setSelectedImage(null);
+
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+
+        previewUrlRef.current = null;
+      }
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
+      setSaved(true);
+
+      setError("");
+
+      setProfile((current) => ({
+        ...current,
+        name: profile.name.trim(),
+      }));
+
+      await loadStatistics(user.uid);
+    } catch (err) {
+      console.error("Save profile error:", err);
+
+      setError(getFirebaseError(err, "Failed to save profile."));
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+
+          <p className="mt-4 text-sm text-gray-500">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      {/* ======================================================
-          HEADER
-      ======================================================= */}
-
       <div>
         <h1 className="text-2xl font-bold text-gray-900">ប្រវត្តិរូប</h1>
 
@@ -98,19 +394,23 @@ export default function LandlordProfile() {
         </p>
       </div>
 
-      {/* ======================================================
-          PROFILE HEADER
-      ======================================================= */}
+      {error && (
+        <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-4">
+          <AlertCircle size={18} className="mt-0.5 shrink-0 text-red-500" />
+
+          <div>
+            <p className="text-sm font-semibold text-red-700">Error</p>
+
+            <p className="mt-1 text-xs text-red-600">{error}</p>
+          </div>
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-        {/* Cover */}
-
         <div className="h-32 bg-linear-to-r from-blue-600 to-blue-400 sm:h-40" />
 
         <div className="px-5 pb-5 sm:px-6">
           <div className="-mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end sm:justify-between">
-            {/* Profile Image */}
-
             <div className="relative w-fit">
               <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-blue-100 text-blue-600 shadow-md sm:h-28 sm:w-28">
                 {profileImage ? (
@@ -135,18 +435,16 @@ export default function LandlordProfile() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 onChange={handleImageChange}
                 className="hidden"
               />
             </div>
 
-            {/* Name */}
-
             <div className="flex-1 sm:pb-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {profile.name}
+                  {profile.name || "Landlord"}
                 </h2>
 
                 <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-[10px] font-semibold text-green-600">
@@ -155,34 +453,32 @@ export default function LandlordProfile() {
                 </span>
               </div>
 
-              <p className="mt-1 text-sm text-gray-400">Landlord · RoomKhmer</p>
+              <p className="mt-1 text-sm text-gray-400">
+                {userRole === "owner" ? "Owner" : "Landlord"} · RoomKhmer
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ======================================================
-          ACCOUNT STATUS
-      ======================================================= */}
-
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <ProfileStat
           icon={<House size={20} />}
-          value="12"
+          value={stats.rooms}
           label="Total Rooms"
           className="bg-blue-50 text-blue-600"
         />
 
         <ProfileStat
           icon={<CalendarCheck size={20} />}
-          value="28"
+          value={stats.bookings}
           label="Bookings"
           className="bg-green-50 text-green-600"
         />
 
         <ProfileStat
           icon={<Wallet size={20} />}
-          value="$8.4K"
+          value={`$${stats.earnings.toLocaleString()}`}
           label="Total Earnings"
           className="bg-purple-50 text-purple-600"
         />
@@ -194,10 +490,6 @@ export default function LandlordProfile() {
           className="bg-yellow-50 text-yellow-600"
         />
       </div>
-
-      {/* ======================================================
-          PROFILE FORM
-      ======================================================= */}
 
       <form
         onSubmit={handleSubmit}
@@ -218,8 +510,6 @@ export default function LandlordProfile() {
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-          {/* Name */}
-
           <FormField label="Full Name">
             <div className="relative">
               <User
@@ -233,11 +523,10 @@ export default function LandlordProfile() {
                 value={profile.name}
                 onChange={handleChange}
                 className={inputClass("pl-9")}
+                required
               />
             </div>
           </FormField>
-
-          {/* Email */}
 
           <FormField label="Email Address">
             <div className="relative">
@@ -250,13 +539,11 @@ export default function LandlordProfile() {
                 type="email"
                 name="email"
                 value={profile.email}
-                onChange={handleChange}
-                className={inputClass("pl-9")}
+                className={inputClass("bg-gray-50 pl-9")}
+                readOnly
               />
             </div>
           </FormField>
-
-          {/* Phone */}
 
           <FormField label="Phone Number">
             <div className="relative">
@@ -275,8 +562,6 @@ export default function LandlordProfile() {
             </div>
           </FormField>
 
-          {/* Gender */}
-
           <FormField label="Gender">
             <select
               name="gender"
@@ -293,8 +578,6 @@ export default function LandlordProfile() {
               <option value="Other">Other</option>
             </select>
           </FormField>
-
-          {/* Date of Birth */}
 
           <FormField label="Date of Birth">
             <div className="relative">
@@ -313,8 +596,6 @@ export default function LandlordProfile() {
             </div>
           </FormField>
 
-          {/* Address */}
-
           <FormField label="Address">
             <div className="relative">
               <MapPin
@@ -332,8 +613,6 @@ export default function LandlordProfile() {
             </div>
           </FormField>
 
-          {/* Bio */}
-
           <FormField label="About Me" className="md:col-span-2">
             <textarea
               name="bio"
@@ -345,10 +624,6 @@ export default function LandlordProfile() {
             />
           </FormField>
         </div>
-
-        {/* ====================================================
-            SAVE
-        ===================================================== */}
 
         <div className="mt-6 flex flex-col-reverse gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-end">
           {saved && (
@@ -378,10 +653,6 @@ export default function LandlordProfile() {
         </div>
       </form>
 
-      {/* ======================================================
-          VERIFICATION
-      ======================================================= */}
-
       <div className="rounded-2xl border border-green-100 bg-green-50 p-5 sm:p-6">
         <div className="flex gap-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-600">
@@ -397,23 +668,12 @@ export default function LandlordProfile() {
               Your landlord account has been verified. Verified landlords can
               publish rooms and receive booking requests from tenants.
             </p>
-
-            <button
-              type="button"
-              className="mt-3 text-xs font-semibold text-green-700 underline underline-offset-2"
-            >
-              View verification details
-            </button>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-/* ============================================================
-   FORM FIELD
-============================================================ */
 
 function FormField({ label, children, className = "" }) {
   return (
@@ -426,10 +686,6 @@ function FormField({ label, children, className = "" }) {
     </div>
   );
 }
-
-/* ============================================================
-   PROFILE STAT
-============================================================ */
 
 function ProfileStat({ icon, value, label, className }) {
   return (
@@ -447,10 +703,48 @@ function ProfileStat({ icon, value, label, className }) {
   );
 }
 
-/* ============================================================
-   INPUT CLASS
-============================================================ */
-
 function inputClass(extra = "") {
   return `h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 ${extra}`;
+}
+
+function getDate(value) {
+  if (!value) {
+    return null;
+  }
+
+  if (value?.toDate) {
+    return value.toDate();
+  }
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const date = new Date(value);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  return null;
+}
+
+function getFirebaseError(error, fallback) {
+  if (!error) {
+    return fallback;
+  }
+
+  if (error.code === "permission-denied") {
+    return "You do not have permission to update this profile.";
+  }
+
+  if (error.code === "auth/requires-recent-login") {
+    return "Please login again before updating your profile photo.";
+  }
+
+  if (error.code === "auth/network-request-failed") {
+    return "Network error. Please check your internet connection.";
+  }
+
+  return error.message || fallback;
 }

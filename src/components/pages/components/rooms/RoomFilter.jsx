@@ -10,9 +10,6 @@ import {
 } from "lucide-react";
 
 const RoomFilter = ({ filters, setFilters, onClear }) => {
-  // =========================
-  // LOCATION
-  // =========================
   const handleLocationChange = (location) => {
     setFilters((prev) => ({
       ...prev,
@@ -20,9 +17,6 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
     }));
   };
 
-  // =========================
-  // ROOM TYPE
-  // =========================
   const handleRoomTypeChange = (type) => {
     setFilters((prev) => ({
       ...prev,
@@ -30,9 +24,6 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
     }));
   };
 
-  // =========================
-  // AMENITIES
-  // =========================
   const handleFacilityChange = (facility) => {
     setFilters((prev) => {
       const exists = prev.facilities.includes(facility);
@@ -46,9 +37,6 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
     });
   };
 
-  // =========================
-  // PRICE
-  // =========================
   const handlePriceChange = (value) => {
     setFilters((prev) => ({
       ...prev,
@@ -58,9 +46,6 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
 
   return (
     <aside className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-      {/* =========================
-          HEADER
-      ========================== */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-semibold text-gray-900">
@@ -80,9 +65,6 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
         </button>
       </div>
 
-      {/* =========================
-          LOCATION
-      ========================== */}
       <div className="mt-6">
         <label className="text-sm font-semibold text-gray-800">ទីតាំង</label>
 
@@ -116,9 +98,6 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
         </div>
       </div>
 
-      {/* =========================
-          PRICE
-      ========================== */}
       <div className="mt-7 border-t border-gray-100 pt-6">
         <div className="flex items-center justify-between">
           <div>
@@ -150,9 +129,6 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
         </div>
       </div>
 
-      {/* =========================
-          ROOM TYPE
-      ========================== */}
       <div className="mt-7 border-t border-gray-100 pt-6">
         <label className="text-sm font-semibold text-gray-800">
           ប្រភេទបន្ទប់
@@ -198,9 +174,6 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
         </div>
       </div>
 
-      {/* =========================
-          AMENITIES
-      ========================== */}
       <div className="mt-7 border-t border-gray-100 pt-6">
         <label className="text-sm font-semibold text-gray-800">
           សម្ភារៈបរិក្ខារ
@@ -262,11 +235,7 @@ const RoomFilter = ({ filters, setFilters, onClear }) => {
             );
           })}
         </div>
-      </div>
-
-      {/* =========================
-          APPLY
-      ========================== */}
+      </div>  
       <button
         type="button"
         className="mt-7 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700"

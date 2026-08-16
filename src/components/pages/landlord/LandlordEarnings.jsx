@@ -1,12 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+
 import {
   Wallet,
   TrendingUp,
   Clock,
   CheckCircle,
   ArrowUpRight,
-  ArrowDownRight,
-  CalendarDays,
   Download,
   MoreHorizontal,
   House,
@@ -14,118 +13,235 @@ import {
   CreditCard,
 } from "lucide-react";
 
+import { collection, getDocs, query, where } from "firebase/firestore";
+
+import { onAuthStateChanged } from "firebase/auth";
+
+import { auth, db } from "../../../firebase/config";
+
 export default function LandlordEarnings() {
   const [period, setPeriod] = useState("6months");
 
-  // ============================================================
-  // TEMPORARY DATA
-  // Later this will come from Firebase / Firestore
-  // ============================================================
+  // This contains PAYMENTS, not bookings.
+  const [payments, setPayments] = useState([]);
 
-  const monthlyEarnings = [
-    {
-      month: "Mar",
-      amount: 1500,
-    },
-    {
-      month: "Apr",
-      amount: 1800,
-    },
-    {
-      month: "May",
-      amount: 1650,
-    },
-    {
-      month: "Jun",
-      amount: 2100,
-    },
-    {
-      month: "Jul",
-      amount: 2050,
-    },
-    {
-      month: "Aug",
-      amount: 2450,
-    },
-  ];
+  const [loading, setLoading] = useState(true);
 
-  const transactions = [
-    {
-      id: "TXN-00125",
-      tenant: "Sokha Chan",
-      room: "Modern Private Room",
-      date: "Aug 12, 2026",
-      amount: 180,
-      status: "paid",
-      method: "ABA Pay",
-    },
-    {
-      id: "TXN-00124",
-      tenant: "Dara Kim",
-      room: "Cozy Student Room",
-      date: "Aug 11, 2026",
-      amount: 150,
-      status: "paid",
-      method: "ACLEDA",
-    },
-    {
-      id: "TXN-00123",
-      tenant: "Vanna Lim",
-      room: "Single Room",
-      date: "Aug 10, 2026",
-      amount: 130,
-      status: "pending",
-      method: "Cash",
-    },
-    {
-      id: "TXN-00122",
-      tenant: "Rithy Chea",
-      room: "Budget Student Room",
-      date: "Aug 08, 2026",
-      amount: 120,
-      status: "paid",
-      method: "ABA Pay",
-    },
-    {
-      id: "TXN-00121",
-      tenant: "Sreypov Sok",
-      room: "Modern Studio",
-      date: "Aug 05, 2026",
-      amount: 250,
-      status: "paid",
-      method: "Credit Card",
-    },
-  ];
-
-  const roomEarnings = [
-    {
-      name: "Modern Private Room",
-      location: "Toul Kork",
-      earnings: 720,
-      bookings: 4,
-    },
-    {
-      name: "Cozy Student Room",
-      location: "Sen Sok",
-      earnings: 600,
-      bookings: 4,
-    },
-    {
-      name: "Modern Studio",
-      location: "BKK1",
-      earnings: 500,
-      bookings: 2,
-    },
-    {
-      name: "Budget Student Room",
-      location: "Chamkarmon",
-      earnings: 360,
-      bookings: 3,
-    },
-  ];
+  const [error, setError] = useState("");
 
   // ============================================================
-  // CALCULATIONS
+  // LOAD PAYMENTS
+  // ============================================================
+
+  useEffect(() => {
+    let unsubscribe;
+
+    const loadPayments = async (user) => {
+      try {
+        setLoading(true);
+        setError("");
+
+        if (!user) {
+          setError("Please login as a landlord.");
+          return;
+        }
+
+        console.log("💰 Loading payments for landlord:", user.uid);
+
+        const paymentsQuery = query(
+          collection(db, "payments"),
+          where("landlordId", "==", user.uid),
+        );
+
+        const snapshot = await getDocs(paymentsQuery);
+
+        const paymentData = snapshot.docs.map((paymentDoc) => {
+          const data = paymentDoc.data();
+
+          return {
+            id: paymentDoc.id,
+
+            ...data,
+
+            // ------------------------------------------------
+            // PAYMENT
+            // ------------------------------------------------
+
+            amount: Number(data.amount || 0),
+
+            status: data.status || "pending",
+
+            paymentMethod: data.paymentMethod || "Not paid",
+
+            paidAt: data.paidAt || null,
+
+            createdAt: data.createdAt || null,
+
+            // ------------------------------------------------
+            // ROOM
+            // ------------------------------------------------
+
+            room: data.roomName || "Unknown Room",
+
+            roomId: data.roomId || "",
+
+            location: data.location || data.roomLocation || "",
+
+            // ------------------------------------------------
+            // TENANT
+            // ------------------------------------------------
+
+            tenant: data.tenantName || "Unknown Tenant",
+
+            tenantId: data.tenantId || "",
+
+            // ------------------------------------------------
+            // PERIOD
+            // ------------------------------------------------
+
+            periodNumber: Number(data.periodNumber || 1),
+
+            periodStart: data.periodStart || null,
+
+            periodEnd: data.periodEnd || null,
+
+            dueDate: data.dueDate || null,
+          };
+        });
+
+        setPayments(paymentData);
+
+        console.log("💰 Payments loaded:", paymentData);
+      } catch (err) {
+        console.error("❌ Earnings error:", err);
+
+        setError(
+          err.code
+            ? `${err.code}: ${err.message}`
+            : err.message || "Failed to load earnings.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // ------------------------------------------------------------
+    // IMPORTANT
+    // ------------------------------------------------------------
+    // Don't use auth.currentUser immediately.
+    // Wait until Firebase Authentication finishes restoring
+    // the login session.
+    // ------------------------------------------------------------
+
+    unsubscribe = onAuthStateChanged(auth, (user) => {
+      loadPayments(user);
+    });
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, []);
+
+  // ============================================================
+  // PAID PAYMENTS
+  // ============================================================
+
+  const paidPayments = useMemo(() => {
+    return payments.filter((payment) => payment.status === "paid");
+  }, [payments]);
+
+  // ============================================================
+  // PENDING PAYMENTS
+  // ============================================================
+
+  const pendingPayments = useMemo(() => {
+    return payments.filter((payment) => payment.status === "pending");
+  }, [payments]);
+
+  // ============================================================
+  // TOTAL PAID
+  // ============================================================
+
+  const paidAmount = useMemo(() => {
+    return paidPayments.reduce(
+      (total, payment) => total + Number(payment.amount || 0),
+      0,
+    );
+  }, [paidPayments]);
+
+  // ============================================================
+  // TOTAL PENDING
+  // ============================================================
+
+  const pendingAmount = useMemo(() => {
+    return pendingPayments.reduce(
+      (total, payment) => total + Number(payment.amount || 0),
+      0,
+    );
+  }, [pendingPayments]);
+
+  // ============================================================
+  // MONTHLY EARNINGS
+  // ============================================================
+  //
+  // IMPORTANT:
+  // Only PAID payments are counted.
+  //
+  // ============================================================
+
+  const monthlyEarnings = useMemo(() => {
+    const months = [];
+
+    const now = new Date();
+
+    const count = period === "3months" ? 3 : period === "12months" ? 12 : 6;
+
+    for (let i = count - 1; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+
+      months.push({
+        month: date.toLocaleString("en-US", {
+          month: "short",
+        }),
+
+        year: date.getFullYear(),
+
+        monthIndex: date.getMonth(),
+
+        amount: 0,
+      });
+    }
+
+    paidPayments.forEach((payment) => {
+      // ----------------------------------------------------
+      // Prefer paidAt because earnings should be recorded
+      // when the payment was actually paid.
+      // ----------------------------------------------------
+
+      const date = getPaymentDate(payment.paidAt, payment.createdAt);
+
+      if (!date) {
+        return;
+      }
+
+      const month = months.find(
+        (item) =>
+          item.year === date.getFullYear() &&
+          item.monthIndex === date.getMonth(),
+      );
+
+      if (month) {
+        month.amount += Number(payment.amount || 0);
+      }
+    });
+
+    return months;
+  }, [paidPayments, period]);
+
+  // ============================================================
+  // TOTAL EARNINGS FOR SELECTED PERIOD
   // ============================================================
 
   const totalEarnings = monthlyEarnings.reduce(
@@ -133,69 +249,122 @@ export default function LandlordEarnings() {
     0,
   );
 
-  const currentMonth = monthlyEarnings[monthlyEarnings.length - 1].amount;
-
-  const previousMonth = monthlyEarnings[monthlyEarnings.length - 2].amount;
-
-  const growth = ((currentMonth - previousMonth) / previousMonth) * 100;
-
-  const pendingAmount = transactions
-    .filter((item) => item.status === "pending")
-    .reduce((total, item) => total + item.amount, 0);
-
-  const paidAmount = transactions
-    .filter((item) => item.status === "paid")
-    .reduce((total, item) => total + item.amount, 0);
-
-  const maxEarning = Math.max(...monthlyEarnings.map((item) => item.amount));
-
   // ============================================================
-  // FILTERED CHART
+  // CURRENT MONTH
   // ============================================================
 
-  const chartData = useMemo(() => {
-    if (period === "3months") {
-      return monthlyEarnings.slice(-3);
-    }
+  const currentMonth = monthlyEarnings[monthlyEarnings.length - 1]?.amount || 0;
 
-    if (period === "12months") {
-      return [
-        ...monthlyEarnings,
-        {
-          month: "Sep",
-          amount: 2200,
-        },
-        {
-          month: "Oct",
-          amount: 2350,
-        },
-        {
-          month: "Nov",
-          amount: 2500,
-        },
-        {
-          month: "Dec",
-          amount: 2700,
-        },
-        {
-          month: "Jan",
-          amount: 2900,
-        },
-        {
-          month: "Feb",
-          amount: 3100,
-        },
-      ];
-    }
+  // ============================================================
+  // PREVIOUS MONTH
+  // ============================================================
 
-    return monthlyEarnings;
-  }, [period]);
+  const previousMonth =
+    monthlyEarnings[monthlyEarnings.length - 2]?.amount || 0;
+
+  // ============================================================
+  // GROWTH
+  // ============================================================
+
+  const growth =
+    previousMonth > 0
+      ? ((currentMonth - previousMonth) / previousMonth) * 100
+      : currentMonth > 0
+        ? 100
+        : 0;
+
+  // ============================================================
+  // EARNINGS BY ROOM
+  // ============================================================
+
+  const roomEarnings = useMemo(() => {
+    const rooms = {};
+
+    // Only PAID payments
+    paidPayments.forEach((payment) => {
+      const key = payment.roomId || payment.room || "unknown";
+
+      if (!rooms[key]) {
+        rooms[key] = {
+          name: payment.room || "Unknown Room",
+
+          location: payment.location || "Unknown Location",
+
+          earnings: 0,
+
+          payments: 0,
+        };
+      }
+
+      rooms[key].earnings += Number(payment.amount || 0);
+
+      rooms[key].payments += 1;
+    });
+
+    return Object.values(rooms).sort((a, b) => b.earnings - a.earnings);
+  }, [paidPayments]);
+
+  const maxRoomEarning = Math.max(
+    ...roomEarnings.map((room) => room.earnings),
+    1,
+  );
+
+  // ============================================================
+  // RECENT TRANSACTIONS
+  // ============================================================
+
+  const transactions = useMemo(() => {
+    return [...payments]
+      .sort((a, b) => {
+        const aTime = getTimestamp(a.paidAt || a.createdAt);
+
+        const bTime = getTimestamp(b.paidAt || b.createdAt);
+
+        return bTime - aTime;
+      })
+      .slice(0, 10)
+      .map((payment) => ({
+        id: payment.id,
+
+        tenant: payment.tenant,
+
+        room: payment.room,
+
+        date: formatDate(payment.paidAt || payment.createdAt),
+
+        amount: Number(payment.amount || 0),
+
+        status: payment.status,
+
+        method: payment.paymentMethod || "Not paid",
+      }));
+  }, [payments]);
+
+  // ============================================================
+  // LOADING
+  // ============================================================
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+
+          <p className="mt-4 text-sm text-gray-500">Loading earnings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================
+  // UI
+  // ============================================================
 
   return (
     <div className="space-y-6">
       {/* ======================================================
           HEADER
-      ======================================================= */}
+      ====================================================== */}
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
@@ -216,21 +385,31 @@ export default function LandlordEarnings() {
       </div>
 
       {/* ======================================================
-          STATISTICS
-      ======================================================= */}
+          ERROR
+      ====================================================== */}
+
+      {error && (
+        <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      {/* ======================================================
+          STATS
+      ====================================================== */}
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <EarningStat
           title="Total Earnings"
-          subtitle="Last 6 months"
-          value={`$${totalEarnings.toLocaleString()}`}
+          subtitle="Actual paid payments"
+          value={`$${paidAmount.toLocaleString()}`}
           icon={<Wallet size={21} />}
           iconClass="bg-blue-50 text-blue-600"
         />
 
         <EarningStat
           title="This Month"
-          subtitle="August 2026"
+          subtitle="Paid payments"
           value={`$${currentMonth.toLocaleString()}`}
           icon={<TrendingUp size={21} />}
           iconClass="bg-green-50 text-green-600"
@@ -238,17 +417,17 @@ export default function LandlordEarnings() {
         />
 
         <EarningStat
-          title="Pending Payments"
-          subtitle="Awaiting payment"
+          title="Pending Income"
+          subtitle="Payments not paid yet"
           value={`$${pendingAmount.toLocaleString()}`}
           icon={<Clock size={21} />}
           iconClass="bg-yellow-50 text-yellow-600"
         />
 
         <EarningStat
-          title="Paid Amount"
-          subtitle="Completed payments"
-          value={`$${paidAmount.toLocaleString()}`}
+          title="Paid Payments"
+          subtitle="Successful payments"
+          value={paidPayments.length}
           icon={<CheckCircle size={21} />}
           iconClass="bg-purple-50 text-purple-600"
         />
@@ -256,12 +435,10 @@ export default function LandlordEarnings() {
 
       {/* ======================================================
           CHART + SUMMARY
-      ======================================================= */}
+      ====================================================== */}
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        {/* ====================================================
-            EARNINGS CHART
-        ===================================================== */}
+        {/* CHART */}
 
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6 xl:col-span-2">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -271,7 +448,7 @@ export default function LandlordEarnings() {
               </h2>
 
               <p className="mt-1 text-xs text-gray-400">
-                Monthly rental income
+                Actual paid rental income
               </p>
             </div>
 
@@ -288,16 +465,19 @@ export default function LandlordEarnings() {
             </select>
           </div>
 
-          {/* Chart */}
-
           <div className="mt-8">
             <div className="flex h-64 items-end gap-3 sm:gap-6">
-              {chartData.map((item) => {
+              {monthlyEarnings.map((item) => {
+                const maxEarning = Math.max(
+                  ...monthlyEarnings.map((item) => item.amount),
+                  1,
+                );
+
                 const height = (item.amount / maxEarning) * 100;
 
                 return (
                   <div
-                    key={item.month}
+                    key={`${item.month}-${item.year}`}
                     className="flex h-full flex-1 flex-col items-center justify-end gap-2"
                   >
                     <span className="text-[10px] font-semibold text-gray-500">
@@ -305,10 +485,10 @@ export default function LandlordEarnings() {
                     </span>
 
                     <div
-                      className="w-full max-w-14 rounded-t-xl bg-blue-500 transition-all duration-300 hover:bg-blue-600"
+                      className="w-full max-w-14 rounded-t-xl bg-blue-500 transition-all duration-300"
                       style={{
                         height: `${height}%`,
-                        minHeight: "8px",
+                        minHeight: item.amount > 0 ? "8px" : "0px",
                       }}
                     />
 
@@ -322,17 +502,19 @@ export default function LandlordEarnings() {
           </div>
         </div>
 
-        {/* ====================================================
-            EARNING SUMMARY
-        ===================================================== */}
+        {/* SUMMARY */}
 
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-bold text-gray-900">Income Summary</h2>
 
-          <p className="mt-1 text-xs text-gray-400">August 2026</p>
+          <p className="mt-1 text-xs text-gray-400">This month</p>
 
           <div className="mt-6 space-y-5">
-            <SummaryRow label="Room Rent" value="$2,450" percentage="100%" />
+            <SummaryRow
+              label="Paid Rent"
+              value={`$${currentMonth.toLocaleString()}`}
+              percentage={currentMonth > 0 ? "100%" : "0%"}
+            />
 
             <SummaryRow
               label="Platform Fee"
@@ -343,25 +525,24 @@ export default function LandlordEarnings() {
 
             <SummaryRow
               label="Net Income"
-              value="$2,450"
-              percentage="100%"
+              value={`$${currentMonth.toLocaleString()}`}
+              percentage={currentMonth > 0 ? "100%" : "0%"}
               highlight
             />
           </div>
-
-          {/* Growth */}
 
           <div className="mt-7 rounded-xl bg-green-50 p-4">
             <div className="flex items-center gap-2 text-green-600">
               <TrendingUp size={18} />
 
               <span className="text-sm font-semibold">
-                +{growth.toFixed(1)}%
+                {growth >= 0 ? "+" : ""}
+                {growth.toFixed(1)}%
               </span>
             </div>
 
             <p className="mt-1 text-xs text-green-600">
-              Your income increased compared with last month.
+              Compared with last month.
             </p>
           </div>
         </div>
@@ -369,7 +550,7 @@ export default function LandlordEarnings() {
 
       {/* ======================================================
           ROOM EARNINGS
-      ======================================================= */}
+      ====================================================== */}
 
       <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-gray-100 p-5 sm:p-6">
@@ -378,80 +559,82 @@ export default function LandlordEarnings() {
               Earnings by Room
             </h2>
 
-            <p className="mt-1 text-xs text-gray-400">
-              See which rooms generate the most income
-            </p>
+            <p className="mt-1 text-xs text-gray-400">Paid payments only</p>
           </div>
 
-          <button type="button" className="text-gray-400 hover:text-gray-700">
-            <MoreHorizontal size={20} />
-          </button>
+          <MoreHorizontal size={20} className="text-gray-400" />
         </div>
 
         <div className="grid grid-cols-1 divide-y md:grid-cols-2 md:divide-x md:divide-y-0">
-          {roomEarnings.map((room) => (
-            <div
-              key={room.name}
-              className="p-5 transition hover:bg-gray-50 sm:p-6"
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                  <House size={20} />
-                </div>
+          {roomEarnings.length === 0 ? (
+            <div className="col-span-full p-10 text-center text-sm text-gray-400">
+              No paid payments yet.
+            </div>
+          ) : (
+            roomEarnings.map((room) => (
+              <div
+                key={`${room.name}-${room.location}`}
+                className="p-5 transition hover:bg-gray-50 sm:p-6"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <House size={20} />
+                  </div>
 
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="truncate text-sm font-bold text-gray-900">
-                        {room.name}
-                      </h3>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="truncate text-sm font-bold text-gray-900">
+                          {room.name}
+                        </h3>
 
-                      <p className="mt-1 text-xs text-gray-400">
-                        {room.location}
+                        <p className="mt-1 text-xs text-gray-400">
+                          {room.location}
+                        </p>
+                      </div>
+
+                      <p className="shrink-0 text-sm font-bold text-gray-900">
+                        ${room.earnings.toLocaleString()}
                       </p>
                     </div>
 
-                    <p className="shrink-0 text-sm font-bold text-gray-900">
-                      ${room.earnings}
-                    </p>
-                  </div>
-
-                  {/* Progress */}
-
-                  <div className="mt-4">
-                    <div className="h-2 overflow-hidden rounded-full bg-gray-100">
-                      <div
-                        className="h-full rounded-full bg-blue-500"
-                        style={{
-                          width: `${Math.min(
-                            (room.earnings / 720) * 100,
-                            100,
-                          )}%`,
-                        }}
-                      />
+                    <div className="mt-4">
+                      <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+                        <div
+                          className="h-full rounded-full bg-blue-500"
+                          style={{
+                            width: `${Math.min(
+                              (room.earnings / maxRoomEarning) * 100,
+                              100,
+                            )}%`,
+                          }}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="mt-2 flex justify-between">
-                    <span className="text-[10px] text-gray-400">
-                      {room.bookings} bookings
-                    </span>
+                    <div className="mt-2 flex justify-between">
+                      <span className="text-[10px] text-gray-400">
+                        {room.payments} paid
+                      </span>
 
-                    <span className="text-[10px] font-medium text-gray-500">
-                      {Math.round((room.earnings / totalEarnings) * 100)}% of
-                      total
-                    </span>
+                      <span className="text-[10px] font-medium text-gray-500">
+                        {paidAmount > 0
+                          ? Math.round((room.earnings / paidAmount) * 100)
+                          : 0}
+                        % of total
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
       {/* ======================================================
           TRANSACTIONS
-      ======================================================= */}
+      ====================================================== */}
 
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-gray-100 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
@@ -460,21 +643,11 @@ export default function LandlordEarnings() {
               Recent Transactions
             </h2>
 
-            <p className="mt-1 text-xs text-gray-400">
-              Your latest rental payments
-            </p>
+            <p className="mt-1 text-xs text-gray-400">Payment history</p>
           </div>
-
-          <button
-            type="button"
-            className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
-          >
-            View All
-            <ArrowUpRight size={16} />
-          </button>
         </div>
 
-        {/* Desktop */}
+        {/* DESKTOP */}
 
         <div className="hidden overflow-x-auto md:block">
           <table className="w-full">
@@ -493,7 +666,7 @@ export default function LandlordEarnings() {
                 </th>
 
                 <th className="px-6 py-4 text-xs font-medium text-gray-400">
-                  Payment
+                  Type
                 </th>
 
                 <th className="px-6 py-4 text-xs font-medium text-gray-400">
@@ -550,7 +723,7 @@ export default function LandlordEarnings() {
 
                   <td className="px-6 py-4">
                     <span className="text-sm font-bold text-gray-800">
-                      ${transaction.amount}
+                      ${transaction.amount.toLocaleString()}
                     </span>
                   </td>
 
@@ -563,7 +736,7 @@ export default function LandlordEarnings() {
           </table>
         </div>
 
-        {/* Mobile */}
+        {/* MOBILE */}
 
         <div className="space-y-3 p-4 md:hidden">
           {transactions.map((transaction) => (
@@ -602,24 +775,31 @@ export default function LandlordEarnings() {
               <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
                 <div className="flex items-center gap-1.5 text-xs text-gray-400">
                   <CreditCard size={13} />
+
                   {transaction.method}
                 </div>
 
                 <p className="text-sm font-bold text-gray-900">
-                  ${transaction.amount}
+                  ${transaction.amount.toLocaleString()}
                 </p>
               </div>
             </div>
           ))}
         </div>
+
+        {transactions.length === 0 && (
+          <div className="p-10 text-center text-sm text-gray-400">
+            No payment transactions yet.
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-/* ============================================================
-   EARNING STAT
-============================================================ */
+// ============================================================
+// EARNING STAT
+// ============================================================
 
 function EarningStat({ title, subtitle, value, icon, iconClass, growth }) {
   return (
@@ -634,6 +814,7 @@ function EarningStat({ title, subtitle, value, icon, iconClass, growth }) {
         {growth !== undefined && (
           <span className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-1 text-[10px] font-semibold text-green-600">
             <ArrowUpRight size={12} />
+            {growth >= 0 ? "+" : ""}
             {growth.toFixed(1)}%
           </span>
         )}
@@ -648,9 +829,9 @@ function EarningStat({ title, subtitle, value, icon, iconClass, growth }) {
   );
 }
 
-/* ============================================================
-   SUMMARY ROW
-============================================================ */
+// ============================================================
+// SUMMARY
+// ============================================================
 
 function SummaryRow({
   label,
@@ -703,9 +884,9 @@ function SummaryRow({
   );
 }
 
-/* ============================================================
-   PAYMENT STATUS
-============================================================ */
+// ============================================================
+// PAYMENT STATUS
+// ============================================================
 
 function PaymentStatus({ status }) {
   if (status === "paid") {
@@ -717,10 +898,106 @@ function PaymentStatus({ status }) {
     );
   }
 
+  if (status === "failed") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1.5 text-[10px] font-semibold text-red-500">
+        Payment Failed
+      </span>
+    );
+  }
+
+  if (status === "cancelled") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1.5 text-[10px] font-semibold text-gray-500">
+        Cancelled
+      </span>
+    );
+  }
+
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-50 px-2.5 py-1.5 text-[10px] font-semibold text-yellow-600">
       <Clock size={12} />
       Pending
     </span>
   );
+}
+
+// ============================================================
+// DATE HELPERS
+// ============================================================
+
+function getPaymentDate(paidAt, createdAt) {
+  const preferred = paidAt || createdAt;
+
+  if (!preferred) {
+    return null;
+  }
+
+  if (typeof preferred.toDate === "function") {
+    return preferred.toDate();
+  }
+
+  if (preferred instanceof Date) {
+    return preferred;
+  }
+
+  const date = new Date(preferred);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function getTimestamp(value) {
+  if (!value) {
+    return 0;
+  }
+
+  if (typeof value.toMillis === "function") {
+    return value.toMillis();
+  }
+
+  if (typeof value.toDate === "function") {
+    return value.toDate().getTime();
+  }
+
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function formatDate(value) {
+  if (!value) {
+    return "-";
+  }
+
+  let date = null;
+
+  if (typeof value.toDate === "function") {
+    date = value.toDate();
+  } else if (value instanceof Date) {
+    date = value;
+  } else if (typeof value === "string") {
+    // Handles YYYY-MM-DD
+    // without timezone shifting.
+    const parts = value.split("-");
+
+    if (parts.length === 3) {
+      date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    } else {
+      date = new Date(value);
+    }
+  }
+
+  if (!date || Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
 }

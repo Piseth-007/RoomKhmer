@@ -29,9 +29,7 @@ import { db } from "../../../firebase/config";
 import RequestRoomModal from "../../common/RequestRoomModal";
 const RoomDetail = () => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-
   const { id } = useParams();
-
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -79,9 +77,7 @@ const RoomDetail = () => {
     loadRoom();
   }, [id]);
   const [activeImage, setActiveImage] = useState(0);
-
   const [isFavorite, setIsFavorite] = useState(false);
-
   const [showAllImages, setShowAllImages] = useState(false);
 
   if (loading) {
@@ -194,14 +190,9 @@ const RoomDetail = () => {
           Back to rooms
         </Link>
 
-        {/* =================================================
-            GALLERY + SUMMARY
-        ================================================== */}
 
         <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
-          {/* =================================================
-              GALLERY
-          ================================================== */}
+          
 
           <div>
             {/* Main image */}
@@ -526,8 +517,7 @@ const RoomDetail = () => {
 
       {showAllImages && (
         <div className="fixed inset-0 z-100 bg-black/90 p-4">
-          {/* Close */}
-
+  
           <button
             type="button"
             onClick={() => setShowAllImages(false)}

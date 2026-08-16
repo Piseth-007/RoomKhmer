@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   User,
   Mail,
@@ -16,23 +16,63 @@ import {
   Eye,
   EyeOff,
   Save,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 
+import {
+  EmailAuthProvider,
+  onAuthStateChanged,
+  reauthenticateWithCredential,
+  updatePassword,
+  updateProfile,
+} from "firebase/auth";
+
+import {
+  doc,
+  getDoc,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+
+import { auth, db } from "../../../firebase/config";
+
 export default function AdminProfile() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
   const [profile, setProfile] = useState({
-    name: "RoomKhmer Admin",
-    email: "admin@roomkhmer.com",
-    phone: "012 345 678",
-    location: "Phnom Penh, Cambodia",
+    name: "",
+    email: "",
+    phone: "",
+    location: "",
     role: "Administrator",
     status: "Active",
-    joined: "January 15, 2026",
+    joined: "",
+    photoURL: "",
+    lastLogin: "",
   });
 
-  const [form, setForm] = useState(profile);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    location: "",
+    role: "Administrator",
+    status: "Active",
+    joined: "",
+    photoURL: "",
+    lastLogin: "",
+  });
 
   const [passwords, setPasswords] = useState({
     current: "",
@@ -46,22 +86,106 @@ export default function AdminProfile() {
     confirm: false,
   });
 
-  // ============================================================
-  // EDIT PROFILE
-  // ============================================================
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) {
+        setError("No authenticated user found.");
+        setLoading(false);
+        return;
+      }
+
+      setUser(currentUser);
+      await loadProfile(currentUser);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const loadProfile = async (currentUser) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const userRef = doc(db, "users", currentUser.uid);
+
+      const snapshot = await getDoc(userRef);
+
+      const data = snapshot.exists() ? snapshot.data() : {};
+
+      const role = String(data.role || "").toLowerCase();
+
+      const profileData = {
+        name: data.name || currentUser.displayName || "Admin",
+
+        email: data.email || currentUser.email || "",
+
+        phone: data.phone || "",
+
+        location: data.location || "Phnom Penh, Cambodia",
+
+        role: role === "admin" ? "Administrator" : data.role || "Administrator",
+
+        status: data.status || "Active",
+
+        joined:
+          formatDate(data.createdAt) ||
+          formatDate(currentUser.metadata?.creationTime),
+
+        photoURL: data.photoURL || currentUser.photoURL || "",
+
+        lastLogin:
+          formatDateTime(data.lastLoginAt) ||
+          formatDateTime(currentUser.metadata?.lastSignInTime),
+      };
+
+      setProfile(profileData);
+      setForm(profileData);
+
+      if (!snapshot.exists()) {
+        await setDoc(
+          userRef,
+          {
+            name: profileData.name,
+            email: profileData.email,
+            phone: profileData.phone,
+            location: profileData.location,
+            role: "admin",
+            status: "Active",
+            photoURL: profileData.photoURL,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            lastLoginAt: serverTimestamp(),
+          },
+          {
+            merge: true,
+          },
+        );
+      } else {
+        await updateDoc(userRef, {
+          lastLoginAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+    } catch (err) {
+      console.error("Load admin profile error:", err);
+
+      setError(getFirebaseError(err, "Failed to load profile."));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEdit = () => {
     setForm(profile);
+    setMessage("");
+    setError("");
     setIsEditing(true);
   };
 
   const handleCancel = () => {
     setForm(profile);
-    setIsEditing(false);
-  };
-
-  const handleSave = () => {
-    setProfile(form);
+    setMessage("");
+    setError("");
     setIsEditing(false);
   };
 
@@ -74,9 +198,147 @@ export default function AdminProfile() {
     }));
   };
 
-  // ============================================================
-  // PASSWORD
-  // ============================================================
+  const handleSave = async () => {
+    if (!user) {
+      setError("No authenticated user found.");
+      return;
+    }
+
+    if (!form.name.trim()) {
+      setError("Name is required.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError("");
+      setMessage("");
+
+      const userRef = doc(db, "users", user.uid);
+
+      await updateDoc(userRef, {
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        location: form.location.trim(),
+        updatedAt: serverTimestamp(),
+      });
+
+      if (user.displayName !== form.name.trim()) {
+        await updateProfile(user, {
+          displayName: form.name.trim(),
+        });
+      }
+
+      const updatedProfile = {
+        ...profile,
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        location: form.location.trim(),
+      };
+
+      setProfile(updatedProfile);
+      setForm(updatedProfile);
+      setIsEditing(false);
+
+      setMessage("Profile updated successfully.");
+    } catch (err) {
+      console.error("Save admin profile error:", err);
+
+      setError(getFirebaseError(err, "Failed to save profile."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file || !user) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file.");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image must be smaller than 5MB.");
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setError("");
+      setMessage("");
+
+      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+
+      const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+      if (!cloudName) {
+        throw new Error("Cloudinary cloud name is missing.");
+      }
+
+      if (!uploadPreset) {
+        throw new Error("Cloudinary upload preset is missing.");
+      }
+
+      const uploadData = new FormData();
+
+      uploadData.append("file", file);
+
+      uploadData.append("upload_preset", uploadPreset);
+
+      uploadData.append("folder", "roomkhmer/admin-profiles");
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: "POST",
+          body: uploadData,
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error?.message || "Cloudinary upload failed.");
+      }
+
+      const photoURL = result.secure_url;
+
+      await updateDoc(doc(db, "users", user.uid), {
+        photoURL,
+        updatedAt: serverTimestamp(),
+      });
+
+      await updateProfile(user, {
+        photoURL,
+      });
+
+      setProfile((current) => ({
+        ...current,
+        photoURL,
+      }));
+
+      setForm((current) => ({
+        ...current,
+        photoURL,
+      }));
+
+      setMessage("Profile photo updated successfully.");
+    } catch (err) {
+      console.error("Cloudinary profile upload error:", err);
+
+      setError(err.message || "Failed to upload profile photo.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
@@ -94,36 +356,87 @@ export default function AdminProfile() {
     }));
   };
 
-  const handleChangePassword = (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault();
 
+    if (!user) {
+      setError("No authenticated user found.");
+      return;
+    }
+
     if (!passwords.current || !passwords.newPassword || !passwords.confirm) {
-      alert("Please fill in all password fields.");
+      setError("Please fill in all password fields.");
       return;
     }
 
     if (passwords.newPassword !== passwords.confirm) {
-      alert("New passwords do not match.");
+      setError("New passwords do not match.");
       return;
     }
 
-    alert("Password updated successfully.");
+    if (passwords.newPassword.length < 6) {
+      setError("New password must contain at least 6 characters.");
+      return;
+    }
 
-    setPasswords({
-      current: "",
-      newPassword: "",
-      confirm: "",
-    });
+    try {
+      setSaving(true);
+      setError("");
+      setMessage("");
 
-    setShowPasswordForm(false);
+      if (!user.email) {
+        throw new Error("This account does not have an email address.");
+      }
+
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        passwords.current,
+      );
+
+      await reauthenticateWithCredential(user, credential);
+
+      await updatePassword(user, passwords.newPassword);
+
+      setPasswords({
+        current: "",
+        newPassword: "",
+        confirm: "",
+      });
+
+      setShowPasswordForm(false);
+
+      setMessage("Password updated successfully.");
+    } catch (err) {
+      console.error("Change password error:", err);
+
+      if (err.code === "auth/wrong-password") {
+        setError("Current password is incorrect.");
+      } else if (err.code === "auth/invalid-credential") {
+        setError("Current password is incorrect.");
+      } else if (err.code === "auth/requires-recent-login") {
+        setError("Please log in again before changing your password.");
+      } else {
+        setError(getFirebaseError(err, "Failed to update password."));
+      }
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <Loader2 size={34} className="mx-auto animate-spin text-blue-600" />
+
+          <p className="mt-4 text-sm text-gray-500">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* ======================================================
-          HEADER
-      ======================================================= */}
-
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -153,34 +466,54 @@ export default function AdminProfile() {
         )}
       </div>
 
-      {/* ======================================================
-          PROFILE OVERVIEW
-      ======================================================= */}
+      {message && (
+        <div className="flex items-center gap-3 rounded-xl border border-green-100 bg-green-50 p-4 text-sm text-green-700">
+          <Check size={18} />
+          {message}
+        </div>
+      )}
+
+      {error && (
+        <div className="flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
+          <AlertCircle size={18} />
+          {error}
+        </div>
+      )}
 
       <section className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-        {/* Cover */}
-
-        <div className="h-28 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 sm:h-36" />
+        <div className="h-28 bg-linear-to-r from-blue-600 via-blue-500 to-indigo-500 sm:h-36" />
 
         <div className="px-5 pb-6 sm:px-7">
           <div className="-mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end sm:justify-between">
-            {/* Avatar */}
-
             <div className="relative">
-              <div className="flex h-24 w-24 items-center justify-center rounded-2xl border-4 border-white bg-blue-50 text-blue-600 shadow-md sm:h-28 sm:w-28">
-                <ShieldCheck size={48} strokeWidth={1.7} />
+              <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-blue-50 text-blue-600 shadow-md sm:h-28 sm:w-28">
+                {profile.photoURL ? (
+                  <img
+                    src={profile.photoURL}
+                    alt="Admin profile"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <ShieldCheck size={48} strokeWidth={1.7} />
+                )}
               </div>
 
-              <button
-                type="button"
-                className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-sm transition hover:bg-blue-700"
-                title="Change profile photo"
-              >
-                <Camera size={14} />
-              </button>
-            </div>
+              <label className="absolute bottom-1 right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-sm transition hover:bg-blue-700">
+                {uploading ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Camera size={14} />
+                )}
 
-            {/* Account name */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  disabled={uploading}
+                  className="hidden"
+                />
+              </label>
+            </div>
 
             <div className="flex-1 sm:ml-2">
               <div className="flex flex-wrap items-center gap-2">
@@ -190,15 +523,13 @@ export default function AdminProfile() {
 
                 <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-[9px] font-semibold text-green-600">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                  Active
+                  {profile.status}
                 </span>
               </div>
 
               <p className="mt-1 text-xs text-gray-500">{profile.role}</p>
             </div>
           </div>
-
-          {/* Quick info */}
 
           <div className="mt-6 grid grid-cols-1 gap-3 border-t border-gray-100 pt-5 sm:grid-cols-3">
             <QuickInfo
@@ -210,27 +541,19 @@ export default function AdminProfile() {
             <QuickInfo
               icon={<Phone size={15} />}
               label="Phone"
-              value={profile.phone}
+              value={profile.phone || "Not provided"}
             />
 
             <QuickInfo
               icon={<MapPin size={15} />}
               label="Location"
-              value={profile.location}
+              value={profile.location || "Not provided"}
             />
           </div>
         </div>
       </section>
 
-      {/* ======================================================
-          PROFILE INFORMATION + ACCOUNT
-      ======================================================= */}
-
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* ====================================================
-            PERSONAL INFORMATION
-        ===================================================== */}
-
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6 lg:col-span-2">
           <div className="flex items-center justify-between">
             <div>
@@ -264,14 +587,29 @@ export default function AdminProfile() {
                 icon={<User size={16} />}
               />
 
-              <ProfileInput
-                label="Email Address"
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                icon={<Mail size={16} />}
-              />
+              <div>
+                <label className="mb-2 block text-xs font-semibold text-gray-600">
+                  Email Address
+                </label>
+
+                <div className="relative">
+                  <Mail
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+
+                  <input
+                    type="email"
+                    value={form.email}
+                    disabled
+                    className="h-11 w-full cursor-not-allowed rounded-xl border border-gray-200 bg-gray-100 pl-10 pr-4 text-sm text-gray-500 outline-none"
+                  />
+                </div>
+
+                <p className="mt-1.5 text-[10px] text-gray-400">
+                  Email is managed by Firebase Authentication.
+                </p>
+              </div>
 
               <ProfileInput
                 label="Phone Number"
@@ -293,7 +631,8 @@ export default function AdminProfile() {
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-5 py-2.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-50"
+                  disabled={saving}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-5 py-2.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
                 >
                   <X size={15} />
                   Cancel
@@ -302,10 +641,16 @@ export default function AdminProfile() {
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-700"
+                  disabled={saving}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
                 >
-                  <Save size={15} />
-                  Save Changes
+                  {saving ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : (
+                    <Save size={15} />
+                  )}
+
+                  {saving ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </div>
@@ -325,13 +670,13 @@ export default function AdminProfile() {
 
               <InfoItem
                 label="Phone Number"
-                value={profile.phone}
+                value={profile.phone || "Not provided"}
                 icon={<Phone size={16} />}
               />
 
               <InfoItem
                 label="Location"
-                value={profile.location}
+                value={profile.location || "Not provided"}
                 icon={<MapPin size={16} />}
               />
 
@@ -343,16 +688,12 @@ export default function AdminProfile() {
 
               <InfoItem
                 label="Joined Date"
-                value={profile.joined}
+                value={profile.joined || "Not available"}
                 icon={<CalendarDays size={16} />}
               />
             </div>
           )}
         </section>
-
-        {/* ====================================================
-            ACCOUNT STATUS
-        ===================================================== */}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-bold text-gray-900">Account Status</h2>
@@ -364,38 +705,34 @@ export default function AdminProfile() {
           <div className="mt-6 space-y-4">
             <AccountRow
               label="Account"
-              value="Active"
+              value={profile.status}
               icon={<Check size={15} />}
               className="bg-green-50 text-green-600"
             />
 
             <AccountRow
               label="Role"
-              value="Administrator"
+              value={profile.role}
               icon={<ShieldCheck size={15} />}
               className="bg-blue-50 text-blue-600"
             />
 
             <AccountRow
               label="Joined"
-              value="Jan 15, 2026"
+              value={profile.joined || "Not available"}
               icon={<CalendarDays size={15} />}
               className="bg-purple-50 text-purple-600"
             />
 
             <AccountRow
               label="Last Login"
-              value="Today, 10:42 AM"
+              value={profile.lastLogin || "Not available"}
               icon={<Clock size={15} />}
               className="bg-yellow-50 text-yellow-600"
             />
           </div>
         </section>
       </div>
-
-      {/* ======================================================
-          SECURITY
-      ======================================================= */}
 
       <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -416,7 +753,11 @@ export default function AdminProfile() {
           {!showPasswordForm && (
             <button
               type="button"
-              onClick={() => setShowPasswordForm(true)}
+              onClick={() => {
+                setError("");
+                setMessage("");
+                setShowPasswordForm(true);
+              }}
               className="flex w-fit items-center gap-2 rounded-xl border border-gray-200 px-4 py-2.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-50"
             >
               <KeyRound size={15} />
@@ -460,18 +801,35 @@ export default function AdminProfile() {
             <div className="flex flex-col-reverse gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={() => setShowPasswordForm(false)}
-                className="rounded-xl border border-gray-200 px-5 py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                disabled={saving}
+                onClick={() => {
+                  setShowPasswordForm(false);
+
+                  setPasswords({
+                    current: "",
+                    newPassword: "",
+                    confirm: "",
+                  });
+
+                  setError("");
+                }}
+                className="rounded-xl border border-gray-200 px-5 py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
               >
                 Cancel
               </button>
 
               <button
                 type="submit"
-                className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-blue-700"
+                disabled={saving}
+                className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                <Lock size={15} />
-                Update Password
+                {saving ? (
+                  <Loader2 size={15} className="animate-spin" />
+                ) : (
+                  <Lock size={15} />
+                )}
+
+                {saving ? "Updating..." : "Update Password"}
               </button>
             </div>
           </form>
@@ -480,61 +838,29 @@ export default function AdminProfile() {
             <SecurityCard
               icon={<Lock size={18} />}
               title="Password"
-              description="Last changed 30 days ago"
+              description="Firebase Authentication"
               status="Protected"
             />
 
             <SecurityCard
               icon={<ShieldCheck size={18} />}
-              title="Two-Factor Authentication"
-              description="Additional account protection"
-              status="Enabled"
+              title="Account"
+              description="Administrator account"
+              status="Verified"
             />
 
             <SecurityCard
               icon={<Clock size={18} />}
               title="Login Activity"
-              description="Last login today at 10:42 AM"
+              description={profile.lastLogin || "No login data"}
               status="Secure"
             />
           </div>
         )}
       </section>
-
-      {/* ======================================================
-          RECENT LOGIN
-      ======================================================= */}
-
-      <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">Recent Login</h2>
-
-            <p className="mt-1 text-xs text-gray-400">
-              Recent administrator login activity
-            </p>
-          </div>
-
-          <Clock size={20} className="text-gray-400" />
-        </div>
-
-        <div className="mt-5 overflow-hidden rounded-xl border border-gray-100">
-          <div className="grid grid-cols-1 divide-y md:grid-cols-3 md:divide-x md:divide-y-0">
-            <LoginInfo label="Device" value="Windows PC" />
-
-            <LoginInfo label="Browser" value="Chrome" />
-
-            <LoginInfo label="Login Time" value="Today, 10:42 AM" />
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
-
-/* ============================================================
-   QUICK INFO
-============================================================ */
 
 function QuickInfo({ icon, label, value }) {
   return (
@@ -554,11 +880,7 @@ function QuickInfo({ icon, label, value }) {
   );
 }
 
-/* ============================================================
-   PROFILE INPUT
-============================================================ */
-
-function ProfileInput({ label, name, type = "text", value, onChange, icon }) {
+function ProfileInput({ label, name, value, onChange, icon }) {
   return (
     <div>
       <label className="mb-2 block text-xs font-semibold text-gray-600">
@@ -571,7 +893,7 @@ function ProfileInput({ label, name, type = "text", value, onChange, icon }) {
         </div>
 
         <input
-          type={type}
+          type="text"
           name={name}
           value={value}
           onChange={onChange}
@@ -581,10 +903,6 @@ function ProfileInput({ label, name, type = "text", value, onChange, icon }) {
     </div>
   );
 }
-
-/* ============================================================
-   INFO ITEM
-============================================================ */
 
 function InfoItem({ label, value, icon }) {
   return (
@@ -599,10 +917,6 @@ function InfoItem({ label, value, icon }) {
     </div>
   );
 }
-
-/* ============================================================
-   ACCOUNT ROW
-============================================================ */
 
 function AccountRow({ label, value, icon, className }) {
   return (
@@ -621,10 +935,6 @@ function AccountRow({ label, value, icon, className }) {
     </div>
   );
 }
-
-/* ============================================================
-   PASSWORD INPUT
-============================================================ */
 
 function PasswordInput({ label, name, value, visible, onChange, onToggle }) {
   return (
@@ -660,10 +970,6 @@ function PasswordInput({ label, name, value, visible, onChange, onToggle }) {
   );
 }
 
-/* ============================================================
-   SECURITY CARD
-============================================================ */
-
 function SecurityCard({ icon, title, description, status }) {
   return (
     <div className="rounded-xl border border-gray-100 p-4">
@@ -683,23 +989,82 @@ function SecurityCard({ icon, title, description, status }) {
 
       <div className="mt-3 flex items-center gap-1.5 text-[10px] font-semibold text-green-600">
         <Check size={12} />
-
         {status}
       </div>
     </div>
   );
 }
 
-/* ============================================================
-   LOGIN INFO
-============================================================ */
+function formatDate(value) {
+  if (!value) {
+    return "";
+  }
 
-function LoginInfo({ label, value }) {
-  return (
-    <div className="p-4">
-      <p className="text-[10px] text-gray-400">{label}</p>
+  let date;
 
-      <p className="mt-1 text-xs font-semibold text-gray-700">{value}</p>
-    </div>
-  );
+  if (typeof value.toDate === "function") {
+    date = value.toDate();
+  } else if (value instanceof Date) {
+    date = value;
+  } else {
+    date = new Date(value);
+  }
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "";
+  }
+
+  let date;
+
+  if (typeof value.toDate === "function") {
+    date = value.toDate();
+  } else if (value instanceof Date) {
+    date = value;
+  } else {
+    date = new Date(value);
+  }
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function getFirebaseError(error, fallback) {
+  if (error?.code === "permission-denied") {
+    return "You do not have permission to access this profile.";
+  }
+
+  if (error?.code === "auth/requires-recent-login") {
+    return "Please log in again before performing this action.";
+  }
+
+  if (error?.code === "auth/invalid-credential") {
+    return "The current password is incorrect.";
+  }
+
+  if (error?.code === "auth/weak-password") {
+    return "The new password is too weak.";
+  }
+
+  return error?.message || fallback;
 }

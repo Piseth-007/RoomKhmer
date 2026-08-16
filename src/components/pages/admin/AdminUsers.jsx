@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import {
   Users,
   Search,
@@ -22,115 +23,138 @@ import {
   ChevronRight,
   AlertCircle,
 } from "lucide-react";
+
 import { Link } from "react-router-dom";
 
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
+
+import { db } from "../../../firebase/config";
+
+const PAGE_SIZE = 10;
+
 export default function AdminUsers() {
-  const [users, setUsers] = useState([
-    {
-      id: "USR-001",
-      name: "Sokha Chan",
-      email: "sokha@example.com",
-      phone: "012 345 678",
-      role: "tenant",
-      location: "Toul Kork",
-      status: "active",
-      joined: "Aug 14, 2026",
-      bookings: 3,
-      rooms: 0,
-    },
-    {
-      id: "USR-002",
-      name: "Dara Kim",
-      email: "dara@example.com",
-      phone: "010 222 333",
-      role: "tenant",
-      location: "Sen Sok",
-      status: "active",
-      joined: "Aug 12, 2026",
-      bookings: 5,
-      rooms: 0,
-    },
-    {
-      id: "USR-003",
-      name: "Sreypov Sok",
-      email: "sreypov@example.com",
-      phone: "096 444 555",
-      role: "tenant",
-      location: "Chamkarmon",
-      status: "suspended",
-      joined: "Aug 10, 2026",
-      bookings: 1,
-      rooms: 0,
-    },
-    {
-      id: "LL-001",
-      name: "Sokha Property",
-      email: "sokha.property@example.com",
-      phone: "012 888 999",
-      role: "landlord",
-      location: "Toul Kork",
-      status: "active",
-      joined: "Aug 08, 2026",
-      bookings: 12,
-      rooms: 8,
-    },
-    {
-      id: "LL-002",
-      name: "Dara Home",
-      email: "dara.home@example.com",
-      phone: "010 777 888",
-      role: "landlord",
-      location: "Sen Sok",
-      status: "active",
-      joined: "Aug 05, 2026",
-      bookings: 18,
-      rooms: 12,
-    },
-    {
-      id: "LL-003",
-      name: "BKK Residence",
-      email: "bkk.residence@example.com",
-      phone: "096 111 222",
-      role: "landlord",
-      location: "BKK1",
-      status: "pending",
-      joined: "Aug 14, 2026",
-      bookings: 0,
-      rooms: 2,
-    },
-    {
-      id: "LL-004",
-      name: "Happy Home",
-      email: "happy.home@example.com",
-      phone: "097 333 444",
-      role: "landlord",
-      location: "Daun Penh",
-      status: "suspended",
-      joined: "Jul 28, 2026",
-      bookings: 7,
-      rooms: 4,
-    },
-  ]);
+  const [users, setUsers] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
+  const [actionLoading, setActionLoading] = useState(null);
+
+  const [error, setError] = useState("");
 
   const [role, setRole] = useState("all");
+
   const [status, setStatus] = useState("all");
+
   const [search, setSearch] = useState("");
+
   const [location, setLocation] = useState("all");
+
   const [openMenu, setOpenMenu] = useState(null);
 
-  // ============================================================
-  // FILTER USERS
-  // ============================================================
+  const [page, setPage] = useState(1);
+
+  /*
+   * ============================================================
+   * LOAD USERS
+   * ============================================================
+   */
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const snapshot = await getDocs(collection(db, "users"));
+
+      const userData = snapshot.docs.map((userDoc) => {
+        const data = userDoc.data();
+
+        return {
+          id: userDoc.id,
+
+          name: data.name || data.displayName || "Unknown User",
+
+          email: data.email || "No email",
+
+          phone: data.phone || data.phoneNumber || "No phone",
+
+          role: normalizeRole(data.role),
+
+          location: data.location || data.address || "Unknown",
+
+          status: normalizeStatus(data.status),
+
+          joined: data.createdAt || null,
+
+          /*
+           * These values are only used if
+           * you actually store them inside
+           * the user document.
+           */
+          bookings: Number(data.bookings || 0),
+
+          rooms: Number(data.rooms || 0),
+        };
+      });
+
+      setUsers(userData);
+    } catch (err) {
+      console.error("Load users error:", err);
+
+      setError(getFirebaseError(err, "Failed to load users."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  /*
+   * ============================================================
+   * RESET PAGE WHEN FILTER CHANGES
+   * ============================================================
+   */
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, role, status, location]);
+
+  /*
+   * ============================================================
+   * FILTER USERS
+   * ============================================================
+   */
 
   const filteredUsers = useMemo(() => {
+    const query = search.toLowerCase().trim();
+
     return users.filter((user) => {
-      const query = search.toLowerCase();
+      const id = String(user.id || "").toLowerCase();
+
+      const name = String(user.name || "").toLowerCase();
+
+      const email = String(user.email || "").toLowerCase();
+
+      const phone = String(user.phone || "").toLowerCase();
+
+      const userLocation = String(user.location || "").toLowerCase();
 
       const matchesSearch =
-        user.id.toLowerCase().includes(query) ||
-        user.name.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query) ||
-        user.phone.toLowerCase().includes(query);
+        !query ||
+        id.includes(query) ||
+        name.includes(query) ||
+        email.includes(query) ||
+        phone.includes(query) ||
+        userLocation.includes(query);
 
       const matchesRole = role === "all" || user.role === role;
 
@@ -142,15 +166,19 @@ export default function AdminUsers() {
     });
   }, [users, role, status, search, location]);
 
-  // ============================================================
-  // COUNTS
-  // ============================================================
+  /*
+   * ============================================================
+   * COUNTS
+   * ============================================================
+   */
 
   const totalUsers = users.length;
 
   const tenantCount = users.filter((user) => user.role === "tenant").length;
 
   const landlordCount = users.filter((user) => user.role === "landlord").length;
+
+  const adminCount = users.filter((user) => user.role === "admin").length;
 
   const activeCount = users.filter((user) => user.status === "active").length;
 
@@ -160,46 +188,176 @@ export default function AdminUsers() {
     (user) => user.status === "suspended",
   ).length;
 
-  // ============================================================
-  // UPDATE STATUS
-  // ============================================================
+  /*
+   * ============================================================
+   * LOCATIONS
+   * ============================================================
+   */
 
-  const updateStatus = (id, newStatus) => {
-    setUsers((current) =>
-      current.map((user) =>
-        user.id === id
-          ? {
-              ...user,
-              status: newStatus,
-            }
-          : user,
+  const locations = useMemo(() => {
+    return [
+      ...new Set(
+        users
+          .map((user) => user.location)
+          .filter((value) => value && value !== "Unknown"),
       ),
-    );
+    ].sort();
+  }, [users]);
 
-    setOpenMenu(null);
+  /*
+   * ============================================================
+   * PAGINATION
+   * ============================================================
+   */
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+
+  const safePage = Math.min(page, totalPages);
+
+  const paginatedUsers = filteredUsers.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
+  );
+
+  /*
+   * ============================================================
+   * UPDATE USER STATUS
+   * ============================================================
+   */
+
+  const updateStatus = async (user, newStatus) => {
+    /*
+     * Do not allow changing
+     * another admin's status.
+     */
+    if (user.role === "admin") {
+      setError(
+        "Admin accounts cannot be suspended or approved from this page.",
+      );
+
+      setOpenMenu(null);
+
+      return;
+    }
+
+    try {
+      setActionLoading(user.id);
+
+      setError("");
+
+      await updateDoc(doc(db, "users", user.id), {
+        status: newStatus,
+
+        updatedAt: serverTimestamp(),
+      });
+
+      setUsers((current) =>
+        current.map((item) =>
+          item.id === user.id
+            ? {
+                ...item,
+                status: newStatus,
+              }
+            : item,
+        ),
+      );
+
+      setOpenMenu(null);
+    } catch (err) {
+      console.error("Update user error:", err);
+
+      setError(getFirebaseError(err, "Failed to update user."));
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  // ============================================================
-  // DELETE USER
-  // ============================================================
+  /*
+   * ============================================================
+   * DELETE USER
+   * ============================================================
+   */
 
-  const deleteUser = (id) => {
+  const deleteUser = async (user) => {
+    /*
+     * Protect admin accounts.
+     */
+    if (user.role === "admin") {
+      setError("Admin accounts cannot be deleted from this page.");
+
+      setOpenMenu(null);
+
+      return;
+    }
+
     const confirmed = window.confirm(
-      "Are you sure you want to delete this user?",
+      `Are you sure you want to delete ${user.name}?`,
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
-    setUsers((current) => current.filter((user) => user.id !== id));
+    try {
+      setActionLoading(user.id);
 
-    setOpenMenu(null);
+      setError("");
+
+      await deleteDoc(doc(db, "users", user.id));
+
+      setUsers((current) => current.filter((item) => item.id !== user.id));
+
+      setOpenMenu(null);
+    } catch (err) {
+      console.error("Delete user error:", err);
+
+      setError(getFirebaseError(err, "Failed to delete user."));
+    } finally {
+      setActionLoading(null);
+    }
   };
+
+  /*
+   * ============================================================
+   * CLEAR FILTERS
+   * ============================================================
+   */
+
+  const clearFilters = () => {
+    setSearch("");
+    setRole("all");
+    setStatus("all");
+    setLocation("all");
+    setPage(1);
+  };
+
+  /*
+   * ============================================================
+   * LOADING
+   * ============================================================
+   */
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+
+          <p className="mt-4 text-sm text-gray-500">Loading users...</p>
+        </div>
+      </div>
+    );
+  }
+
+  /*
+   * ============================================================
+   * UI
+   * ============================================================
+   */
 
   return (
     <div className="space-y-6">
-      {/* ======================================================
-          HEADER
-      ======================================================= */}
+      {/* HEADER */}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -229,9 +387,29 @@ export default function AdminUsers() {
         )}
       </div>
 
-      {/* ======================================================
-          STATISTICS
-      ======================================================= */}
+      {/* ERROR */}
+
+      {error && (
+        <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-4">
+          <AlertCircle size={18} className="mt-0.5 shrink-0 text-red-500" />
+
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-red-700">Firebase error</p>
+
+            <p className="mt-1 wrap-break-word text-xs text-red-600">{error}</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setError("")}
+            className="ml-auto text-xs text-red-500"
+          >
+            Close
+          </button>
+        </div>
+      )}
+
+      {/* STATS */}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <UserStat
@@ -263,9 +441,7 @@ export default function AdminUsers() {
         />
       </div>
 
-      {/* ======================================================
-          ROLE TABS
-      ======================================================= */}
+      {/* ROLE TABS */}
 
       <div className="overflow-x-auto">
         <div className="flex min-w-max gap-2 rounded-xl border border-gray-100 bg-white p-1.5 shadow-sm">
@@ -289,16 +465,21 @@ export default function AdminUsers() {
             active={role === "landlord"}
             onClick={() => setRole("landlord")}
           />
+
+          <RoleTab
+            label="Admins"
+            count={adminCount}
+            active={role === "admin"}
+            onClick={() => setRole("admin")}
+          />
         </div>
       </div>
 
-      {/* ======================================================
-          FILTERS
-      ======================================================= */}
+      {/* FILTERS */}
 
       <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
-          {/* Search */}
+          {/* SEARCH */}
 
           <div className="relative">
             <Search
@@ -310,12 +491,12 @@ export default function AdminUsers() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name, email, phone or ID..."
+              placeholder="Search name, email, phone, location or ID..."
               className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-4 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:bg-white"
             />
           </div>
 
-          {/* Status */}
+          {/* STATUS */}
 
           <select
             value={status}
@@ -331,7 +512,7 @@ export default function AdminUsers() {
             <option value="suspended">Suspended</option>
           </select>
 
-          {/* Location */}
+          {/* LOCATION */}
 
           <select
             value={location}
@@ -340,30 +521,27 @@ export default function AdminUsers() {
           >
             <option value="all">All Locations</option>
 
-            <option value="Toul Kork">Toul Kork</option>
-
-            <option value="Sen Sok">Sen Sok</option>
-
-            <option value="BKK1">BKK1</option>
-
-            <option value="Chamkarmon">Chamkarmon</option>
-
-            <option value="Daun Penh">Daun Penh</option>
+            {locations.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
           </select>
+
+          {/* CLEAR */}
 
           <button
             type="button"
+            onClick={clearFilters}
             className="flex h-11 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
           >
             <Filter size={16} />
-            Filter
+            Clear
           </button>
         </div>
       </div>
 
-      {/* ======================================================
-          STATUS SUMMARY
-      ======================================================= */}
+      {/* STATUS SUMMARY */}
 
       <div className="flex flex-wrap gap-3">
         <StatusSummary
@@ -386,287 +564,222 @@ export default function AdminUsers() {
           value={suspendedCount}
           className="bg-red-50 text-red-500"
         />
+
+        <StatusSummary
+          icon={<ShieldCheck size={14} />}
+          label="Admins"
+          value={adminCount}
+          className="bg-purple-50 text-purple-600"
+        />
       </div>
 
-      {/* ======================================================
-          DESKTOP TABLE
-      ======================================================= */}
+      {/* DESKTOP TABLE */}
 
-      <div className="hidden overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm lg:block">
-        <div className="overflow-x-auto">
+      <div className="hidden overflow-visible rounded-2xl border border-gray-100 bg-white shadow-sm lg:block">
+        <div className="overflow-x-auto overflow-y-visible">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100 text-left">
-                <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                  User
-                </th>
+                <TableHead>User</TableHead>
 
-                <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                  Contact
-                </th>
+                <TableHead>Contact</TableHead>
 
-                <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                  Role
-                </th>
+                <TableHead>Role</TableHead>
 
-                <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                  Location
-                </th>
+                <TableHead>Location</TableHead>
 
-                <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                  Activity
-                </th>
+                <TableHead>Activity</TableHead>
 
-                <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                  Status
-                </th>
+                <TableHead>Status</TableHead>
 
-                <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                  Action
-                </th>
+                <TableHead>Action</TableHead>
               </tr>
             </thead>
 
             <tbody>
-              {filteredUsers.map((user) => (
-                <tr
-                  key={user.id}
-                  className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
-                >
-                  {/* User */}
+              {paginatedUsers.map((user) => {
+                const busy = actionLoading === user.id;
 
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <UserAvatar user={user} />
+                return (
+                  <tr
+                    key={user.id}
+                    className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
+                  >
+                    {/* USER */}
 
-                      <div className="min-w-0">
-                        <p className="max-w-[170px] truncate text-sm font-semibold text-gray-800">
-                          {user.name}
-                        </p>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <UserAvatar user={user} />
 
-                        <p className="mt-1 text-[10px] text-gray-400">
-                          {user.id}
-                        </p>
+                        <div className="min-w-0">
+                          <p className="max-w-42.5 truncate text-sm font-semibold text-gray-800">
+                            {user.name}
+                          </p>
+
+                          <p className="mt-1 max-w-42.5 truncate text-[10px] text-gray-400">
+                            {user.id}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* Contact */}
+                    {/* CONTACT */}
 
-                  <td className="px-5 py-4">
-                    <p className="flex items-center gap-1.5 text-xs text-gray-600">
-                      <Mail size={12} className="text-gray-400" />
-                      {user.email}
-                    </p>
+                    <td className="px-5 py-4">
+                      <p className="flex max-w-55 items-center gap-1.5 truncate text-xs text-gray-600">
+                        <Mail size={12} className="shrink-0 text-gray-400" />
 
-                    <p className="mt-1 flex items-center gap-1.5 text-[10px] text-gray-400">
-                      <Phone size={11} />
-                      {user.phone}
-                    </p>
-                  </td>
+                        {user.email}
+                      </p>
 
-                  {/* Role */}
+                      <p className="mt-1 flex items-center gap-1.5 text-[10px] text-gray-400">
+                        <Phone size={11} />
 
-                  <td className="px-5 py-4">
-                    <RoleBadge role={user.role} />
-                  </td>
+                        {user.phone}
+                      </p>
+                    </td>
 
-                  {/* Location */}
+                    {/* ROLE */}
 
-                  <td className="px-5 py-4">
-                    <span className="flex items-center gap-1.5 text-xs text-gray-600">
-                      <MapPin size={13} className="text-gray-400" />
-                      {user.location}
-                    </span>
-                  </td>
+                    <td className="px-5 py-4">
+                      <RoleBadge role={user.role} />
+                    </td>
 
-                  {/* Activity */}
+                    {/* LOCATION */}
 
-                  <td className="px-5 py-4">
-                    {user.role === "landlord" ? (
-                      <div>
-                        <p className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
-                          <Home size={13} />
-                          {user.rooms} Rooms
-                        </p>
+                    <td className="px-5 py-4">
+                      <span className="flex max-w-32.5 items-center gap-1.5 truncate text-xs text-gray-600">
+                        <MapPin size={13} className="shrink-0 text-gray-400" />
 
-                        <p className="mt-1 text-[9px] text-gray-400">
-                          {user.bookings} Bookings
-                        </p>
-                      </div>
-                    ) : (
-                      <div>
-                        <p className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
-                          <CalendarDays size={13} />
-                          {user.bookings} Bookings
-                        </p>
+                        {user.location}
+                      </span>
+                    </td>
 
-                        <p className="mt-1 text-[9px] text-gray-400">Tenant</p>
-                      </div>
-                    )}
-                  </td>
+                    {/* ACTIVITY */}
 
-                  {/* Status */}
+                    <td className="px-5 py-4">
+                      {user.role === "landlord" ? (
+                        <div>
+                          <p className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
+                            <Home size={13} />
+                            {user.rooms} Rooms
+                          </p>
 
-                  <td className="px-5 py-4">
-                    <UserStatus status={user.status} />
-                  </td>
+                          <p className="mt-1 text-[9px] text-gray-400">
+                            {user.bookings} Bookings
+                          </p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
+                            <CalendarDays size={13} />
+                            {user.bookings} Bookings
+                          </p>
 
-                  {/* Action */}
-
-                  <td className="px-5 py-4">
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setOpenMenu(openMenu === user.id ? null : user.id)
-                        }
-                        className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-                      >
-                        <MoreVertical size={17} />
-                      </button>
-
-                      {openMenu === user.id && (
-                        <UserMenu
-                          user={user}
-                          onUpdateStatus={updateStatus}
-                          onDelete={deleteUser}
-                        />
+                          <p className="mt-1 text-[9px] text-gray-400">
+                            {user.role === "admin" ? "Administrator" : "Tenant"}
+                          </p>
+                        </div>
                       )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+
+                    {/* STATUS */}
+
+                    <td className="px-5 py-4">
+                      <UserStatus status={user.status} />
+                    </td>
+
+                    {/* ACTION */}
+
+                    <td className="px-5 py-4">
+                      <div className="relative">
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() =>
+                            setOpenMenu(openMenu === user.id ? null : user.id)
+                          }
+                          className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40"
+                        >
+                          <MoreVertical size={17} />
+                        </button>
+
+                        {openMenu === user.id && (
+                          <UserMenu
+                            user={user}
+                            busy={busy}
+                            onUpdateStatus={updateStatus}
+                            onDelete={deleteUser}
+                            closeMenu={() => setOpenMenu(null)}
+                          />
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
-        <TableFooter count={filteredUsers.length} total={users.length} />
+        <TableFooter
+          page={safePage}
+          totalPages={totalPages}
+          count={paginatedUsers.length}
+          total={filteredUsers.length}
+          onPrevious={() => setPage((current) => Math.max(1, current - 1))}
+          onNext={() => setPage((current) => Math.min(totalPages, current + 1))}
+        />
       </div>
 
-      {/* ======================================================
-          MOBILE CARDS
-      ======================================================= */}
+      {/* MOBILE */}
 
       <div className="space-y-4 lg:hidden">
-        {filteredUsers.map((user) => (
-          <div
+        {paginatedUsers.map((user) => (
+          <MobileUserCard
             key={user.id}
-            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <UserAvatar user={user} />
-
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-gray-900">
-                    {user.name}
-                  </p>
-
-                  <p className="mt-1 text-[10px] text-gray-400">{user.id}</p>
-                </div>
-              </div>
-
-              <UserStatus status={user.status} />
-            </div>
-
-            <div className="mt-4 space-y-2 border-y border-gray-100 py-4">
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <Mail size={14} />
-                <span className="truncate">{user.email}</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <Phone size={14} />
-                {user.phone}
-              </div>
-
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <MapPin size={14} />
-                {user.location}
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between">
-              <RoleBadge role={user.role} />
-
-              {user.role === "landlord" ? (
-                <div className="flex items-center gap-3 text-[10px] text-gray-400">
-                  <span className="flex items-center gap-1">
-                    <Home size={12} />
-                    {user.rooms} rooms
-                  </span>
-
-                  <span className="flex items-center gap-1">
-                    <CalendarDays size={12} />
-                    {user.bookings} bookings
-                  </span>
-                </div>
-              ) : (
-                <span className="flex items-center gap-1 text-[10px] text-gray-400">
-                  <CalendarDays size={12} />
-                  {user.bookings} bookings
-                </span>
-              )}
-            </div>
-
-            <div className="mt-4 flex gap-2">
-              <Link
-                to={`/admin/users/${user.id}`}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-50"
-              >
-                <Eye size={15} />
-                View
-              </Link>
-
-              {user.status === "active" && (
-                <button
-                  type="button"
-                  onClick={() => updateStatus(user.id, "suspended")}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-50 py-2.5 text-xs font-semibold text-red-500 transition hover:bg-red-100"
-                >
-                  <UserX size={15} />
-                  Suspend
-                </button>
-              )}
-
-              {user.status === "suspended" && (
-                <button
-                  type="button"
-                  onClick={() => updateStatus(user.id, "active")}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-50 py-2.5 text-xs font-semibold text-green-600 transition hover:bg-green-100"
-                >
-                  <UserCheck size={15} />
-                  Activate
-                </button>
-              )}
-
-              {user.status === "pending" && (
-                <button
-                  type="button"
-                  onClick={() => updateStatus(user.id, "active")}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-50 py-2.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-100"
-                >
-                  <CheckCircle size={15} />
-                  Approve
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => deleteUser(user.id)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500 transition hover:bg-red-100"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
+            user={user}
+            actionLoading={actionLoading}
+            updateStatus={updateStatus}
+            deleteUser={deleteUser}
+          />
         ))}
       </div>
 
-      {/* ======================================================
-          EMPTY STATE
-      ======================================================= */}
+      {/* MOBILE PAGINATION */}
+
+      {paginatedUsers.length > 0 && (
+        <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 lg:hidden">
+          <p className="text-xs text-gray-400">
+            Page <span className="font-semibold text-gray-700">{safePage}</span>{" "}
+            of <span className="font-semibold text-gray-700">{totalPages}</span>
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={safePage === 1}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronLeft size={15} />
+            </button>
+
+            <button
+              type="button"
+              disabled={safePage === totalPages}
+              onClick={() =>
+                setPage((current) => Math.min(totalPages, current + 1))
+              }
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronRight size={15} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* EMPTY */}
 
       {filteredUsers.length === 0 && (
         <div className="rounded-2xl border border-gray-100 bg-white py-16 text-center shadow-sm">
@@ -687,9 +800,143 @@ export default function AdminUsers() {
   );
 }
 
-/* ============================================================
-   USER STAT
-============================================================ */
+/*
+ * ============================================================
+ * MOBILE USER CARD
+ * ============================================================
+ */
+
+function MobileUserCard({ user, actionLoading, updateStatus, deleteUser }) {
+  const busy = actionLoading === user.id;
+
+  const isAdmin = user.role === "admin";
+
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <UserAvatar user={user} />
+
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-gray-900">
+              {user.name}
+            </p>
+
+            <p className="mt-1 truncate text-[10px] text-gray-400">{user.id}</p>
+          </div>
+        </div>
+
+        <UserStatus status={user.status} />
+      </div>
+
+      <div className="mt-4 space-y-2 border-y border-gray-100 py-4">
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <Mail size={14} />
+
+          <span className="truncate">{user.email}</span>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <Phone size={14} />
+
+          {user.phone}
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <MapPin size={14} />
+
+          {user.location}
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between">
+        <RoleBadge role={user.role} />
+
+        {user.role === "landlord" ? (
+          <div className="flex items-center gap-3 text-[10px] text-gray-400">
+            <span className="flex items-center gap-1">
+              <Home size={12} />
+              {user.rooms} rooms
+            </span>
+
+            <span className="flex items-center gap-1">
+              <CalendarDays size={12} />
+              {user.bookings} bookings
+            </span>
+          </div>
+        ) : (
+          <span className="flex items-center gap-1 text-[10px] text-gray-400">
+            <CalendarDays size={12} />
+            {user.bookings} bookings
+          </span>
+        )}
+      </div>
+
+      <div className="mt-4 flex gap-2">
+        <Link
+          to={`/admin/users/${user.id}`}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-50"
+        >
+          <Eye size={15} />
+          View
+        </Link>
+
+        {!isAdmin && user.status === "active" && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => updateStatus(user, "suspended")}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-50 py-2.5 text-xs font-semibold text-red-500 transition hover:bg-red-100 disabled:opacity-50"
+          >
+            <UserX size={15} />
+            Suspend
+          </button>
+        )}
+
+        {!isAdmin && user.status === "suspended" && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => updateStatus(user, "active")}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-50 py-2.5 text-xs font-semibold text-green-600 transition hover:bg-green-100 disabled:opacity-50"
+          >
+            <UserCheck size={15} />
+            Activate
+          </button>
+        )}
+
+        {!isAdmin && user.status === "pending" && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => updateStatus(user, "active")}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-50 py-2.5 text-xs font-semibold text-blue-600 transition hover:bg-blue-100 disabled:opacity-50"
+          >
+            <CheckCircle size={15} />
+            Approve
+          </button>
+        )}
+
+        {!isAdmin && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => deleteUser(user)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500 transition hover:bg-red-100 disabled:opacity-50"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/*
+ * ============================================================
+ * USER STAT
+ * ============================================================
+ */
 
 function UserStat({ label, value, icon, className }) {
   return (
@@ -709,9 +956,11 @@ function UserStat({ label, value, icon, className }) {
   );
 }
 
-/* ============================================================
-   ROLE TAB
-============================================================ */
+/*
+ * ============================================================
+ * ROLE TAB
+ * ============================================================
+ */
 
 function RoleTab({ label, count, active, onClick }) {
   return (
@@ -735,9 +984,11 @@ function RoleTab({ label, count, active, onClick }) {
   );
 }
 
-/* ============================================================
-   STATUS SUMMARY
-============================================================ */
+/*
+ * ============================================================
+ * STATUS SUMMARY
+ * ============================================================
+ */
 
 function StatusSummary({ icon, label, value, className }) {
   return (
@@ -753,9 +1004,11 @@ function StatusSummary({ icon, label, value, className }) {
   );
 }
 
-/* ============================================================
-   USER AVATAR
-============================================================ */
+/*
+ * ============================================================
+ * AVATAR
+ * ============================================================
+ */
 
 function UserAvatar({ user }) {
   return (
@@ -763,10 +1016,14 @@ function UserAvatar({ user }) {
       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
         user.role === "landlord"
           ? "bg-purple-50 text-purple-600"
-          : "bg-blue-50 text-blue-600"
+          : user.role === "admin"
+            ? "bg-red-50 text-red-600"
+            : "bg-blue-50 text-blue-600"
       }`}
     >
       {user.role === "landlord" ? (
+        <ShieldCheck size={20} />
+      ) : user.role === "admin" ? (
         <ShieldCheck size={20} />
       ) : (
         <User size={20} />
@@ -775,11 +1032,22 @@ function UserAvatar({ user }) {
   );
 }
 
-/* ============================================================
-   ROLE BADGE
-============================================================ */
+/*
+ * ============================================================
+ * ROLE BADGE
+ * ============================================================
+ */
 
 function RoleBadge({ role }) {
+  if (role === "admin") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1.5 text-[9px] font-semibold text-red-600">
+        <ShieldCheck size={11} />
+        Admin
+      </span>
+    );
+  }
+
   if (role === "landlord") {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-2.5 py-1.5 text-[9px] font-semibold text-purple-600">
@@ -797,9 +1065,11 @@ function RoleBadge({ role }) {
   );
 }
 
-/* ============================================================
-   USER STATUS
-============================================================ */
+/*
+ * ============================================================
+ * USER STATUS
+ * ============================================================
+ */
 
 function UserStatus({ status }) {
   const config = {
@@ -831,78 +1101,112 @@ function UserStatus({ status }) {
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[9px] font-semibold ${current.className}`}
     >
       <Icon size={11} />
+
       {current.label}
     </span>
   );
 }
 
-/* ============================================================
-   USER MENU
-============================================================ */
+/*
+ * ============================================================
+ * USER MENU
+ * ============================================================
+ */
 
-function UserMenu({ user, onUpdateStatus, onDelete }) {
+function UserMenu({ user, busy, onUpdateStatus, onDelete, closeMenu }) {
+  const isAdmin = user.role === "admin";
+
   return (
-    <div className="absolute right-0 top-10 z-30 w-48 overflow-hidden rounded-xl border border-gray-100 bg-white p-1 shadow-xl">
+    <div className="absolute right-0 top-10 z-50 w-48 overflow-hidden rounded-xl border border-gray-100 bg-white p-1 shadow-xl">
       <Link
         to={`/admin/users/${user.id}`}
+        onClick={closeMenu}
         className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-gray-600 hover:bg-gray-50"
       >
         <Eye size={15} />
         View Profile
       </Link>
 
-      {user.status === "pending" && (
+      {!isAdmin && user.status === "pending" && (
         <button
           type="button"
-          onClick={() => onUpdateStatus(user.id, "active")}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-green-600 hover:bg-green-50"
+          disabled={busy}
+          onClick={() => onUpdateStatus(user, "active")}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-green-600 hover:bg-green-50 disabled:opacity-50"
         >
           <CheckCircle size={15} />
           Approve User
         </button>
       )}
 
-      {user.status === "active" && (
+      {!isAdmin && user.status === "active" && (
         <button
           type="button"
-          onClick={() => onUpdateStatus(user.id, "suspended")}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-red-500 hover:bg-red-50"
+          disabled={busy}
+          onClick={() => onUpdateStatus(user, "suspended")}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-red-500 hover:bg-red-50 disabled:opacity-50"
         >
           <UserX size={15} />
           Suspend User
         </button>
       )}
 
-      {user.status === "suspended" && (
+      {!isAdmin && user.status === "suspended" && (
         <button
           type="button"
-          onClick={() => onUpdateStatus(user.id, "active")}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-green-600 hover:bg-green-50"
+          disabled={busy}
+          onClick={() => onUpdateStatus(user, "active")}
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-green-600 hover:bg-green-50 disabled:opacity-50"
         >
           <UserCheck size={15} />
           Activate User
         </button>
       )}
 
-      <div className="my-1 border-t border-gray-100" />
+      {!isAdmin && (
+        <>
+          <div className="my-1 border-t border-gray-100" />
 
-      <button
-        type="button"
-        onClick={() => onDelete(user.id)}
-        className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-red-500 hover:bg-red-50"
-      >
-        <Trash2 size={15} />
-        Delete User
-      </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onDelete(user)}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-xs text-red-500 hover:bg-red-50 disabled:opacity-50"
+          >
+            <Trash2 size={15} />
+            Delete User
+          </button>
+        </>
+      )}
+
+      {isAdmin && (
+        <div className="px-3 py-2 text-[10px] text-gray-400">Admin account</div>
+      )}
     </div>
   );
 }
 
-/* ============================================================
-   TABLE FOOTER
-============================================================ */
+/*
+ * ============================================================
+ * TABLE HEAD
+ * ============================================================
+ */
 
-function TableFooter({ count, total }) {
+function TableHead({ children }) {
+  return (
+    <th className="px-5 py-4 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+      {children}
+    </th>
+  );
+}
+
+/*
+ * ============================================================
+ * TABLE FOOTER
+ * ============================================================
+ */
+
+function TableFooter({ page, totalPages, count, total, onPrevious, onNext }) {
   return (
     <div className="flex items-center justify-between border-t border-gray-100 px-5 py-4">
       <p className="text-xs text-gray-400">
@@ -910,35 +1214,103 @@ function TableFooter({ count, total }) {
         <span className="font-semibold text-gray-700">{total}</span> users
       </p>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <button
           type="button"
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50"
+          disabled={page === 1}
+          onClick={onPrevious}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronLeft size={15} />
         </button>
 
-        <button
-          type="button"
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-xs font-semibold text-white"
-        >
-          1
-        </button>
+        <span className="min-w-8 text-center text-xs font-semibold text-gray-700">
+          {page}
+        </span>
 
         <button
           type="button"
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50"
-        >
-          2
-        </button>
-
-        <button
-          type="button"
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50"
+          disabled={page === totalPages}
+          onClick={onNext}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronRight size={15} />
         </button>
       </div>
     </div>
   );
+}
+
+/*
+ * ============================================================
+ * NORMALIZE ROLE
+ * ============================================================
+ */
+
+function normalizeRole(role) {
+  const value = String(role || "")
+    .trim()
+    .toLowerCase();
+
+  if (value === "landlord" || value === "owner") {
+    return "landlord";
+  }
+
+  if (value === "student" || value === "tenant") {
+    return "tenant";
+  }
+
+  if (value === "admin") {
+    return "admin";
+  }
+
+  return "tenant";
+}
+
+/*
+ * ============================================================
+ * NORMALIZE STATUS
+ * ============================================================
+ */
+
+function normalizeStatus(status) {
+  const value = String(status || "")
+    .trim()
+    .toLowerCase();
+
+  if (value === "suspended") {
+    return "suspended";
+  }
+
+  if (value === "pending") {
+    return "pending";
+  }
+
+  return "active";
+}
+
+/*
+ * ============================================================
+ * FIREBASE ERROR
+ * ============================================================
+ */
+
+function getFirebaseError(error, fallback) {
+  if (!error) {
+    return fallback;
+  }
+
+  if (error.code === "permission-denied") {
+    return "Permission denied. Make sure you are logged in as an admin and your Firestore rules allow admin access to users.";
+  }
+
+  if (error.code === "not-found") {
+    return "The user document no longer exists.";
+  }
+
+  if (error.code === "unavailable") {
+    return "Firebase is temporarily unavailable. Please try again.";
+  }
+
+  return error.message || fallback;
 }

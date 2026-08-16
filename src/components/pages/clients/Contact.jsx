@@ -13,6 +13,9 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../../../firebase/config";
+
 const Contact = () => {
   const [form, setForm] = useState({
     name: "",
@@ -32,11 +35,25 @@ const Contact = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // Temporary frontend behavior.
-    // Later this will connect to Laravel API.
+  console.log("Submitting form...");
+  console.log("Form data:", form);
+  console.log("Firestore db:", db);
+
+  try {
+    const docRef = await addDoc(collection(db, "contactMessages"), {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      subject: form.subject.trim(),
+      message: form.message.trim(),
+      status: "unread",
+      createdAt: serverTimestamp(),
+    });
+
+    console.log("SUCCESS! Document ID:", docRef.id);
+
     setSubmitted(true);
 
     setForm({
@@ -45,7 +62,15 @@ const Contact = () => {
       subject: "",
       message: "",
     });
-  };
+  } catch (error) {
+    console.error("🔥 FIREBASE ERROR");
+    console.error("Code:", error.code);
+    console.error("Message:", error.message);
+    console.error("Full error:", error);
+
+    alert(`Firebase Error:\n${error.code}\n${error.message}`);
+  }
+};
 
   const contactInfo = [
     {
@@ -151,9 +176,6 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* =====================================================
-          CONTACT INFORMATION
-      ====================================================== */}
 
       <section className="bg-white">
         <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
