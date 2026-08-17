@@ -16,6 +16,33 @@ import {
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
+function Avatar({ size = "normal", photo, name = "Guest" }) {
+  const avatarClass =
+    size === "large"
+      ? "h-12 w-12 text-lg"
+      : size === "small"
+        ? "h-8 w-8 text-sm"
+        : "h-9 w-9 text-sm";
+
+  if (photo) {
+    return (
+      <img
+        src={photo}
+        alt={name}
+        className={`${avatarClass} rounded-full object-cover ring-2 ring-white`}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`${avatarClass} flex items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-600`}
+    >
+      {name?.charAt(0)?.toUpperCase() || <User size={18} />}
+    </div>
+  );
+}
+
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -42,18 +69,22 @@ export default function Navbar() {
   const navLinks = [
     {
       name: "ទំព័រដើម",
+      english: "Home",
       path: "/",
     },
     {
       name: "ស្វែងរកបន្ទប់",
+      english: "Rooms",
       path: "/rooms",
     },
     {
       name: "តំបន់",
+      english: "Locations",
       path: "/locations",
     },
     {
       name: "អំពីយើង",
+      english: "About",
       path: "/about",
     },
   ];
@@ -63,9 +94,12 @@ export default function Navbar() {
     setIsProfileOpen(false);
   };
 
-  const handleLogout = async () => {
+  const closeProfile = () => {
     setIsProfileOpen(false);
-    setIsOpen(false);
+  };
+
+  const handleLogout = async () => {
+    closeMenu();
 
     try {
       await logout();
@@ -104,40 +138,10 @@ export default function Navbar() {
     };
   }, []);
 
-  const Avatar = ({ size = "normal" }) => {
-    const avatarClass =
-      size === "large"
-        ? "h-12 w-12 text-lg"
-        : size === "small"
-          ? "h-8 w-8 text-sm"
-          : "h-9 w-9 text-sm";
-
-    if (user.photo) {
-      return (
-        <img
-          src={user.photo}
-          alt={user.name}
-          className={`${avatarClass} rounded-full object-cover ring-2 ring-white`}
-        />
-      );
-    }
-
-    return (
-      <div
-        className={`${avatarClass} flex items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-600`}
-      >
-        {user.name?.charAt(0)?.toUpperCase() || <User size={18} />}
-      </div>
-    );
-  };
-
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 shadow-sm backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* =====================================================
-            LOGO
-        ====================================================== */}
-
+        {/* Logo */}
         <Link
           to="/"
           onClick={closeMenu}
@@ -158,10 +162,7 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* =====================================================
-            DESKTOP NAVIGATION
-        ====================================================== */}
-
+        {/* Desktop Navigation */}
         <nav className="hidden items-center lg:flex">
           {navLinks.map((link) => (
             <NavLink
@@ -184,7 +185,9 @@ export default function Navbar() {
                     className={`mt-0.5 text-[9px] ${
                       isActive ? "text-blue-400" : "text-gray-400"
                     }`}
-                  ></span>
+                  >
+                    {link.english}
+                  </span>
 
                   {isActive && (
                     <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-blue-600" />
@@ -195,13 +198,9 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* =====================================================
-            DESKTOP ACTIONS
-        ====================================================== */}
-
+        {/* Desktop Actions */}
         <div className="hidden items-center gap-1 lg:flex">
           {/* Location */}
-
           <Link
             to="/locations"
             className="hidden items-center gap-1.5 rounded-xl px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 hover:text-blue-600 xl:flex"
@@ -212,7 +211,6 @@ export default function Navbar() {
           </Link>
 
           {/* Search */}
-
           <Link
             to="/rooms"
             aria-label="Search rooms"
@@ -222,7 +220,6 @@ export default function Navbar() {
           </Link>
 
           {/* Favorites */}
-
           <Link
             to="/favorites"
             aria-label="Favorites"
@@ -233,19 +230,16 @@ export default function Navbar() {
 
           <div className="mx-2 h-7 w-px bg-gray-200" />
 
-          {/* =================================================
-              AUTHENTICATED USER
-          ================================================== */}
-
+          {/* User */}
           {isLoggedIn ? (
             <div ref={profileRef} className="relative">
               <button
                 type="button"
-                onClick={() => setIsProfileOpen((prev) => !prev)}
+                onClick={() => setIsProfileOpen((previous) => !previous)}
                 aria-expanded={isProfileOpen}
                 className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-gray-50"
               >
-                <Avatar />
+                <Avatar photo={user.photo} name={user.name} />
 
                 <div className="hidden text-left xl:block">
                   <p className="max-w-28 truncate text-sm font-semibold text-gray-800">
@@ -263,17 +257,16 @@ export default function Navbar() {
                 />
               </button>
 
-              {/* =================================================
-                  PROFILE DROPDOWN
-              ================================================== */}
-
+              {/* Profile Dropdown */}
               {isProfileOpen && (
                 <div className="absolute right-0 top-12 w-72 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl">
-                  {/* User */}
-
-                  <div className="bg-gradient-to-r from-blue-50 to-white p-4">
+                  <div className="bg-linear-to-r from-blue-50 to-white p-4">
                     <div className="flex items-center gap-3">
-                      <Avatar size="large" />
+                      <Avatar
+                        size="large"
+                        photo={user.photo}
+                        name={user.name}
+                      />
 
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-gray-900">
@@ -287,12 +280,11 @@ export default function Navbar() {
                     </div>
                   </div>
 
-                  {/* Links */}
-
                   <div className="p-2">
+                    {/* Profile */}
                     <Link
                       to="/profile"
-                      onClick={() => setIsProfileOpen(false)}
+                      onClick={closeProfile}
                       className="flex items-center gap-3 rounded-xl px-3 py-3 transition hover:bg-blue-50"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
@@ -308,9 +300,10 @@ export default function Navbar() {
                       </div>
                     </Link>
 
+                    {/* Bookings */}
                     <Link
                       to="/bookings"
-                      onClick={() => setIsProfileOpen(false)}
+                      onClick={closeProfile}
                       className="flex items-center gap-3 rounded-xl px-3 py-3 transition hover:bg-blue-50"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
@@ -326,9 +319,10 @@ export default function Navbar() {
                       </div>
                     </Link>
 
+                    {/* Favorites */}
                     <Link
                       to="/favorites"
-                      onClick={() => setIsProfileOpen(false)}
+                      onClick={closeProfile}
                       className="flex items-center gap-3 rounded-xl px-3 py-3 transition hover:bg-red-50"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-500">
@@ -346,7 +340,6 @@ export default function Navbar() {
                   </div>
 
                   {/* Logout */}
-
                   <div className="border-t border-gray-100 p-2">
                     <button
                       type="button"
@@ -371,18 +364,13 @@ export default function Navbar() {
             </div>
           ) : (
             <>
-              {/* Login */}
-
               <Link
                 to="/auth/login"
                 className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-blue-600"
               >
                 <User size={17} />
-
                 <span>ចូលគណនី</span>
               </Link>
-
-              {/* Register */}
 
               <Link
                 to="/auth/register"
@@ -394,13 +382,10 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* =====================================================
-            MOBILE MENU BUTTON
-        ====================================================== */}
-
+        {/* Mobile Button */}
         <button
           type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
+          onClick={() => setIsOpen((previous) => !previous)}
           aria-label="Toggle navigation menu"
           aria-expanded={isOpen}
           className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-700 transition hover:bg-gray-100 lg:hidden"
@@ -409,20 +394,14 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* =======================================================
-          MOBILE MENU
-      ======================================================= */}
-
+      {/* Mobile Menu */}
       {isOpen && (
         <div className="border-t border-gray-100 bg-white lg:hidden">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
-            {/* =================================================
-                MOBILE USER
-            ================================================== */}
-
+            {/* Mobile User */}
             {isLoggedIn && (
-              <div className="mb-4 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-50 to-white p-4">
-                <Avatar size="large" />
+              <div className="mb-4 flex items-center gap-3 rounded-2xl bg-linear-to-r from-blue-50 to-white p-4">
+                <Avatar size="large" photo={user.photo} name={user.name} />
 
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-gray-900">
@@ -434,24 +413,17 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* =================================================
-                SEARCH
-            ================================================== */}
-
+            {/* Mobile Search */}
             <Link
               to="/rooms"
               onClick={closeMenu}
               className="mb-4 flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3.5 text-sm text-gray-500 transition hover:border-blue-100 hover:bg-blue-50 hover:text-blue-600"
             >
               <Search size={18} />
-
               <span>ស្វែងរកបន្ទប់...</span>
             </Link>
 
-            {/* =================================================
-                NAVIGATION
-            ================================================== */}
-
+            {/* Navigation */}
             <nav className="space-y-1">
               {navLinks.map((link) => (
                 <NavLink
@@ -494,7 +466,6 @@ export default function Navbar() {
               ))}
 
               {/* Favorites */}
-
               <NavLink
                 to="/favorites"
                 onClick={closeMenu}
@@ -516,7 +487,6 @@ export default function Navbar() {
               </NavLink>
 
               {/* Profile */}
-
               {isLoggedIn && (
                 <>
                   <NavLink
@@ -540,7 +510,6 @@ export default function Navbar() {
                   </NavLink>
 
                   {/* Bookings */}
-
                   <NavLink
                     to="/bookings"
                     onClick={closeMenu}
@@ -564,10 +533,7 @@ export default function Navbar() {
               )}
             </nav>
 
-            {/* =================================================
-                MOBILE AUTH
-            ================================================== */}
-
+            {/* Mobile Auth */}
             <div className="mt-4 border-t border-gray-100 pt-4">
               {isLoggedIn ? (
                 <button

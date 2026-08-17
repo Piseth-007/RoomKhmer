@@ -260,7 +260,7 @@ const Locations = () => {
         )}
 
         {!loading && error && (
-          <div className="flex min-h-[350px] flex-col items-center justify-center rounded-2xl bg-white text-center">
+          <div className="flex min-h-87.5 flex-col items-center justify-center rounded-2xl bg-white text-center">
             <Building2 size={32} className="text-red-500" />
 
             <h3 className="mt-5 text-lg font-semibold text-gray-900">
@@ -288,7 +288,7 @@ const Locations = () => {
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/65 via-black/10 to-transparent" />
 
                   <div className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl bg-white text-blue-600 shadow">
                     <MapPin size={17} />

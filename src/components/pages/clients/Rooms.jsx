@@ -687,7 +687,7 @@ const Rooms = () => {
             =================================================== */}
 
             {!loading && error && (
-              <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border border-red-100 bg-white px-6 text-center">
+              <div className="flex min-h-100 flex-col items-center justify-center rounded-2xl border border-red-100 bg-white px-6 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50 text-red-500">
                   <Search size={28} />
                 </div>
@@ -732,7 +732,7 @@ const Rooms = () => {
             =================================================== */}
 
             {!loading && !error && filteredRooms.length === 0 && (
-              <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white px-6 text-center">
+              <div className="flex min-h-100 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white px-6 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-gray-400">
                   <Search size={28} />
                 </div>

@@ -508,14 +508,14 @@ export default function Home() {
 
             <div className="relative hidden lg:block">
               <div className="relative mx-auto max-w-lg">
-                <div className="overflow-hidden rounded-[2rem] shadow-2xl shadow-gray-300/50">
+                <div className="overflow-hidden rounded-4xl shadow-2xl shadow-gray-300/50">
                   <img
                     src="https://media.istockphoto.com/id/521138299/photo/central-phnom-penh-in-cambodia.jpg?s=612x612&w=0&k=20&c=pW-7c3rS-79zwd_-7xQHsZ5v5KsUB36kWA3SZWHvUWE="
                     alt="Phnom Penh"
-                    className="h-[540px] w-full object-cover"
+                    className="h-135 w-full object-cover"
                   />
 
-                  <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                  <div className="absolute inset-0 rounded-4xl bg-linear-to-t from-black/30 via-transparent to-transparent" />
                 </div>
 
                 <div className="absolute -bottom-6 -left-8 w-64 rounded-2xl border border-gray-100 bg-white p-4 shadow-xl">
@@ -605,7 +605,7 @@ export default function Home() {
                 to={`/rooms?location=${encodeURIComponent(location.english)}`}
                 className="group relative overflow-hidden rounded-2xl"
               >
-                <div className="aspect-[4/3] overflow-hidden">
+                <div className="aspect-4/3 overflow-hidden">
                   <img
                     src={location.image}
                     alt={location.english}
@@ -614,7 +614,7 @@ export default function Home() {
                   />
                 </div>
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/10 to-transparent" />
 
                 <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
                   <p className="text-lg font-semibold">{location.name}</p>
@@ -683,7 +683,7 @@ export default function Home() {
                   key={item}
                   className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
                 >
-                  <div className="aspect-[4/3] animate-pulse bg-gray-200" />
+                  <div className="aspect-4/3 animate-pulse bg-gray-200" />
 
                   <div className="space-y-4 p-5">
                     <div className="h-5 w-3/4 animate-pulse rounded bg-gray-200" />
@@ -784,7 +784,7 @@ export default function Home() {
                   >
                     {/* IMAGE */}
 
-                    <div className="relative aspect-[4/3] overflow-hidden">
+                    <div className="relative aspect-4/3 overflow-hidden">
                       <img
                         src={roomImage}
                         alt={room.name || "Room"}
@@ -792,7 +792,7 @@ export default function Home() {
                         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                       />
 
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition group-hover:opacity-100" />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 transition group-hover:opacity-100" />
 
                       {/* NEW */}
 
