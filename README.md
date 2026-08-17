@@ -1,16 +1,102 @@
-# React + Vite
+# RoomKhmer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+RoomKhmer is a modern room rental web application designed to help students, workers, tenants, landlords, and administrators manage room rentals in Phnom Penh, Cambodia.
 
-Currently, two official plugins are available:
+The platform provides a simple way for tenants to discover available rooms, search by location, view room details, save favorite rooms, submit rental requests, manage bookings, and manage their profiles.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Landlords can manage their rooms, rental requests, bookings, and payments, while administrators can manage users, rooms, bookings, and the overall platform.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Project Overview
 
-## Expanding the ESLint configuration
+RoomKhmer is designed especially for students and workers who move to Phnom Penh and need a convenient way to find affordable accommodation.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The system has three main user roles:
+
+- Student / Tenant
+- Landlord
+- Administrator
+
+Each role has different permissions and functionality.
+
+---
+
+## Main Features
+
+### Client / Tenant
+
+- Browse available rooms
+- Search rooms
+- Filter rooms by location
+- Filter rooms by price
+- Filter by room type
+- Filter by facilities
+- Sort rooms
+- View room details
+- View room images
+- Save favorite rooms
+- Submit room rental requests
+- Manage bookings
+- View payment information
+- Manage profile
+- Update personal information
+- Logout
+
+### Landlord
+
+- Landlord dashboard
+- Create rooms
+- Edit rooms
+- Delete rooms
+- Upload room images
+- Manage room information
+- View room status
+- Manage rental requests
+- Accept or reject requests
+- Manage bookings
+- Manage payments
+- View reports
+- Manage landlord profile
+- Manage settings
+
+### Administrator
+
+- Admin dashboard
+- Manage users
+- Manage landlords
+- Manage tenants
+- Manage rooms
+- Approve rooms
+- Reject rooms
+- Manage bookings
+- Manage payments
+- View reports
+- Manage administrator profile
+- Manage system settings
+
+---
+
+## Room Workflow
+
+The main room workflow is:
+
+```text
+Landlord
+   |
+   | Create Room
+   v
+Pending
+   |
+   | Admin Review
+   v
+Approved
+   |
+   | Visible to tenants
+   v
+Available
+   |
+   | Tenant rents room
+   v
+Occupied
+```
