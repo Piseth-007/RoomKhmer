@@ -11,7 +11,6 @@ import {
   XCircle,
   Wallet,
   Eye,
-  MoreVertical,
   CircleCheck,
   Filter,
   ChevronLeft,

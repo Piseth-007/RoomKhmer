@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   Heart,
   Mail,
   MapPin,

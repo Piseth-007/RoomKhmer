@@ -1,45 +1,46 @@
-import React from "react";
+import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import ClientLayouts from "../layouts/ClientLayouts";
 import AuthLayout from "../layouts/AuthLayout";
 
-import Home from "../components/pages/clients/Home";
-
-import Login from "../components/pages/auth/Login";
-import Register from "../components/pages/auth/Register";
-import Rooms from "../components/pages/clients/Rooms";
-import RoomDetail from "../components/pages/clients/RoomDetail";
-import Locations from "../components/pages/clients/Locations";
-import About from "../components/pages/clients/About";
-import ForgotPassword from "../components/pages/auth/ForgotPassword";
-import ResetPassword from "../components/pages/auth/ResetPassword";
-import Contact from "../components/pages/clients/Contact";
-import Favorites from "../components/pages/clients/Favorites";
-import NotFound from "../components/pages/NotFound";
-import Profile from "../components/pages/clients/Profile";
-import Bookings from "../components/pages/clients/Bookings";
 import LandlordLayout from "../layouts/LandlordLayout";
-import LandlordDashboard from "../components/pages/landlord/LandlordDashboard";
-import LandlordRooms from "../components/pages/landlord/LandlordRooms";
-import CreateRoom from "../components/pages/landlord/CreateRoom";
-import LandlordBookings from "../components/pages/landlord/LandlordBookings";
-import EditRoom from "../components/pages/landlord/EditRoom";
-import LandlordEarnings from "../components/pages/landlord/LandlordEarnings";
-import LandlordProfile from "../components/pages/landlord/LandlordProfile";
-import LandlordSettings from "../components/pages/landlord/LandlordSettings";
 import AdminLayout from "../layouts/AdminLayout";
-import AdminDashboard from "../components/pages/admin/AdminDashboard";
-import AdminRooms from "../components/pages/admin/AdminRooms";
-import AdminUsers from "../components/pages/admin/AdminUsers";
-import AdminBookings from "../components/pages/admin/AdminBookings";
-import AdminReports from "../components/pages/admin/AdminReports";
-import AdminProfile from "../components/pages/admin/AdminProfile";
-import AdminSettings from "../components/pages/admin/AdminSettings";
 import ProtectedRoute from "../components/common/ProtectedRoute";
 
+const Home = lazy(() => import("../components/pages/clients/Home"));
+const Login = lazy(() => import("../components/pages/auth/Login"));
+const Register = lazy(() => import("../components/pages/auth/Register"));
+const Rooms = lazy(() => import("../components/pages/clients/Rooms"));
+const RoomDetail = lazy(() => import("../components/pages/clients/RoomDetail"));
+const Locations = lazy(() => import("../components/pages/clients/Locations"));
+const About = lazy(() => import("../components/pages/clients/About"));
+const ForgotPassword = lazy(() => import("../components/pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("../components/pages/auth/ResetPassword"));
+const Contact = lazy(() => import("../components/pages/clients/Contact"));
+const Favorites = lazy(() => import("../components/pages/clients/Favorites"));
+const NotFound = lazy(() => import("../components/pages/NotFound"));
+const Profile = lazy(() => import("../components/pages/clients/Profile"));
+const Bookings = lazy(() => import("../components/pages/clients/Bookings"));
+const LandlordDashboard = lazy(() => import("../components/pages/landlord/LandlordDashboard"));
+const LandlordRooms = lazy(() => import("../components/pages/landlord/LandlordRooms"));
+const CreateRoom = lazy(() => import("../components/pages/landlord/CreateRoom"));
+const LandlordBookings = lazy(() => import("../components/pages/landlord/LandlordBookings"));
+const EditRoom = lazy(() => import("../components/pages/landlord/EditRoom"));
+const LandlordEarnings = lazy(() => import("../components/pages/landlord/LandlordEarnings"));
+const LandlordProfile = lazy(() => import("../components/pages/landlord/LandlordProfile"));
+const LandlordSettings = lazy(() => import("../components/pages/landlord/LandlordSettings"));
+const AdminDashboard = lazy(() => import("../components/pages/admin/AdminDashboard"));
+const AdminRooms = lazy(() => import("../components/pages/admin/AdminRooms"));
+const AdminUsers = lazy(() => import("../components/pages/admin/AdminUsers"));
+const AdminBookings = lazy(() => import("../components/pages/admin/AdminBookings"));
+const AdminReports = lazy(() => import("../components/pages/admin/AdminReports"));
+const AdminProfile = lazy(() => import("../components/pages/admin/AdminProfile"));
+const AdminSettings = lazy(() => import("../components/pages/admin/AdminSettings"));
+
 const AppRoutes = () => (
-  <Routes>
+  <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+    <Routes>
     {/* ================= CLIENT ================= */}
 
     <Route path="/" element={<ClientLayouts />}>
@@ -118,7 +119,8 @@ const AppRoutes = () => (
       <Route path="profile" element={<AdminProfile />} />
       <Route path="settings" element={<AdminSettings />} />
     </Route>
-  </Routes>
+    </Routes>
+  </Suspense>
 );
 
 export default AppRoutes;

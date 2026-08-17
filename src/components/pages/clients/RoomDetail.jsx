@@ -3,7 +3,6 @@ import { Link, useParams } from "react-router-dom";
 
 import {
   ArrowLeft,
-  ArrowRight,
   Bath,
   BedDouble,
   Building2,
@@ -14,11 +13,8 @@ import {
   Heart,
   MapPin,
   MessageCircle,
-  Phone,
   ShieldCheck,
   Star,
-  UserRound,
-  Wallet,
   Wifi,
   Wind,
   X,

@@ -1,4 +1,3 @@
-import React from "react";
 import LandlordSidebar from "../components/pages/components/landlord/LandlordSidebar";
 import LandlordNavbar from "../components/pages/components/landlord/LandlordNavbar";
 import { Outlet } from "react-router-dom";

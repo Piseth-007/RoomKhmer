@@ -9,7 +9,6 @@ import {
   LogOut,
   Menu,
   X,
-  Plus,
   ChevronRight,
 } from "lucide-react";
 import { NavLink, Link, useNavigate } from "react-router-dom";
@@ -18,11 +17,6 @@ export default function LandlordSidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const navigate = useNavigate();
-
-  const landlord = {
-    name: "Leang Piseth",
-    role: "Landlord",
-  };
 
   // ============================================================
   // MENU

@@ -5,7 +5,6 @@ import {
   House,
   CalendarDays,
   Wallet,
-  TrendingUp,
   Clock,
   CheckCircle,
   XCircle,
@@ -191,10 +190,6 @@ export default function AdminDashboard() {
 
   const pendingBookings = bookings.filter(
     (booking) => booking.status === "pending",
-  ).length;
-
-  const completedBookings = bookings.filter(
-    (booking) => booking.status === "completed",
   ).length;
 
   /*

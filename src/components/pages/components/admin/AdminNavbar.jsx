@@ -15,7 +15,8 @@ import { Link, useNavigate } from "react-router-dom";
 
 import {
   collection,
-  getDocs,
+  doc,
+  getDoc,
   limit,
   onSnapshot,
   orderBy,
@@ -26,11 +27,86 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 
 import { auth, db } from "../../../../firebase/config";
 
+/*
+ * ============================================================
+ * LOAD ADMIN PROFILE
+ * ============================================================
+ */
+
+async function loadAdminProfile(user) {
+  const userRef = doc(db, "users", user.uid);
+
+  const userSnapshot = await getDoc(userRef);
+
+  const data = userSnapshot.exists() ? userSnapshot.data() : {};
+
+  return {
+    uid: user.uid,
+    name: data.name || user.displayName || "Admin",
+    email: data.email || user.email || "",
+    photoURL: data.photoURL || user.photoURL || "",
+    role: data.role || "admin",
+  };
+}
+
+/*
+ * ============================================================
+ * FORMAT NOTIFICATION TIME
+ * ============================================================
+ */
+
+function formatNotificationTime(value) {
+  if (!value) {
+    return "Recently";
+  }
+
+  let date;
+  if (value?.toDate) {
+    date = value.toDate();
+  } else if (value instanceof Date) {
+    date = value;
+  } else {
+    date = new Date(value);
+  }
+
+  if (!date || Number.isNaN(date.getTime())) {
+    return "Recently";
+  }
+
+  const now = Date.now();
+
+  const difference = now - date.getTime();
+
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (difference < minute) {
+    return "Just now";
+  }
+
+  if (difference < hour) {
+    return `${Math.floor(difference / minute)} min ago`;
+  }
+
+  if (difference < day) {
+    return `${Math.floor(difference / hour)} hour ago`;
+  }
+
+  if (difference < 7 * day) {
+    return `${Math.floor(difference / day)} day ago`;
+  }
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export default function AdminNavbar() {
   const navigate = useNavigate();
 
   const profileRef = useRef(null);
-
   const notificationRef = useRef(null);
 
   const [profileOpen, setProfileOpen] = useState(false);
@@ -60,9 +136,7 @@ export default function AdminNavbar() {
    */
 
   useEffect(() => {
-    let unsubscribe;
-
-    unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
         if (!user) {
           setAdmin({
@@ -72,8 +146,6 @@ export default function AdminNavbar() {
             photoURL: "",
             role: "admin",
           });
-
-          setLoading(false);
 
           return;
         }
@@ -96,11 +168,7 @@ export default function AdminNavbar() {
       }
     });
 
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    return unsubscribe;
   }, []);
 
   /*
@@ -110,64 +178,52 @@ export default function AdminNavbar() {
    */
 
   useEffect(() => {
-    let unsubscribe;
+    const notificationsRef = collection(db, "adminNotifications");
 
-    try {
-      const notificationsRef = collection(db, "adminNotifications");
+    const notificationsQuery = query(
+      notificationsRef,
+      orderBy("createdAt", "desc"),
+      limit(10),
+    );
 
-      const notificationsQuery = query(
-        notificationsRef,
-        orderBy("createdAt", "desc"),
-        limit(10),
-      );
+    const unsubscribe = onSnapshot(
+      notificationsQuery,
+      (snapshot) => {
+        const data = snapshot.docs.map((notificationDoc) => {
+          const item = notificationDoc.data();
 
-      unsubscribe = onSnapshot(
-        notificationsQuery,
-        (snapshot) => {
-          const data = snapshot.docs.map((notificationDoc) => {
-            const item = notificationDoc.data();
+          return {
+            id: notificationDoc.id,
 
-            return {
-              id: notificationDoc.id,
+            title: item.title || "Notification",
 
-              title: item.title || "Notification",
+            description: item.description || item.message || "",
 
-              description: item.description || item.message || "",
+            unread: item.unread !== false,
 
-              unread: item.unread !== false,
+            time: formatNotificationTime(item.createdAt),
 
-              time: formatNotificationTime(item.createdAt),
+            type: item.type || "general",
 
-              type: item.type || "general",
+            link: item.link || "",
+          };
+        });
 
-              link: item.link || "",
-            };
-          });
+        setNotifications(data);
+      },
+      (error) => {
+        console.error("Notification error:", error);
 
-          setNotifications(data);
-        },
-        (error) => {
-          console.error("Notification error:", error);
+        setNotifications([]);
+      },
+    );
 
-          setNotifications([]);
-        },
-      );
-    } catch (error) {
-      console.error("Notification setup error:", error);
-
-      setNotifications([]);
-    }
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    return unsubscribe;
   }, []);
 
   /*
    * ============================================================
-   * CLOSE DROPDOWNS WHEN CLICKING OUTSIDE
+   * CLOSE DROPDOWNS
    * ============================================================
    */
 
@@ -235,7 +291,7 @@ export default function AdminNavbar() {
 
   /*
    * ============================================================
-   * TOGGLE NOTIFICATION
+   * TOGGLE NOTIFICATIONS
    * ============================================================
    */
 
@@ -249,12 +305,6 @@ export default function AdminNavbar() {
    * ============================================================
    * MARK ALL READ
    * ============================================================
-   *
-   * This version only updates local state.
-   *
-   * If you later create an adminNotifications collection
-   * with notification documents, you can update Firestore
-   * here.
    */
 
   const markAllRead = () => {
@@ -294,9 +344,7 @@ export default function AdminNavbar() {
   return (
     <header className="fixed right-0 top-0 z-30 h-18 border-b border-gray-200 bg-white/95 backdrop-blur-md lg:left-64">
       <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* ======================================================
-            DESKTOP SEARCH
-        ====================================================== */}
+        {/* Desktop Search */}
 
         <div className="hidden w-full max-w-md md:block">
           <div className="relative">
@@ -313,9 +361,7 @@ export default function AdminNavbar() {
           </div>
         </div>
 
-        {/* ======================================================
-            MOBILE BRAND
-        ====================================================== */}
+        {/* Mobile Brand */}
 
         <div className="ml-12 md:hidden">
           <p className="text-sm font-bold text-gray-900">
@@ -326,9 +372,7 @@ export default function AdminNavbar() {
           <p className="text-[10px] text-gray-400">Admin Portal</p>
         </div>
 
-        {/* ======================================================
-            RIGHT ACTIONS
-        ====================================================== */}
+        {/* Right Actions */}
 
         <div className="ml-auto flex items-center gap-2">
           {/* Mobile Search */}
@@ -341,9 +385,7 @@ export default function AdminNavbar() {
             <Search size={19} />
           </button>
 
-          {/* ==================================================
-              NOTIFICATIONS
-          ================================================== */}
+          {/* Notifications */}
 
           <div ref={notificationRef} className="relative">
             <button
@@ -447,13 +489,9 @@ export default function AdminNavbar() {
             )}
           </div>
 
-          {/* Divider */}
-
           <div className="mx-1 hidden h-8 w-px bg-gray-200 sm:block" />
 
-          {/* ======================================================
-              ADMIN PROFILE
-          ====================================================== */}
+          {/* Admin Profile */}
 
           <div ref={profileRef} className="relative">
             <button
@@ -491,8 +529,6 @@ export default function AdminNavbar() {
 
             {profileOpen && (
               <div className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
-                {/* User info */}
-
                 <div className="border-b border-gray-100 p-4">
                   <div className="flex items-center gap-3">
                     {admin.photoURL ? (
@@ -525,8 +561,6 @@ export default function AdminNavbar() {
                     </div>
                   </div>
                 </div>
-
-                {/* Menu */}
 
                 <div className="p-2">
                   <Link
@@ -565,93 +599,4 @@ export default function AdminNavbar() {
       </div>
     </header>
   );
-}
-
-/*
- * ============================================================
- * LOAD ADMIN PROFILE
- * ============================================================
- */
-
-async function loadAdminProfile(user) {
-  const userRef = (await import("firebase/firestore")).doc(
-    db,
-    "users",
-    user.uid,
-  );
-
-  const userSnapshot = await (
-    await import("firebase/firestore")
-  ).getDoc(userRef);
-
-  const data = userSnapshot.exists() ? userSnapshot.data() : {};
-
-  return {
-    uid: user.uid,
-
-    name: data.name || user.displayName || "Admin",
-
-    email: data.email || user.email || "",
-
-    photoURL: data.photoURL || user.photoURL || "",
-
-    role: data.role || "admin",
-  };
-}
-
-/*
- * ============================================================
- * FORMAT NOTIFICATION TIME
- * ============================================================
- */
-
-function formatNotificationTime(value) {
-  if (!value) {
-    return "Recently";
-  }
-
-  let date = null;
-
-  if (value?.toDate) {
-    date = value.toDate();
-  } else if (value instanceof Date) {
-    date = value;
-  } else {
-    date = new Date(value);
-  }
-
-  if (!date || Number.isNaN(date.getTime())) {
-    return "Recently";
-  }
-
-  const now = Date.now();
-
-  const difference = now - date.getTime();
-
-  const minute = 60 * 1000;
-
-  const hour = 60 * minute;
-
-  const day = 24 * hour;
-
-  if (difference < minute) {
-    return "Just now";
-  }
-
-  if (difference < hour) {
-    return `${Math.floor(difference / minute)} min ago`;
-  }
-
-  if (difference < day) {
-    return `${Math.floor(difference / hour)} hour ago`;
-  }
-
-  if (difference < 7 * day) {
-    return `${Math.floor(difference / day)} day ago`;
-  }
-
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
 }

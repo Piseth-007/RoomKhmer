@@ -707,28 +707,6 @@ function inputClass(extra = "") {
   return `h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 ${extra}`;
 }
 
-function getDate(value) {
-  if (!value) {
-    return null;
-  }
-
-  if (value?.toDate) {
-    return value.toDate();
-  }
-
-  if (value instanceof Date) {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    const date = new Date(value);
-
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-
-  return null;
-}
-
 function getFirebaseError(error, fallback) {
   if (!error) {
     return fallback;

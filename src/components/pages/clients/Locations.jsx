@@ -4,14 +4,10 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Building2,
-  Bus,
   ChevronRight,
-  GraduationCap,
   MapPin,
   Search,
-  ShoppingBag,
   SlidersHorizontal,
-  Utensils,
   X,
 } from "lucide-react";
 
@@ -99,21 +95,19 @@ const Locations = () => {
     return counts;
   }, [rooms]);
 
-  const getRoomCount = (location) => {
-    const englishName = normalizeLocation(location.name);
-
-    const khmerName = normalizeLocation(location.khmerName);
-
-    return (
-      roomCountByLocation[englishName] || roomCountByLocation[khmerName] || 0
-    );
-  };
-
   const locationsWithRooms = useMemo(() => {
-    return locations.map((location) => ({
-      ...location,
-      roomCount: getRoomCount(location),
-    }));
+    return locations.map((location) => {
+      const englishName = normalizeLocation(location.name);
+      const khmerName = normalizeLocation(location.khmerName);
+
+      return {
+        ...location,
+        roomCount:
+          roomCountByLocation[englishName] ||
+          roomCountByLocation[khmerName] ||
+          0,
+      };
+    });
   }, [roomCountByLocation]);
 
   const filteredLocations = useMemo(() => {

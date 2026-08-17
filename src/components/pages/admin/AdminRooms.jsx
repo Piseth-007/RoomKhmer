@@ -958,7 +958,7 @@ function RoomMobileCard({
 // ACTION MENU
 // ============================================================
 
-function RoomActionMenu({ room, busy, updateStatus, deleteRoom, closeMenu }) {
+function RoomActionMenu({ room, busy, updateStatus, deleteRoom }) {
   return (
     <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-gray-100 bg-white p-1 shadow-xl">
       {room.status === "pending" && (

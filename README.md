@@ -6,6 +6,25 @@ The platform provides a simple way for tenants to discover available rooms, sear
 
 Landlords can manage their rooms, rental requests, bookings, and payments, while administrators can manage users, rooms, bookings, and the overall platform.
 
+## Run and deploy
+
+Install dependencies and start the local development server:
+
+```bash
+npm install
+npm run dev
+```
+
+Before deploying, copy `.env.example` to `.env` locally and set the same variables in your hosting provider's environment settings. Do not commit `.env`.
+
+Create the production bundle with:
+
+```bash
+npm run build
+```
+
+Deploy the generated `dist/` directory to a static host. Configure the host to rewrite unknown routes to `index.html`, so direct visits to client-side routes continue to work.
+
 ---
 
 ## Project Overview

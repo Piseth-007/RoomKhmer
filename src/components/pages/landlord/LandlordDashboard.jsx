@@ -189,20 +189,10 @@ export default function LandlordDashboard() {
     (room) => room.status === "rented" || room.status === "occupied",
   ).length;
 
-  const availableRooms = rooms.filter(
-    (room) => room.status === "available" || room.status === "approved",
-  ).length;
-
-  const pendingRooms = rooms.filter((room) => room.status === "pending").length;
-
   const totalBookings = bookings.length;
 
   const pendingBookings = bookings.filter(
     (booking) => booking.status === "pending",
-  ).length;
-
-  const confirmedBookings = bookings.filter(
-    (booking) => booking.status === "confirmed" || booking.status === "active",
   ).length;
 
   const completedBookings = bookings.filter(

@@ -20,11 +20,6 @@ export default function AdminSidebar() {
 
   const navigate = useNavigate();
 
-  const admin = {
-    name: "Admin",
-    role: "Administrator",
-  };
-
   const menuItems = [
     {
       name: "ផ្ទាំងគ្រប់គ្រង",

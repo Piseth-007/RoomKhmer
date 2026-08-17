@@ -26,18 +26,13 @@ export default function LandlordRooms() {
   const [openMenu, setOpenMenu] = useState(null);
 
   const [rooms, setRooms] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   useEffect(() => {
     const loadRooms = async () => {
       try {
-        setLoading(true);
-        setError("");
-
         const user = auth.currentUser;
 
         if (!user) {
-          setError("You are not logged in.");
+          console.error("You are not logged in.");
           return;
         }
 
@@ -46,9 +41,6 @@ export default function LandlordRooms() {
         setRooms(data);
       } catch (error) {
         console.error(error);
-        setError("Failed to load rooms.");
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -242,8 +234,6 @@ export default function LandlordRooms() {
   );
 }
 
-
-
 function RoomStat({ icon, label, value, className }) {
   return (
     <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
@@ -259,7 +249,6 @@ function RoomStat({ icon, label, value, className }) {
     </div>
   );
 }
-
 
 function RoomCard({ room, openMenu, setOpenMenu, onDelete }) {
   return (

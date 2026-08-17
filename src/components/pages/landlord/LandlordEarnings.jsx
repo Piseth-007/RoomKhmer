@@ -244,11 +244,6 @@ export default function LandlordEarnings() {
   // TOTAL EARNINGS FOR SELECTED PERIOD
   // ============================================================
 
-  const totalEarnings = monthlyEarnings.reduce(
-    (total, item) => total + item.amount,
-    0,
-  );
-
   // ============================================================
   // CURRENT MONTH
   // ============================================================

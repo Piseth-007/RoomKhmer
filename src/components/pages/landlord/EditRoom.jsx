@@ -22,6 +22,7 @@ import {
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 
 import { auth, db } from "../../../firebase/config";
+
 export default function EditRoom() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -56,14 +57,23 @@ export default function EditRoom() {
   const [error, setError] = useState("");
   const [roomStatus, setRoomStatus] = useState("pending");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  // ============================================================
+  // FORM CHANGE
+  // ============================================================
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
 
     setFormData((current) => ({
       ...current,
       [name]: value,
     }));
   };
+
+  // ============================================================
+  // AMENITIES
+  // ============================================================
+
   const handleAmenity = (name) => {
     setAmenities((current) => ({
       ...current,
@@ -71,10 +81,16 @@ export default function EditRoom() {
     }));
   };
 
-  const handleImages = (e) => {
-    const files = Array.from(e.target.files);
+  // ============================================================
+  // IMAGE SELECTION
+  // ============================================================
 
-    if (!files.length) return;
+  const handleImages = (event) => {
+    const files = Array.from(event.target.files || []);
+
+    if (!files.length) {
+      return;
+    }
 
     const newImages = files.map((file) => ({
       id: `${file.name}-${Date.now()}-${Math.random()}`,
@@ -85,8 +101,12 @@ export default function EditRoom() {
 
     setImages((current) => [...current, ...newImages]);
 
-    e.target.value = "";
+    event.target.value = "";
   };
+
+  // ============================================================
+  // REMOVE IMAGE
+  // ============================================================
 
   const removeImage = (imageId) => {
     setImages((current) => {
@@ -99,8 +119,14 @@ export default function EditRoom() {
       return current.filter((item) => item.id !== imageId);
     });
   };
+
+  // ============================================================
+  // CLOUDINARY UPLOAD
+  // ============================================================
+
   const uploadImageToCloudinary = async (file) => {
     const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+
     const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
     if (!cloudName || !uploadPreset) {
@@ -123,28 +149,29 @@ export default function EditRoom() {
     const result = await response.json();
 
     if (!response.ok) {
-      console.error("Cloudinary error:", result);
-
       throw new Error(result?.error?.message || "Failed to upload image.");
     }
 
     return result.secure_url;
   };
+
+  // ============================================================
+  // GET FINAL IMAGE URLS
+  // ============================================================
+
   const getFinalImageUrls = async () => {
     const imageUrls = [];
 
     for (const image of images) {
+      // Existing image
       if (image.existing && image.url) {
         imageUrls.push(image.url);
         continue;
       }
 
+      // New image
       if (image.file) {
-        console.log("📤 Uploading new image:", image.file.name);
-
         const url = await uploadImageToCloudinary(image.file);
-
-        console.log("✅ New image uploaded:", url);
 
         imageUrls.push(url);
       }
@@ -153,8 +180,12 @@ export default function EditRoom() {
     return imageUrls;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // ============================================================
+  // SUBMIT
+  // ============================================================
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
     const user = auth.currentUser;
 
@@ -169,11 +200,9 @@ export default function EditRoom() {
     }
 
     setIsSaving(true);
+    setError("");
 
     try {
-      console.log("========== EDIT ROOM START ==========");
-
-      // Get current room
       const roomRef = doc(db, "rooms", id);
 
       const roomSnap = await getDoc(roomRef);
@@ -184,28 +213,31 @@ export default function EditRoom() {
 
       const existingRoom = roomSnap.data();
 
-      // Security check
+      // Check landlord ownership
       if (existingRoom.landlordId !== user.uid) {
         throw new Error("You don't have permission to edit this room.");
       }
 
-      // Upload new images and keep existing images
-      console.log("📸 Processing images...");
-
+      // Upload new images
       const imageUrls = await getFinalImageUrls();
-
-      console.log("✅ Final images:", imageUrls);
 
       const updatedData = {
         name: formData.name.trim(),
+
         type: formData.type,
+
         price: Number(formData.price),
+
         location: formData.location,
+
         address: formData.address.trim(),
+
         description: formData.description.trim(),
 
         bedrooms: Number(formData.bedrooms),
+
         bathrooms: Number(formData.bathrooms),
+
         area: Number(formData.area) || 0,
 
         availableFrom: formData.availableFrom || null,
@@ -222,27 +254,31 @@ export default function EditRoom() {
         updatedAt: serverTimestamp(),
       };
 
-      console.log("📦 Updating Firestore:", updatedData);
-
       await updateDoc(roomRef, updatedData);
-
-      console.log("✅ Room updated successfully");
 
       alert("Room updated successfully!");
 
       navigate("/landlord/rooms");
     } catch (error) {
-      console.error("❌ EDIT ROOM ERROR");
-      console.error("Code:", error.code);
-      console.error("Message:", error.message);
-      console.error(error);
+      console.error("Edit room error:", error);
 
-      alert(error.message || "Failed to update room.");
+      const message = error?.message || "Failed to update room.";
+
+      setError(message);
+
+      alert(message);
     } finally {
       setIsSaving(false);
     }
   };
+
+  // ============================================================
+  // LOAD ROOM
+  // ============================================================
+
   useEffect(() => {
+    let isMounted = true;
+
     const loadRoom = async () => {
       try {
         setLoading(true);
@@ -251,32 +287,49 @@ export default function EditRoom() {
         const user = auth.currentUser;
 
         if (!user) {
-          setError("You are not logged in.");
+          if (isMounted) {
+            setError("You are not logged in.");
+          }
+
           return;
         }
 
         if (!id) {
-          setError("Room ID is missing.");
+          if (isMounted) {
+            setError("Room ID is missing.");
+          }
+
           return;
         }
 
         const roomRef = doc(db, "rooms", id);
+
         const roomSnap = await getDoc(roomRef);
 
         if (!roomSnap.exists()) {
-          setError("Room not found.");
+          if (isMounted) {
+            setError("Room not found.");
+          }
+
           return;
         }
 
         const room = roomSnap.data();
-        console.log(room);
-        setRoomStatus(room.status || "pending");
 
-        // Security check on frontend
+        // Check ownership
         if (room.landlordId !== user.uid) {
-          setError("You don't have permission to edit this room.");
+          if (isMounted) {
+            setError("You don't have permission to edit this room.");
+          }
+
           return;
         }
+
+        if (!isMounted) {
+          return;
+        }
+
+        setRoomStatus(room.status || "pending");
 
         setFormData({
           name: room.name || "",
@@ -296,12 +349,18 @@ export default function EditRoom() {
 
         setAmenities({
           wifi: room.amenities?.wifi || false,
+
           airConditioning: room.amenities?.airConditioning || false,
+
           parking: room.amenities?.parking || false,
+
           privateBathroom: room.amenities?.privateBathroom || false,
+
           kitchen: room.amenities?.kitchen || false,
+
           furnished: room.amenities?.furnished || false,
         });
+
         setImages(
           (room.images || []).map((url, index) => ({
             id: `existing-${index}-${Date.now()}`,
@@ -312,17 +371,98 @@ export default function EditRoom() {
         );
       } catch (err) {
         console.error("Error loading room:", err);
-        setError(err.message || "Failed to load room.");
+
+        if (isMounted) {
+          setError(err?.message || "Failed to load room.");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadRoom();
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
+
+  // ============================================================
+  // CLEAN UP LOCAL IMAGE PREVIEWS
+  // ============================================================
+
+  useEffect(() => {
+    return () => {
+      images.forEach((image) => {
+        if (!image.existing && image.preview) {
+          URL.revokeObjectURL(image.preview);
+        }
+      });
+    };
+  }, [images]);
+
+  // ============================================================
+  // LOADING
+  // ============================================================
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-5xl">
+        <div className="flex min-h-[400px] items-center justify-center">
+          <div className="text-center">
+            <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+
+            <p className="mt-4 text-sm font-medium text-gray-600">
+              Loading room...
+            </p>
+
+            <p className="mt-1 text-xs text-gray-400">
+              Please wait while we load your room information.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================
+  // ERROR
+  // ============================================================
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-5xl">
+        <div className="rounded-2xl border border-red-100 bg-white p-6 shadow-sm">
+          <div className="rounded-xl bg-red-50 p-5">
+            <h2 className="text-lg font-bold text-red-700">
+              Unable to load room
+            </h2>
+
+            <p className="mt-2 text-sm text-red-600">{error}</p>
+          </div>
+
+          <Link
+            to="/landlord/rooms"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+          >
+            <ArrowLeft size={17} />
+            Back to My Rooms
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================
+  // PAGE
+  // ============================================================
 
   return (
     <div className="mx-auto max-w-5xl">
+      {/* Header */}
+
       <div className="mb-6">
         <Link
           to="/landlord/rooms"
@@ -356,6 +496,10 @@ export default function EditRoom() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* ====================================================
+            ROOM IMAGES
+        ===================================================== */}
+
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
             icon={<ImagePlus size={19} />}
@@ -364,8 +508,6 @@ export default function EditRoom() {
           />
 
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {/* Existing Images */}
-
             {images.map((image, index) => (
               <div
                 key={image.id}
@@ -387,6 +529,7 @@ export default function EditRoom() {
                   type="button"
                   onClick={() => removeImage(image.id)}
                   className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition group-hover:opacity-100"
+                  aria-label="Remove image"
                 >
                   <X size={15} />
                 </button>
@@ -409,6 +552,10 @@ export default function EditRoom() {
           </div>
         </section>
 
+        {/* ====================================================
+            BASIC INFORMATION
+        ===================================================== */}
+
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
             icon={<House size={19} />}
@@ -417,25 +564,23 @@ export default function EditRoom() {
           />
 
           <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-            {/* Room Name */}
-
             <FormField label="Room Name" required className="md:col-span-2">
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
+                required
                 className={inputClass()}
               />
             </FormField>
-
-            {/* Room Type */}
 
             <FormField label="Room Type" required>
               <select
                 name="type"
                 value={formData.type}
                 onChange={handleChange}
+                required
                 className={inputClass()}
               >
                 <option value="">Select room type</option>
@@ -452,8 +597,6 @@ export default function EditRoom() {
               </select>
             </FormField>
 
-            {/* Price */}
-
             <FormField label="Monthly Rent" required>
               <div className="relative">
                 <DollarSign
@@ -467,12 +610,11 @@ export default function EditRoom() {
                   value={formData.price}
                   onChange={handleChange}
                   min="0"
+                  required
                   className={`pl-9 ${inputClass()}`}
                 />
               </div>
             </FormField>
-
-            {/* Location */}
 
             <FormField label="Location" required>
               <div className="relative">
@@ -485,6 +627,7 @@ export default function EditRoom() {
                   name="location"
                   value={formData.location}
                   onChange={handleChange}
+                  required
                   className={`pl-9 ${inputClass()}`}
                 >
                   <option value="">Select location</option>
@@ -506,8 +649,6 @@ export default function EditRoom() {
               </div>
             </FormField>
 
-            {/* Address */}
-
             <FormField label="Full Address" className="md:col-span-2">
               <input
                 type="text"
@@ -518,14 +659,13 @@ export default function EditRoom() {
               />
             </FormField>
 
-            {/* Description */}
-
             <FormField label="Description" required className="md:col-span-2">
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 rows={5}
+                required
                 className={`${inputClass()} resize-none`}
               />
             </FormField>
@@ -706,9 +846,9 @@ export default function EditRoom() {
   );
 }
 
-/* ============================================================
-   SECTION HEADER
-============================================================ */
+// ============================================================
+// SECTION HEADER
+// ============================================================
 
 function SectionHeader({ icon, title, subtitle }) {
   return (
@@ -726,9 +866,9 @@ function SectionHeader({ icon, title, subtitle }) {
   );
 }
 
-/* ============================================================
-   FORM FIELD
-============================================================ */
+// ============================================================
+// FORM FIELD
+// ============================================================
 
 function FormField({ label, required = false, children, className = "" }) {
   return (
@@ -744,9 +884,9 @@ function FormField({ label, required = false, children, className = "" }) {
   );
 }
 
-/* ============================================================
-   AMENITY
-============================================================ */
+// ============================================================
+// AMENITY
+// ============================================================
 
 function Amenity({ name, label, icon, checked, onChange }) {
   return (
@@ -778,9 +918,9 @@ function Amenity({ name, label, icon, checked, onChange }) {
   );
 }
 
-/* ============================================================
-   INPUT CLASS
-============================================================ */
+// ============================================================
+// INPUT CLASS
+// ============================================================
 
 function inputClass() {
   return "h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-50";

@@ -1,7 +1,6 @@
 import {
   Bath,
   Car,
-  ChevronDown,
   CookingPot,
   RotateCcw,
   Wifi,

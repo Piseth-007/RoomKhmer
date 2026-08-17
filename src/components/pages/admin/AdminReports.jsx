@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
-  TrendingUp,
   Users,
   House,
   CalendarDays,
