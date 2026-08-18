@@ -27,11 +27,6 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 
 import { auth, db } from "../../../../firebase/config";
 
-/*
- * ============================================================
- * LOAD ADMIN PROFILE
- * ============================================================
- */
 
 async function loadAdminProfile(user) {
   const userRef = doc(db, "users", user.uid);
@@ -49,11 +44,6 @@ async function loadAdminProfile(user) {
   };
 }
 
-/*
- * ============================================================
- * FORMAT NOTIFICATION TIME
- * ============================================================
- */
 
 function formatNotificationTime(value) {
   if (!value) {
@@ -129,11 +119,6 @@ export default function AdminNavbar() {
     (notification) => notification.unread,
   ).length;
 
-  /*
-   * ============================================================
-   * LOAD ADMIN
-   * ============================================================
-   */
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -171,11 +156,6 @@ export default function AdminNavbar() {
     return unsubscribe;
   }, []);
 
-  /*
-   * ============================================================
-   * LOAD NOTIFICATIONS
-   * ============================================================
-   */
 
   useEffect(() => {
     const notificationsRef = collection(db, "adminNotifications");
@@ -221,11 +201,6 @@ export default function AdminNavbar() {
     return unsubscribe;
   }, []);
 
-  /*
-   * ============================================================
-   * CLOSE DROPDOWNS
-   * ============================================================
-   */
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -248,11 +223,6 @@ export default function AdminNavbar() {
     };
   }, []);
 
-  /*
-   * ============================================================
-   * LOGOUT
-   * ============================================================
-   */
 
   const handleLogout = async () => {
     try {
@@ -277,11 +247,6 @@ export default function AdminNavbar() {
     }
   };
 
-  /*
-   * ============================================================
-   * TOGGLE PROFILE
-   * ============================================================
-   */
 
   const toggleProfile = () => {
     setProfileOpen((current) => !current);
@@ -289,11 +254,6 @@ export default function AdminNavbar() {
     setNotificationOpen(false);
   };
 
-  /*
-   * ============================================================
-   * TOGGLE NOTIFICATIONS
-   * ============================================================
-   */
 
   const toggleNotifications = () => {
     setNotificationOpen((current) => !current);
@@ -301,11 +261,6 @@ export default function AdminNavbar() {
     setProfileOpen(false);
   };
 
-  /*
-   * ============================================================
-   * MARK ALL READ
-   * ============================================================
-   */
 
   const markAllRead = () => {
     setNotifications((current) =>
@@ -316,11 +271,6 @@ export default function AdminNavbar() {
     );
   };
 
-  /*
-   * ============================================================
-   * MARK SINGLE NOTIFICATION READ
-   * ============================================================
-   */
 
   const handleNotificationClick = (notification) => {
     setNotifications((current) =>
@@ -344,7 +294,6 @@ export default function AdminNavbar() {
   return (
     <header className="fixed right-0 top-0 z-30 h-18 border-b border-gray-200 bg-white/95 backdrop-blur-md lg:left-64">
       <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Desktop Search */}
 
         <div className="hidden w-full max-w-md md:block">
           <div className="relative">
@@ -361,7 +310,6 @@ export default function AdminNavbar() {
           </div>
         </div>
 
-        {/* Mobile Brand */}
 
         <div className="ml-12 md:hidden">
           <p className="text-sm font-bold text-gray-900">
@@ -372,10 +320,8 @@ export default function AdminNavbar() {
           <p className="text-[10px] text-gray-400">Admin Portal</p>
         </div>
 
-        {/* Right Actions */}
 
         <div className="ml-auto flex items-center gap-2">
-          {/* Mobile Search */}
 
           <button
             type="button"
@@ -385,7 +331,6 @@ export default function AdminNavbar() {
             <Search size={19} />
           </button>
 
-          {/* Notifications */}
 
           <div ref={notificationRef} className="relative">
             <button
@@ -491,7 +436,6 @@ export default function AdminNavbar() {
 
           <div className="mx-1 hidden h-8 w-px bg-gray-200 sm:block" />
 
-          {/* Admin Profile */}
 
           <div ref={profileRef} className="relative">
             <button

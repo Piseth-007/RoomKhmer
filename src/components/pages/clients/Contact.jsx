@@ -128,19 +128,14 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* =====================================================
-          HERO
-      ====================================================== */}
 
       <section className="relative overflow-hidden bg-white">
-        {/* Decorative background */}
 
         <div className="pointer-events-none absolute -right-40 -top-40 h-105 w-105 rounded-full bg-blue-50 blur-3xl" />
 
         <div className="pointer-events-none absolute -bottom-40 -left-40 h-95 w-95 rounded-full bg-indigo-50 blur-3xl" />
 
         <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-10 sm:px-6 sm:pb-16 lg:px-8">
-          {/* Breadcrumb */}
 
           <div className="mb-10 flex items-center gap-2 text-xs text-gray-400">
             <Link to="/" className="transition hover:text-blue-600">
@@ -152,7 +147,6 @@ const Contact = () => {
             <span className="font-medium text-gray-600">Contact</span>
           </div>
 
-          {/* Hero */}
 
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
@@ -223,15 +217,9 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* =====================================================
-          CONTACT FORM + INFO
-      ====================================================== */}
 
       <main className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-          {/* =================================================
-              LEFT INFORMATION
-          ================================================== */}
 
           <div className="rounded-3xl bg-gray-900 p-7 sm:p-9">
             <span className="text-xs font-semibold uppercase tracking-wider text-blue-400">
@@ -251,7 +239,6 @@ const Contact = () => {
               RoomKhmer, we'd love to hear from you.
             </p>
 
-            {/* Contact methods */}
 
             <div className="mt-8 space-y-5">
               <a
@@ -303,11 +290,9 @@ const Contact = () => {
               </div>
             </div>
 
-            {/* Divider */}
 
             <div className="my-8 h-px bg-white/10" />
 
-            {/* Safety */}
 
             <div className="flex gap-3">
               <ShieldCheck
@@ -328,9 +313,6 @@ const Contact = () => {
             </div>
           </div>
 
-          {/* =================================================
-              FORM
-          ================================================== */}
 
           <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm sm:p-9">
             {!submitted ? (
@@ -346,7 +328,6 @@ const Contact = () => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="mt-7 space-y-5">
-                  {/* Name + Email */}
 
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div>
@@ -420,7 +401,6 @@ const Contact = () => {
                     </div>
                   </div>
 
-                  {/* Subject */}
 
                   <div>
                     <label
@@ -457,7 +437,6 @@ const Contact = () => {
                     />
                   </div>
 
-                  {/* Message */}
 
                   <div>
                     <div className="flex items-center justify-between">
@@ -502,7 +481,6 @@ const Contact = () => {
                     />
                   </div>
 
-                  {/* Submit */}
 
                   <button
                     type="submit"
@@ -528,9 +506,6 @@ const Contact = () => {
                 </form>
               </>
             ) : (
-              /* =================================================
-                 SUCCESS
-              ================================================== */
 
               <div className="flex min-h-125 flex-col items-center justify-center text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
@@ -577,9 +552,6 @@ const Contact = () => {
         </div>
       </main>
 
-      {/* =====================================================
-          FAQ
-      ====================================================== */}
 
       <section className="border-t border-gray-100 bg-white">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
@@ -631,9 +603,6 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* =====================================================
-          CTA
-      ====================================================== */}
 
       <section className="bg-slate-50">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -681,9 +650,6 @@ const Contact = () => {
   );
 };
 
-/* =========================================================
-   HOME ICON
-========================================================= */
 
 const HomeIcon = () => {
   return (

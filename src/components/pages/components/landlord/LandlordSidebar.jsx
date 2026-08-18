@@ -18,9 +18,6 @@ export default function LandlordSidebar() {
 
   const navigate = useNavigate();
 
-  // ============================================================
-  // MENU
-  // ============================================================
 
   const menuItems = [
     {
@@ -56,17 +53,11 @@ export default function LandlordSidebar() {
     },
   ];
 
-  // ============================================================
-  // CLOSE SIDEBAR
-  // ============================================================
 
   const closeSidebar = () => {
     setIsOpen(false);
   };
 
-  // ============================================================
-  // LOGOUT
-  // ============================================================
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -79,9 +70,6 @@ export default function LandlordSidebar() {
 
   return (
     <>
-      {/* ======================================================
-          MOBILE MENU BUTTON
-      ======================================================= */}
 
       <button
         type="button"
@@ -92,9 +80,6 @@ export default function LandlordSidebar() {
         <Menu size={22} />
       </button>
 
-      {/* ======================================================
-          MOBILE OVERLAY
-      ======================================================= */}
 
       {isOpen && (
         <button
@@ -105,18 +90,12 @@ export default function LandlordSidebar() {
         />
       )}
 
-      {/* ======================================================
-          SIDEBAR
-      ======================================================= */}
 
       <aside
         className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
       >
-        {/* ====================================================
-            HEADER / LOGO
-        ===================================================== */}
 
         <div className="flex h-18 shrink-0 items-center justify-between border-b border-gray-100 px-5">
           <Link
@@ -137,7 +116,6 @@ export default function LandlordSidebar() {
             </div>
           </Link>
 
-          {/* Mobile close */}
 
           <button
             type="button"
@@ -149,7 +127,6 @@ export default function LandlordSidebar() {
         </div>
 
         <nav className="flex-1 overflow-hidden px-3 py-5">
-          {/* Main menu title */}
 
           <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-400">
             Main Menu
@@ -200,13 +177,8 @@ export default function LandlordSidebar() {
           </div>
         </nav>
 
-        {/* ====================================================
-            BOTTOM
-            Always stays at bottom.
-        ===================================================== */}
 
         <div className="shrink-0 border-t border-gray-100 p-3">
-          {/* Settings */}
 
           <NavLink
             to="/landlord/settings"
@@ -228,7 +200,6 @@ export default function LandlordSidebar() {
             </div>
           </NavLink>
 
-          {/* Logout */}
 
           <button
             type="button"

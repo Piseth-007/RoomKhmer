@@ -109,19 +109,15 @@ const Register = () => {
   return (
     <div className="mx-auto flex w-full max-w-lg items-center justify-center">
       <div className="w-full">
-        {/* ================= REGISTER CARD ================= */}
 
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
-          {/* ================= HEADER ================= */}
 
           <div className="mb-7 text-center">
-            {/* Icon */}
 
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
               <UserPlus size={27} strokeWidth={2} />
             </div>
 
-            {/* Title */}
 
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">
               បង្កើតគណនី
@@ -136,7 +132,6 @@ const Register = () => {
             </p>
           </div>
 
-          {/* ================= ERROR ================= */}
 
           {error && (
             <div className="mb-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -144,10 +139,8 @@ const Register = () => {
             </div>
           )}
 
-          {/* ================= FORM ================= */}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* ================= FULL NAME ================= */}
 
             <div>
               <label
@@ -181,7 +174,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* ================= EMAIL ================= */}
 
             <div>
               <label
@@ -213,7 +205,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* ================= PHONE ================= */}
 
             <div>
               <label
@@ -245,7 +236,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* ================= ACCOUNT TYPE ================= */}
 
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700">
@@ -256,7 +246,6 @@ const Register = () => {
               </label>
 
               <div className="grid grid-cols-2 gap-3">
-                {/* ================= STUDENT ================= */}
 
                 <button
                   type="button"
@@ -284,7 +273,6 @@ const Register = () => {
                   <p className="mt-0.5 text-xs text-gray-400">Student</p>
                 </button>
 
-                {/* ================= LANDLORD ================= */}
 
                 <button
                   type="button"
@@ -314,7 +302,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* ================= PASSWORD ================= */}
 
             <div>
               <label
@@ -355,7 +342,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* ================= CONFIRM PASSWORD ================= */}
 
             <div>
               <label
@@ -402,7 +388,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* ================= TERMS ================= */}
 
             <label className="flex cursor-pointer items-start gap-3">
               <input
@@ -429,7 +414,6 @@ const Register = () => {
               </span>
             </label>
 
-            {/* ================= REGISTER BUTTON ================= */}
 
             <button
               type="submit"
@@ -450,7 +434,6 @@ const Register = () => {
             </button>
           </form>
 
-          {/* ================= DIVIDER ================= */}
 
           <div className="my-6 flex items-center gap-4">
             <div className="h-px flex-1 bg-gray-100" />
@@ -460,7 +443,6 @@ const Register = () => {
             <div className="h-px flex-1 bg-gray-100" />
           </div>
 
-          {/* ================= GOOGLE ================= */}
 
           <button
             type="button"
@@ -492,7 +474,6 @@ const Register = () => {
             Continue with Google
           </button>
 
-          {/* ================= LOGIN ================= */}
 
           <p className="mt-7 text-center text-sm text-gray-500">
             មានគណនីរួចហើយ?
@@ -505,7 +486,6 @@ const Register = () => {
           </p>
         </div>
 
-        {/* ================= FOOTER ================= */}
 
         <p className="mt-5 text-center text-xs leading-5 text-gray-400">
           By creating an account, you agree to our{" "}

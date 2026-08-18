@@ -32,7 +32,6 @@ const AuthLayout = () => {
         </div>
       </header>
 
-      {/* ================= CONTENT ================= */}
 
       <main className="min-h-[calc(100vh-72px)] px-4 py-10 sm:px-6">
         <Outlet />

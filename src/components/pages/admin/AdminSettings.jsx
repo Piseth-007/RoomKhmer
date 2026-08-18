@@ -25,35 +25,29 @@ export default function AdminSettings() {
   const [saved, setSaved] = useState(false);
 
   const [settings, setSettings] = useState({
-    // General
     platformName: "RoomKhmer",
     supportEmail: "support@roomkhmer.com",
     phone: "012 345 678",
     location: "Phnom Penh, Cambodia",
     currency: "USD",
 
-    // Booking
     commission: "5",
     minimumBookingDays: "1",
     maximumBookingDays: "365",
     autoConfirmBookings: false,
 
-    // Users
     allowRegistration: true,
     requireLandlordApproval: true,
     requireEmailVerification: true,
 
-    // Notifications
     emailNotifications: true,
     bookingNotifications: true,
     newUserNotifications: true,
     landlordNotifications: true,
 
-    // Security
     twoFactorRequired: false,
     sessionTimeout: "60",
 
-    // System
     maintenanceMode: false,
     allowNewBookings: true,
   });
@@ -62,9 +56,6 @@ export default function AdminSettings() {
     ...settings,
   };
 
-  // ============================================================
-  // UPDATE SETTING
-  // ============================================================
 
   const updateSetting = (name, value) => {
     setSettings((current) => ({
@@ -75,13 +66,8 @@ export default function AdminSettings() {
     setSaved(false);
   };
 
-  // ============================================================
-  // SAVE
-  // ============================================================
 
   const handleSave = () => {
-    // Later:
-    // Save settings to Firebase / Firestore
 
     setSaved(true);
 
@@ -90,9 +76,6 @@ export default function AdminSettings() {
     }, 3000);
   };
 
-  // ============================================================
-  // RESET
-  // ============================================================
 
   const handleReset = () => {
     const confirmed = window.confirm(
@@ -146,9 +129,6 @@ export default function AdminSettings() {
 
   return (
     <div className="space-y-6">
-      {/* ======================================================
-          HEADER
-      ======================================================= */}
 
       <div>
         <div className="flex items-center gap-2">
@@ -166,9 +146,6 @@ export default function AdminSettings() {
         </p>
       </div>
 
-      {/* ======================================================
-          SAVE BAR
-      ======================================================= */}
 
       {saved && (
         <div className="flex items-center gap-3 rounded-xl border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-700">
@@ -186,14 +163,8 @@ export default function AdminSettings() {
         </div>
       )}
 
-      {/* ======================================================
-          SETTINGS LAYOUT
-      ======================================================= */}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
-        {/* ====================================================
-            SIDEBAR
-        ===================================================== */}
 
         <aside className="h-fit rounded-2xl border border-gray-100 bg-white p-2 shadow-sm">
           <div className="mb-2 px-3 py-3">
@@ -249,14 +220,8 @@ export default function AdminSettings() {
           </nav>
         </aside>
 
-        {/* ====================================================
-            CONTENT
-        ===================================================== */}
 
         <main className="min-w-0">
-          {/* ==================================================
-              GENERAL
-          =================================================== */}
 
           {activeSection === "general" && (
             <SettingsCard
@@ -315,9 +280,6 @@ export default function AdminSettings() {
             </SettingsCard>
           )}
 
-          {/* ==================================================
-              BOOKING
-          =================================================== */}
 
           {activeSection === "booking" && (
             <SettingsCard
@@ -368,9 +330,6 @@ export default function AdminSettings() {
             </SettingsCard>
           )}
 
-          {/* ==================================================
-              USERS
-          =================================================== */}
 
           {activeSection === "users" && (
             <SettingsCard
@@ -409,9 +368,6 @@ export default function AdminSettings() {
             </SettingsCard>
           )}
 
-          {/* ==================================================
-              NOTIFICATIONS
-          =================================================== */}
 
           {activeSection === "notifications" && (
             <SettingsCard
@@ -459,9 +415,6 @@ export default function AdminSettings() {
             </SettingsCard>
           )}
 
-          {/* ==================================================
-              SECURITY
-          =================================================== */}
 
           {activeSection === "security" && (
             <SettingsCard
@@ -517,9 +470,6 @@ export default function AdminSettings() {
             </SettingsCard>
           )}
 
-          {/* ==================================================
-              SYSTEM
-          =================================================== */}
 
           {activeSection === "system" && (
             <SettingsCard
@@ -581,9 +531,6 @@ export default function AdminSettings() {
         </main>
       </div>
 
-      {/* ======================================================
-          ACTION BAR
-      ======================================================= */}
 
       <div className="sticky bottom-4 z-20 rounded-2xl border border-gray-100 bg-white/95 p-3 shadow-lg backdrop-blur-md">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -616,9 +563,6 @@ export default function AdminSettings() {
   );
 }
 
-/* ============================================================
-   SETTINGS CARD
-============================================================ */
 
 function SettingsCard({ title, description, icon, children }) {
   return (
@@ -640,9 +584,6 @@ function SettingsCard({ title, description, icon, children }) {
   );
 }
 
-/* ============================================================
-   SETTINGS INPUT
-============================================================ */
 
 function SettingsInput({ label, name, type = "text", value, onChange, icon }) {
   return (
@@ -668,9 +609,6 @@ function SettingsInput({ label, name, type = "text", value, onChange, icon }) {
   );
 }
 
-/* ============================================================
-   SETTINGS SELECT
-============================================================ */
 
 function SettingsSelect({ label, value, onChange, children }) {
   return (
@@ -690,9 +628,6 @@ function SettingsSelect({ label, value, onChange, children }) {
   );
 }
 
-/* ============================================================
-   TOGGLE
-============================================================ */
 
 function ToggleSetting({
   label,
@@ -736,9 +671,6 @@ function ToggleSetting({
   );
 }
 
-/* ============================================================
-   SYSTEM INFO
-============================================================ */
 
 function SystemInfo({ label, value }) {
   return (

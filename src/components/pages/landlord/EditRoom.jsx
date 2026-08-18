@@ -57,9 +57,6 @@ export default function EditRoom() {
   const [error, setError] = useState("");
   const [roomStatus, setRoomStatus] = useState("pending");
 
-  // ============================================================
-  // FORM CHANGE
-  // ============================================================
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -70,9 +67,6 @@ export default function EditRoom() {
     }));
   };
 
-  // ============================================================
-  // AMENITIES
-  // ============================================================
 
   const handleAmenity = (name) => {
     setAmenities((current) => ({
@@ -81,9 +75,6 @@ export default function EditRoom() {
     }));
   };
 
-  // ============================================================
-  // IMAGE SELECTION
-  // ============================================================
 
   const handleImages = (event) => {
     const files = Array.from(event.target.files || []);
@@ -104,9 +95,6 @@ export default function EditRoom() {
     event.target.value = "";
   };
 
-  // ============================================================
-  // REMOVE IMAGE
-  // ============================================================
 
   const removeImage = (imageId) => {
     setImages((current) => {
@@ -120,9 +108,6 @@ export default function EditRoom() {
     });
   };
 
-  // ============================================================
-  // CLOUDINARY UPLOAD
-  // ============================================================
 
   const uploadImageToCloudinary = async (file) => {
     const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
@@ -155,21 +140,16 @@ export default function EditRoom() {
     return result.secure_url;
   };
 
-  // ============================================================
-  // GET FINAL IMAGE URLS
-  // ============================================================
 
   const getFinalImageUrls = async () => {
     const imageUrls = [];
 
     for (const image of images) {
-      // Existing image
       if (image.existing && image.url) {
         imageUrls.push(image.url);
         continue;
       }
 
-      // New image
       if (image.file) {
         const url = await uploadImageToCloudinary(image.file);
 
@@ -180,9 +160,6 @@ export default function EditRoom() {
     return imageUrls;
   };
 
-  // ============================================================
-  // SUBMIT
-  // ============================================================
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -213,12 +190,10 @@ export default function EditRoom() {
 
       const existingRoom = roomSnap.data();
 
-      // Check landlord ownership
       if (existingRoom.landlordId !== user.uid) {
         throw new Error("You don't have permission to edit this room.");
       }
 
-      // Upload new images
       const imageUrls = await getFinalImageUrls();
 
       const updatedData = {
@@ -272,9 +247,6 @@ export default function EditRoom() {
     }
   };
 
-  // ============================================================
-  // LOAD ROOM
-  // ============================================================
 
   useEffect(() => {
     let isMounted = true;
@@ -316,7 +288,6 @@ export default function EditRoom() {
 
         const room = roomSnap.data();
 
-        // Check ownership
         if (room.landlordId !== user.uid) {
           if (isMounted) {
             setError("You don't have permission to edit this room.");
@@ -389,9 +360,6 @@ export default function EditRoom() {
     };
   }, [id]);
 
-  // ============================================================
-  // CLEAN UP LOCAL IMAGE PREVIEWS
-  // ============================================================
 
   useEffect(() => {
     return () => {
@@ -403,9 +371,6 @@ export default function EditRoom() {
     };
   }, [images]);
 
-  // ============================================================
-  // LOADING
-  // ============================================================
 
   if (loading) {
     return (
@@ -427,9 +392,6 @@ export default function EditRoom() {
     );
   }
 
-  // ============================================================
-  // ERROR
-  // ============================================================
 
   if (error) {
     return (
@@ -455,13 +417,9 @@ export default function EditRoom() {
     );
   }
 
-  // ============================================================
-  // PAGE
-  // ============================================================
 
   return (
     <div className="mx-auto max-w-5xl">
-      {/* Header */}
 
       <div className="mb-6">
         <Link
@@ -496,9 +454,6 @@ export default function EditRoom() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* ====================================================
-            ROOM IMAGES
-        ===================================================== */}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
@@ -552,9 +507,6 @@ export default function EditRoom() {
           </div>
         </section>
 
-        {/* ====================================================
-            BASIC INFORMATION
-        ===================================================== */}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
@@ -672,9 +624,6 @@ export default function EditRoom() {
           </div>
         </section>
 
-        {/* ====================================================
-            ROOM DETAILS
-        ===================================================== */}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
@@ -729,9 +678,6 @@ export default function EditRoom() {
           </div>
         </section>
 
-        {/* ====================================================
-            AMENITIES
-        ===================================================== */}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
@@ -791,9 +737,6 @@ export default function EditRoom() {
           </div>
         </section>
 
-        {/* ====================================================
-            RULES
-        ===================================================== */}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
@@ -811,9 +754,6 @@ export default function EditRoom() {
           />
         </section>
 
-        {/* ====================================================
-            ACTIONS
-        ===================================================== */}
 
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Link
@@ -846,9 +786,6 @@ export default function EditRoom() {
   );
 }
 
-// ============================================================
-// SECTION HEADER
-// ============================================================
 
 function SectionHeader({ icon, title, subtitle }) {
   return (
@@ -866,9 +803,6 @@ function SectionHeader({ icon, title, subtitle }) {
   );
 }
 
-// ============================================================
-// FORM FIELD
-// ============================================================
 
 function FormField({ label, required = false, children, className = "" }) {
   return (
@@ -884,9 +818,6 @@ function FormField({ label, required = false, children, className = "" }) {
   );
 }
 
-// ============================================================
-// AMENITY
-// ============================================================
 
 function Amenity({ name, label, icon, checked, onChange }) {
   return (
@@ -918,9 +849,6 @@ function Amenity({ name, label, icon, checked, onChange }) {
   );
 }
 
-// ============================================================
-// INPUT CLASS
-// ============================================================
 
 function inputClass() {
   return "h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-50";

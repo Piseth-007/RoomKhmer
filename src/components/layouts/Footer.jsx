@@ -11,18 +11,11 @@ import { Link } from "react-router-dom";
 const Footer = () => {
   return (
     <footer className="border-t border-gray-100 bg-gray-950 text-white">
-      {/* =====================================================
-          MAIN FOOTER
-      ====================================================== */}
 
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1.3fr]">
-          {/* =================================================
-              BRAND
-          ================================================== */}
 
           <div className="max-w-sm">
-            {/* Logo */}
 
             <Link to="/" className="inline-flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
@@ -40,7 +33,6 @@ const Footer = () => {
               </div>
             </Link>
 
-            {/* Description */}
 
             <p className="mt-5 text-sm leading-6 text-gray-400">
               RoomKhmer ជួយនិស្សិត និងអ្នកធ្វើការ
@@ -51,7 +43,6 @@ const Footer = () => {
               Find affordable and comfortable rooms in Phnom Penh, Cambodia.
             </p>
 
-            {/* Social */}
 
             <div className="mt-6 flex items-center gap-2">
               <a
@@ -97,9 +88,6 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* =================================================
-              QUICK LINKS
-          ================================================== */}
 
           <div>
             <h3 className="text-sm font-semibold text-white">Quick Links</h3>
@@ -154,9 +142,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* =================================================
-              STUDENTS
-          ================================================== */}
 
           <div>
             <h3 className="text-sm font-semibold text-white">For Students</h3>
@@ -212,9 +197,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* =================================================
-              LANDLORDS
-          ================================================== */}
 
           <div>
             <h3 className="text-sm font-semibold text-white">For Landlords</h3>
@@ -269,9 +251,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* =================================================
-              CONTACT
-          ================================================== */}
 
           <div>
             <h3 className="text-sm font-semibold text-white">Get in Touch</h3>
@@ -279,7 +258,6 @@ const Footer = () => {
             <p className="mt-1 text-xs text-gray-600">ទំនាក់ទំនង</p>
 
             <div className="mt-5 space-y-4">
-              {/* Location */}
 
               <div className="flex gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-900 text-blue-400">
@@ -295,7 +273,6 @@ const Footer = () => {
                 </div>
               </div>
 
-              {/* Phone */}
 
               <div className="flex gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-900 text-blue-400">
@@ -314,7 +291,6 @@ const Footer = () => {
                 </div>
               </div>
 
-              {/* Email */}
 
               <div className="flex gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-900 text-blue-400">
@@ -336,9 +312,6 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* =================================================
-            NEWSLETTER
-        ================================================== */}
 
         <div className="mt-12 rounded-2xl border border-gray-800 bg-gray-900/60 p-5 sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -379,19 +352,14 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* =====================================================
-          BOTTOM FOOTER
-      ====================================================== */}
 
       <div className="border-t border-gray-800">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-          {/* Copyright */}
 
           <p className="text-xs text-gray-600">
             © {new Date().getFullYear()} RoomKhmer. All rights reserved.
           </p>
 
-          {/* Links */}
 
           <div className="flex flex-wrap items-center gap-5">
             <Link
@@ -416,7 +384,6 @@ const Footer = () => {
             </Link>
           </div>
 
-          {/* Made with */}
 
           <p className="flex items-center gap-1 text-xs text-gray-600">
             Made for students in Cambodia

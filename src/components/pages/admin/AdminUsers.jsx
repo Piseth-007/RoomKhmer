@@ -60,11 +60,6 @@ export default function AdminUsers() {
 
   const [page, setPage] = useState(1);
 
-  /*
-   * ============================================================
-   * LOAD USERS
-   * ============================================================
-   */
 
   const loadUsers = async () => {
     try {
@@ -93,11 +88,6 @@ export default function AdminUsers() {
 
           joined: data.createdAt || null,
 
-          /*
-           * These values are only used if
-           * you actually store them inside
-           * the user document.
-           */
           bookings: Number(data.bookings || 0),
 
           rooms: Number(data.rooms || 0),
@@ -118,21 +108,11 @@ export default function AdminUsers() {
     loadUsers();
   }, []);
 
-  /*
-   * ============================================================
-   * RESET PAGE WHEN FILTER CHANGES
-   * ============================================================
-   */
 
   useEffect(() => {
     setPage(1);
   }, [search, role, status, location]);
 
-  /*
-   * ============================================================
-   * FILTER USERS
-   * ============================================================
-   */
 
   const filteredUsers = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -166,11 +146,6 @@ export default function AdminUsers() {
     });
   }, [users, role, status, search, location]);
 
-  /*
-   * ============================================================
-   * COUNTS
-   * ============================================================
-   */
 
   const totalUsers = users.length;
 
@@ -188,11 +163,6 @@ export default function AdminUsers() {
     (user) => user.status === "suspended",
   ).length;
 
-  /*
-   * ============================================================
-   * LOCATIONS
-   * ============================================================
-   */
 
   const locations = useMemo(() => {
     return [
@@ -204,11 +174,6 @@ export default function AdminUsers() {
     ].sort();
   }, [users]);
 
-  /*
-   * ============================================================
-   * PAGINATION
-   * ============================================================
-   */
 
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
 
@@ -219,17 +184,8 @@ export default function AdminUsers() {
     safePage * PAGE_SIZE,
   );
 
-  /*
-   * ============================================================
-   * UPDATE USER STATUS
-   * ============================================================
-   */
 
   const updateStatus = async (user, newStatus) => {
-    /*
-     * Do not allow changing
-     * another admin's status.
-     */
     if (user.role === "admin") {
       setError(
         "Admin accounts cannot be suspended or approved from this page.",
@@ -272,16 +228,8 @@ export default function AdminUsers() {
     }
   };
 
-  /*
-   * ============================================================
-   * DELETE USER
-   * ============================================================
-   */
 
   const deleteUser = async (user) => {
-    /*
-     * Protect admin accounts.
-     */
     if (user.role === "admin") {
       setError("Admin accounts cannot be deleted from this page.");
 
@@ -317,11 +265,6 @@ export default function AdminUsers() {
     }
   };
 
-  /*
-   * ============================================================
-   * CLEAR FILTERS
-   * ============================================================
-   */
 
   const clearFilters = () => {
     setSearch("");
@@ -331,11 +274,6 @@ export default function AdminUsers() {
     setPage(1);
   };
 
-  /*
-   * ============================================================
-   * LOADING
-   * ============================================================
-   */
 
   if (loading) {
     return (
@@ -349,15 +287,9 @@ export default function AdminUsers() {
     );
   }
 
-  /*
-   * ============================================================
-   * UI
-   * ============================================================
-   */
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -387,7 +319,6 @@ export default function AdminUsers() {
         )}
       </div>
 
-      {/* ERROR */}
 
       {error && (
         <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-4">
@@ -409,7 +340,6 @@ export default function AdminUsers() {
         </div>
       )}
 
-      {/* STATS */}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <UserStat
@@ -441,7 +371,6 @@ export default function AdminUsers() {
         />
       </div>
 
-      {/* ROLE TABS */}
 
       <div className="overflow-x-auto">
         <div className="flex min-w-max gap-2 rounded-xl border border-gray-100 bg-white p-1.5 shadow-sm">
@@ -475,11 +404,9 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* FILTERS */}
 
       <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
-          {/* SEARCH */}
 
           <div className="relative">
             <Search
@@ -496,7 +423,6 @@ export default function AdminUsers() {
             />
           </div>
 
-          {/* STATUS */}
 
           <select
             value={status}
@@ -512,7 +438,6 @@ export default function AdminUsers() {
             <option value="suspended">Suspended</option>
           </select>
 
-          {/* LOCATION */}
 
           <select
             value={location}
@@ -528,7 +453,6 @@ export default function AdminUsers() {
             ))}
           </select>
 
-          {/* CLEAR */}
 
           <button
             type="button"
@@ -541,7 +465,6 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* STATUS SUMMARY */}
 
       <div className="flex flex-wrap gap-3">
         <StatusSummary
@@ -573,7 +496,6 @@ export default function AdminUsers() {
         />
       </div>
 
-      {/* DESKTOP TABLE */}
 
       <div className="hidden overflow-visible rounded-2xl border border-gray-100 bg-white shadow-sm lg:block">
         <div className="overflow-x-auto overflow-y-visible">
@@ -605,7 +527,6 @@ export default function AdminUsers() {
                     key={user.id}
                     className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50"
                   >
-                    {/* USER */}
 
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
@@ -623,7 +544,6 @@ export default function AdminUsers() {
                       </div>
                     </td>
 
-                    {/* CONTACT */}
 
                     <td className="px-5 py-4">
                       <p className="flex max-w-55 items-center gap-1.5 truncate text-xs text-gray-600">
@@ -639,13 +559,11 @@ export default function AdminUsers() {
                       </p>
                     </td>
 
-                    {/* ROLE */}
 
                     <td className="px-5 py-4">
                       <RoleBadge role={user.role} />
                     </td>
 
-                    {/* LOCATION */}
 
                     <td className="px-5 py-4">
                       <span className="flex max-w-32.5 items-center gap-1.5 truncate text-xs text-gray-600">
@@ -655,7 +573,6 @@ export default function AdminUsers() {
                       </span>
                     </td>
 
-                    {/* ACTIVITY */}
 
                     <td className="px-5 py-4">
                       {user.role === "landlord" ? (
@@ -683,13 +600,11 @@ export default function AdminUsers() {
                       )}
                     </td>
 
-                    {/* STATUS */}
 
                     <td className="px-5 py-4">
                       <UserStatus status={user.status} />
                     </td>
 
-                    {/* ACTION */}
 
                     <td className="px-5 py-4">
                       <div className="relative">
@@ -732,7 +647,6 @@ export default function AdminUsers() {
         />
       </div>
 
-      {/* MOBILE */}
 
       <div className="space-y-4 lg:hidden">
         {paginatedUsers.map((user) => (
@@ -746,7 +660,6 @@ export default function AdminUsers() {
         ))}
       </div>
 
-      {/* MOBILE PAGINATION */}
 
       {paginatedUsers.length > 0 && (
         <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 lg:hidden">
@@ -779,7 +692,6 @@ export default function AdminUsers() {
         </div>
       )}
 
-      {/* EMPTY */}
 
       {filteredUsers.length === 0 && (
         <div className="rounded-2xl border border-gray-100 bg-white py-16 text-center shadow-sm">
@@ -800,11 +712,6 @@ export default function AdminUsers() {
   );
 }
 
-/*
- * ============================================================
- * MOBILE USER CARD
- * ============================================================
- */
 
 function MobileUserCard({ user, actionLoading, updateStatus, deleteUser }) {
   const busy = actionLoading === user.id;
@@ -932,11 +839,6 @@ function MobileUserCard({ user, actionLoading, updateStatus, deleteUser }) {
   );
 }
 
-/*
- * ============================================================
- * USER STAT
- * ============================================================
- */
 
 function UserStat({ label, value, icon, className }) {
   return (
@@ -956,11 +858,6 @@ function UserStat({ label, value, icon, className }) {
   );
 }
 
-/*
- * ============================================================
- * ROLE TAB
- * ============================================================
- */
 
 function RoleTab({ label, count, active, onClick }) {
   return (
@@ -984,11 +881,6 @@ function RoleTab({ label, count, active, onClick }) {
   );
 }
 
-/*
- * ============================================================
- * STATUS SUMMARY
- * ============================================================
- */
 
 function StatusSummary({ icon, label, value, className }) {
   return (
@@ -1004,11 +896,6 @@ function StatusSummary({ icon, label, value, className }) {
   );
 }
 
-/*
- * ============================================================
- * AVATAR
- * ============================================================
- */
 
 function UserAvatar({ user }) {
   return (
@@ -1032,11 +919,6 @@ function UserAvatar({ user }) {
   );
 }
 
-/*
- * ============================================================
- * ROLE BADGE
- * ============================================================
- */
 
 function RoleBadge({ role }) {
   if (role === "admin") {
@@ -1065,11 +947,6 @@ function RoleBadge({ role }) {
   );
 }
 
-/*
- * ============================================================
- * USER STATUS
- * ============================================================
- */
 
 function UserStatus({ status }) {
   const config = {
@@ -1107,11 +984,6 @@ function UserStatus({ status }) {
   );
 }
 
-/*
- * ============================================================
- * USER MENU
- * ============================================================
- */
 
 function UserMenu({ user, busy, onUpdateStatus, onDelete, closeMenu }) {
   const isAdmin = user.role === "admin";
@@ -1186,11 +1058,6 @@ function UserMenu({ user, busy, onUpdateStatus, onDelete, closeMenu }) {
   );
 }
 
-/*
- * ============================================================
- * TABLE HEAD
- * ============================================================
- */
 
 function TableHead({ children }) {
   return (
@@ -1200,11 +1067,6 @@ function TableHead({ children }) {
   );
 }
 
-/*
- * ============================================================
- * TABLE FOOTER
- * ============================================================
- */
 
 function TableFooter({ page, totalPages, count, total, onPrevious, onNext }) {
   return (
@@ -1241,11 +1103,6 @@ function TableFooter({ page, totalPages, count, total, onPrevious, onNext }) {
   );
 }
 
-/*
- * ============================================================
- * NORMALIZE ROLE
- * ============================================================
- */
 
 function normalizeRole(role) {
   const value = String(role || "")
@@ -1267,11 +1124,6 @@ function normalizeRole(role) {
   return "tenant";
 }
 
-/*
- * ============================================================
- * NORMALIZE STATUS
- * ============================================================
- */
 
 function normalizeStatus(status) {
   const value = String(status || "")
@@ -1289,11 +1141,6 @@ function normalizeStatus(status) {
   return "active";
 }
 
-/*
- * ============================================================
- * FIREBASE ERROR
- * ============================================================
- */
 
 function getFirebaseError(error, fallback) {
   if (!error) {

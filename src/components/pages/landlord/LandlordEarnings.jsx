@@ -22,16 +22,12 @@ import { auth, db } from "../../../firebase/config";
 export default function LandlordEarnings() {
   const [period, setPeriod] = useState("6months");
 
-  // This contains PAYMENTS, not bookings.
   const [payments, setPayments] = useState([]);
 
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
 
-  // ============================================================
-  // LOAD PAYMENTS
-  // ============================================================
 
   useEffect(() => {
     let unsubscribe;
@@ -63,9 +59,6 @@ export default function LandlordEarnings() {
 
             ...data,
 
-            // ------------------------------------------------
-            // PAYMENT
-            // ------------------------------------------------
 
             amount: Number(data.amount || 0),
 
@@ -77,9 +70,6 @@ export default function LandlordEarnings() {
 
             createdAt: data.createdAt || null,
 
-            // ------------------------------------------------
-            // ROOM
-            // ------------------------------------------------
 
             room: data.roomName || "Unknown Room",
 
@@ -87,17 +77,11 @@ export default function LandlordEarnings() {
 
             location: data.location || data.roomLocation || "",
 
-            // ------------------------------------------------
-            // TENANT
-            // ------------------------------------------------
 
             tenant: data.tenantName || "Unknown Tenant",
 
             tenantId: data.tenantId || "",
 
-            // ------------------------------------------------
-            // PERIOD
-            // ------------------------------------------------
 
             periodNumber: Number(data.periodNumber || 1),
 
@@ -125,13 +109,6 @@ export default function LandlordEarnings() {
       }
     };
 
-    // ------------------------------------------------------------
-    // IMPORTANT
-    // ------------------------------------------------------------
-    // Don't use auth.currentUser immediately.
-    // Wait until Firebase Authentication finishes restoring
-    // the login session.
-    // ------------------------------------------------------------
 
     unsubscribe = onAuthStateChanged(auth, (user) => {
       loadPayments(user);
@@ -144,25 +121,16 @@ export default function LandlordEarnings() {
     };
   }, []);
 
-  // ============================================================
-  // PAID PAYMENTS
-  // ============================================================
 
   const paidPayments = useMemo(() => {
     return payments.filter((payment) => payment.status === "paid");
   }, [payments]);
 
-  // ============================================================
-  // PENDING PAYMENTS
-  // ============================================================
 
   const pendingPayments = useMemo(() => {
     return payments.filter((payment) => payment.status === "pending");
   }, [payments]);
 
-  // ============================================================
-  // TOTAL PAID
-  // ============================================================
 
   const paidAmount = useMemo(() => {
     return paidPayments.reduce(
@@ -171,9 +139,6 @@ export default function LandlordEarnings() {
     );
   }, [paidPayments]);
 
-  // ============================================================
-  // TOTAL PENDING
-  // ============================================================
 
   const pendingAmount = useMemo(() => {
     return pendingPayments.reduce(
@@ -182,14 +147,6 @@ export default function LandlordEarnings() {
     );
   }, [pendingPayments]);
 
-  // ============================================================
-  // MONTHLY EARNINGS
-  // ============================================================
-  //
-  // IMPORTANT:
-  // Only PAID payments are counted.
-  //
-  // ============================================================
 
   const monthlyEarnings = useMemo(() => {
     const months = [];
@@ -215,10 +172,6 @@ export default function LandlordEarnings() {
     }
 
     paidPayments.forEach((payment) => {
-      // ----------------------------------------------------
-      // Prefer paidAt because earnings should be recorded
-      // when the payment was actually paid.
-      // ----------------------------------------------------
 
       const date = getPaymentDate(payment.paidAt, payment.createdAt);
 
@@ -240,26 +193,14 @@ export default function LandlordEarnings() {
     return months;
   }, [paidPayments, period]);
 
-  // ============================================================
-  // TOTAL EARNINGS FOR SELECTED PERIOD
-  // ============================================================
 
-  // ============================================================
-  // CURRENT MONTH
-  // ============================================================
 
   const currentMonth = monthlyEarnings[monthlyEarnings.length - 1]?.amount || 0;
 
-  // ============================================================
-  // PREVIOUS MONTH
-  // ============================================================
 
   const previousMonth =
     monthlyEarnings[monthlyEarnings.length - 2]?.amount || 0;
 
-  // ============================================================
-  // GROWTH
-  // ============================================================
 
   const growth =
     previousMonth > 0
@@ -268,14 +209,10 @@ export default function LandlordEarnings() {
         ? 100
         : 0;
 
-  // ============================================================
-  // EARNINGS BY ROOM
-  // ============================================================
 
   const roomEarnings = useMemo(() => {
     const rooms = {};
 
-    // Only PAID payments
     paidPayments.forEach((payment) => {
       const key = payment.roomId || payment.room || "unknown";
 
@@ -304,9 +241,6 @@ export default function LandlordEarnings() {
     1,
   );
 
-  // ============================================================
-  // RECENT TRANSACTIONS
-  // ============================================================
 
   const transactions = useMemo(() => {
     return [...payments]
@@ -335,9 +269,6 @@ export default function LandlordEarnings() {
       }));
   }, [payments]);
 
-  // ============================================================
-  // LOADING
-  // ============================================================
 
   if (loading) {
     return (
@@ -351,15 +282,9 @@ export default function LandlordEarnings() {
     );
   }
 
-  // ============================================================
-  // UI
-  // ============================================================
 
   return (
     <div className="space-y-6">
-      {/* ======================================================
-          HEADER
-      ====================================================== */}
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
@@ -379,9 +304,6 @@ export default function LandlordEarnings() {
         </button>
       </div>
 
-      {/* ======================================================
-          ERROR
-      ====================================================== */}
 
       {error && (
         <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
@@ -389,9 +311,6 @@ export default function LandlordEarnings() {
         </div>
       )}
 
-      {/* ======================================================
-          STATS
-      ====================================================== */}
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <EarningStat
@@ -428,12 +347,8 @@ export default function LandlordEarnings() {
         />
       </div>
 
-      {/* ======================================================
-          CHART + SUMMARY
-      ====================================================== */}
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        {/* CHART */}
 
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6 xl:col-span-2">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -497,7 +412,6 @@ export default function LandlordEarnings() {
           </div>
         </div>
 
-        {/* SUMMARY */}
 
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-bold text-gray-900">Income Summary</h2>
@@ -543,9 +457,6 @@ export default function LandlordEarnings() {
         </div>
       </div>
 
-      {/* ======================================================
-          ROOM EARNINGS
-      ====================================================== */}
 
       <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-gray-100 p-5 sm:p-6">
@@ -627,9 +538,6 @@ export default function LandlordEarnings() {
         </div>
       </div>
 
-      {/* ======================================================
-          TRANSACTIONS
-      ====================================================== */}
 
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-gray-100 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
@@ -642,7 +550,6 @@ export default function LandlordEarnings() {
           </div>
         </div>
 
-        {/* DESKTOP */}
 
         <div className="hidden overflow-x-auto md:block">
           <table className="w-full">
@@ -731,7 +638,6 @@ export default function LandlordEarnings() {
           </table>
         </div>
 
-        {/* MOBILE */}
 
         <div className="space-y-3 p-4 md:hidden">
           {transactions.map((transaction) => (
@@ -792,9 +698,6 @@ export default function LandlordEarnings() {
   );
 }
 
-// ============================================================
-// EARNING STAT
-// ============================================================
 
 function EarningStat({ title, subtitle, value, icon, iconClass, growth }) {
   return (
@@ -824,9 +727,6 @@ function EarningStat({ title, subtitle, value, icon, iconClass, growth }) {
   );
 }
 
-// ============================================================
-// SUMMARY
-// ============================================================
 
 function SummaryRow({
   label,
@@ -879,9 +779,6 @@ function SummaryRow({
   );
 }
 
-// ============================================================
-// PAYMENT STATUS
-// ============================================================
 
 function PaymentStatus({ status }) {
   if (status === "paid") {
@@ -917,9 +814,6 @@ function PaymentStatus({ status }) {
   );
 }
 
-// ============================================================
-// DATE HELPERS
-// ============================================================
 
 function getPaymentDate(paidAt, createdAt) {
   const preferred = paidAt || createdAt;
@@ -975,8 +869,6 @@ function formatDate(value) {
   } else if (value instanceof Date) {
     date = value;
   } else if (typeof value === "string") {
-    // Handles YYYY-MM-DD
-    // without timezone shifting.
     const parts = value.split("-");
 
     if (parts.length === 3) {

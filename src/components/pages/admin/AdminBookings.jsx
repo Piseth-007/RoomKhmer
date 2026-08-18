@@ -46,26 +46,6 @@ export default function AdminBookings() {
 
   const PAGE_SIZE = 10;
 
-  /*
-   * ============================================================
-   * LOAD BOOKINGS
-   * ============================================================
-   *
-   * IMPORTANT:
-   *
-   * This page reads from:
-   *
-   *     bookings
-   *
-   * NOT:
-   *
-   *     roomRequests
-   *
-   * Room requests are used by landlords.
-   * Bookings are the actual rental records.
-   *
-   * ============================================================
-   */
 
   useEffect(() => {
     let unsubscribe;
@@ -82,13 +62,6 @@ export default function AdminBookings() {
           return;
         }
 
-        /*
-         * Admin page reads bookings.
-         *
-         * Firestore rules should allow:
-         *
-         * allow read: if isAdmin();
-         */
 
         const snapshot = await getDocs(collection(db, "bookings"));
 
@@ -98,9 +71,6 @@ export default function AdminBookings() {
           return normalizeBooking(bookingDoc.id, raw);
         });
 
-        /*
-         * Newest bookings first.
-         */
 
         data.sort((a, b) => b.createdAtMs - a.createdAtMs);
 
@@ -125,11 +95,6 @@ export default function AdminBookings() {
     };
   }, []);
 
-  /*
-   * ============================================================
-   * FILTER
-   * ============================================================
-   */
 
   const filteredBookings = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -155,11 +120,6 @@ export default function AdminBookings() {
     });
   }, [bookings, search, status, payment, dateFilter]);
 
-  /*
-   * ============================================================
-   * STATISTICS
-   * ============================================================
-   */
 
   const totalCount = bookings.length;
 
@@ -195,11 +155,6 @@ export default function AdminBookings() {
     .filter((booking) => booking.payment === "paid")
     .reduce((total, booking) => total + Number(booking.amount || 0), 0);
 
-  /*
-   * ============================================================
-   * PAGINATION
-   * ============================================================
-   */
 
   const totalPages = Math.max(
     1,
@@ -213,21 +168,11 @@ export default function AdminBookings() {
     currentPage * PAGE_SIZE,
   );
 
-  /*
-   * ============================================================
-   * RESET PAGE WHEN FILTER CHANGES
-   * ============================================================
-   */
 
   useEffect(() => {
     setPage(1);
   }, [search, status, payment, dateFilter]);
 
-  /*
-   * ============================================================
-   * CLEAR FILTERS
-   * ============================================================
-   */
 
   const clearFilters = () => {
     setSearch("");
@@ -237,11 +182,6 @@ export default function AdminBookings() {
     setPage(1);
   };
 
-  /*
-   * ============================================================
-   * LOADING
-   * ============================================================
-   */
 
   if (loading) {
     return (
@@ -255,15 +195,9 @@ export default function AdminBookings() {
     );
   }
 
-  /*
-   * ============================================================
-   * UI
-   * ============================================================
-   */
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -288,7 +222,6 @@ export default function AdminBookings() {
         </div>
       </div>
 
-      {/* ERROR */}
 
       {error && (
         <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-4">
@@ -302,7 +235,6 @@ export default function AdminBookings() {
         </div>
       )}
 
-      {/* STATISTICS */}
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
         <BookingStat
@@ -341,7 +273,6 @@ export default function AdminBookings() {
         />
       </div>
 
-      {/* STATUS TABS */}
 
       <div className="overflow-x-auto">
         <div className="flex min-w-max gap-2 rounded-xl border border-gray-100 bg-white p-1.5 shadow-sm">
@@ -394,7 +325,6 @@ export default function AdminBookings() {
         </div>
       </div>
 
-      {/* FILTERS */}
 
       <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
@@ -452,7 +382,6 @@ export default function AdminBookings() {
         </div>
       </div>
 
-      {/* PAYMENT SUMMARY */}
 
       <div className="flex flex-wrap gap-3">
         <SummaryBadge
@@ -477,7 +406,6 @@ export default function AdminBookings() {
         />
       </div>
 
-      {/* ADMIN NOTICE */}
 
       <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
         <p className="text-xs font-medium text-blue-700">
@@ -486,7 +414,6 @@ export default function AdminBookings() {
         </p>
       </div>
 
-      {/* DESKTOP TABLE */}
 
       <div className="hidden overflow-visible rounded-2xl border border-gray-100 bg-white shadow-sm lg:block">
         <div className="overflow-x-auto">
@@ -620,7 +547,6 @@ export default function AdminBookings() {
         />
       </div>
 
-      {/* MOBILE */}
 
       <div className="space-y-4 lg:hidden">
         {paginatedBookings.map((booking) => (
@@ -719,7 +645,6 @@ export default function AdminBookings() {
         ))}
       </div>
 
-      {/* MOBILE PAGINATION */}
 
       {paginatedBookings.length > 0 && (
         <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 lg:hidden">
@@ -751,7 +676,6 @@ export default function AdminBookings() {
         </div>
       )}
 
-      {/* EMPTY */}
 
       {filteredBookings.length === 0 && (
         <div className="rounded-2xl border border-gray-100 bg-white py-16 text-center shadow-sm">
@@ -772,11 +696,6 @@ export default function AdminBookings() {
   );
 }
 
-/*
- * ============================================================
- * NORMALIZE BOOKING
- * ============================================================
- */
 
 function normalizeBooking(id, raw) {
   const createdAtMs = getTimestampMs(raw.createdAt || raw.bookingDate);
@@ -821,11 +740,6 @@ function normalizeBooking(id, raw) {
   };
 }
 
-/*
- * ============================================================
- * STATUS
- * ============================================================
- */
 
 function normalizeBookingStatus(status) {
   const value = String(status || "")
@@ -851,11 +765,6 @@ function normalizeBookingStatus(status) {
   return "pending";
 }
 
-/*
- * ============================================================
- * PAYMENT
- * ============================================================
- */
 
 function normalizePaymentStatus(status) {
   const value = String(status || "")
@@ -873,11 +782,6 @@ function normalizePaymentStatus(status) {
   return "pending";
 }
 
-/*
- * ============================================================
- * TIMESTAMP
- * ============================================================
- */
 
 function getTimestampMs(value) {
   if (!value) {
@@ -901,11 +805,6 @@ function getTimestampMs(value) {
   return Number.isNaN(date.getTime()) ? 0 : date.getTime();
 }
 
-/*
- * ============================================================
- * DATE FORMAT
- * ============================================================
- */
 
 function formatDate(value) {
   if (!value) {
@@ -925,11 +824,6 @@ function formatDate(value) {
   });
 }
 
-/*
- * ============================================================
- * DATE FILTER
- * ============================================================
- */
 
 function matchDateFilter(timestamp, filter, now) {
   if (filter === "all") {
@@ -970,11 +864,6 @@ function matchDateFilter(timestamp, filter, now) {
   return true;
 }
 
-/*
- * ============================================================
- * FIREBASE ERROR
- * ============================================================
- */
 
 function firebaseError(error, fallback) {
   if (error?.code === "permission-denied") {
@@ -992,11 +881,6 @@ function firebaseError(error, fallback) {
   return error?.message || fallback;
 }
 
-/*
- * ============================================================
- * BOOKING STAT
- * ============================================================
- */
 
 function BookingStat({ label, value, icon, className }) {
   return (
@@ -1014,11 +898,6 @@ function BookingStat({ label, value, icon, className }) {
   );
 }
 
-/*
- * ============================================================
- * STATUS TAB
- * ============================================================
- */
 
 function StatusTab({ label, count, active, onClick, type }) {
   let activeClass = "bg-blue-600 text-white";
@@ -1060,11 +939,6 @@ function StatusTab({ label, count, active, onClick, type }) {
   );
 }
 
-/*
- * ============================================================
- * SUMMARY
- * ============================================================
- */
 
 function SummaryBadge({ icon, label, value, className }) {
   return (
@@ -1080,11 +954,6 @@ function SummaryBadge({ icon, label, value, className }) {
   );
 }
 
-/*
- * ============================================================
- * BOOKING STATUS
- * ============================================================
- */
 
 function BookingStatus({ status }) {
   const config = {
@@ -1134,11 +1003,6 @@ function BookingStatus({ status }) {
   );
 }
 
-/*
- * ============================================================
- * PAYMENT STATUS
- * ============================================================
- */
 
 function PaymentStatus({ status }) {
   const config = {
@@ -1169,11 +1033,6 @@ function PaymentStatus({ status }) {
   );
 }
 
-/*
- * ============================================================
- * TABLE HEAD
- * ============================================================
- */
 
 function TableHead({ children }) {
   return (
@@ -1183,11 +1042,6 @@ function TableHead({ children }) {
   );
 }
 
-/*
- * ============================================================
- * TABLE FOOTER
- * ============================================================
- */
 
 function TableFooter({ page, totalPages, count, total, onPrevious, onNext }) {
   return (

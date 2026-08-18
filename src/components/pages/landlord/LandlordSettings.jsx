@@ -46,9 +46,6 @@ export default function LandlordSettings() {
 
   const [saved, setSaved] = useState(false);
 
-  // ============================================================
-  // NOTIFICATIONS
-  // ============================================================
 
   const toggleNotification = (name) => {
     setNotifications((current) => ({
@@ -59,9 +56,6 @@ export default function LandlordSettings() {
     setSaved(false);
   };
 
-  // ============================================================
-  // PRIVACY
-  // ============================================================
 
   const togglePrivacy = (name) => {
     setPrivacy((current) => ({
@@ -72,9 +66,6 @@ export default function LandlordSettings() {
     setSaved(false);
   };
 
-  // ============================================================
-  // PASSWORD
-  // ============================================================
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
@@ -87,9 +78,6 @@ export default function LandlordSettings() {
     setSaved(false);
   };
 
-  // ============================================================
-  // SAVE SETTINGS
-  // ============================================================
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -107,9 +95,6 @@ export default function LandlordSettings() {
     }, 3000);
   };
 
-  // ============================================================
-  // CHANGE PASSWORD
-  // ============================================================
 
   const handleChangePassword = (e) => {
     e.preventDefault();
@@ -147,9 +132,6 @@ export default function LandlordSettings() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      {/* ======================================================
-          HEADER
-      ======================================================= */}
 
       <div>
         <h1 className="text-2xl font-bold text-gray-900">ការកំណត់</h1>
@@ -159,9 +141,6 @@ export default function LandlordSettings() {
         </p>
       </div>
 
-      {/* ======================================================
-          SAVE MESSAGE
-      ======================================================= */}
 
       {saved && (
         <div className="flex items-center gap-3 rounded-xl border border-green-100 bg-green-50 p-4 text-green-700">
@@ -177,9 +156,6 @@ export default function LandlordSettings() {
         </div>
       )}
 
-      {/* ======================================================
-          GENERAL SETTINGS
-      ======================================================= */}
 
       <section className="rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div className="flex items-center gap-3 border-b border-gray-100 p-5 sm:p-6">
@@ -197,7 +173,6 @@ export default function LandlordSettings() {
         </div>
 
         <div className="space-y-5 p-5 sm:p-6">
-          {/* Language */}
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
@@ -230,9 +205,6 @@ export default function LandlordSettings() {
         </div>
       </section>
 
-      {/* ======================================================
-          NOTIFICATIONS
-      ======================================================= */}
 
       <section className="rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div className="flex items-center gap-3 border-b border-gray-100 p-5 sm:p-6">
@@ -300,9 +272,6 @@ export default function LandlordSettings() {
         </div>
       </section>
 
-      {/* ======================================================
-          PRIVACY
-      ======================================================= */}
 
       <section className="rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div className="flex items-center gap-3 border-b border-gray-100 p-5 sm:p-6">
@@ -338,9 +307,6 @@ export default function LandlordSettings() {
         </div>
       </section>
 
-      {/* ======================================================
-          PASSWORD
-      ======================================================= */}
 
       <section className="rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div className="flex items-center gap-3 border-b border-gray-100 p-5 sm:p-6">
@@ -410,9 +376,6 @@ export default function LandlordSettings() {
         </form>
       </section>
 
-      {/* ======================================================
-          DANGER ZONE
-      ======================================================= */}
 
       <section className="rounded-2xl border border-red-100 bg-white shadow-sm">
         <div className="flex items-center gap-3 border-b border-red-100 p-5 sm:p-6">
@@ -460,9 +423,6 @@ export default function LandlordSettings() {
         </div>
       </section>
 
-      {/* ======================================================
-          SAVE
-      ======================================================= */}
 
       <div className="flex justify-end">
         <button
@@ -478,9 +438,6 @@ export default function LandlordSettings() {
   );
 }
 
-/* ============================================================
-   SETTING TOGGLE
-============================================================ */
 
 function SettingToggle({ icon, title, description, checked, onChange }) {
   return (
@@ -515,9 +472,6 @@ function SettingToggle({ icon, title, description, checked, onChange }) {
   );
 }
 
-/* ============================================================
-   PASSWORD FIELD
-============================================================ */
 
 function PasswordField({ label, name, value, onChange, visible, onToggle }) {
   return (

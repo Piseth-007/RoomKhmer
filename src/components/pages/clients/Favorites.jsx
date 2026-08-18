@@ -91,7 +91,6 @@ const Favorites = () => {
               </p>
             </div>
 
-            {/* Count */}
 
             {favoriteRooms.length > 0 && (
               <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
@@ -171,9 +170,6 @@ const Favorites = () => {
               </div>
             </div>
 
-            {/* =================================================
-                ROOM GRID
-            ================================================== */}
 
             <div className="grid items-stretch gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {favoriteRooms.map((room) => (
@@ -185,9 +181,6 @@ const Favorites = () => {
               ))}
             </div>
 
-            {/* =================================================
-                BOTTOM CTA
-            ================================================== */}
 
             <section className="mt-14 overflow-hidden rounded-3xl bg-gray-900">
               <div className="flex flex-col gap-7 px-6 py-10 sm:px-10 lg:flex-row lg:items-center lg:justify-between">
@@ -238,12 +231,8 @@ const Favorites = () => {
             </section>
           </>
         ) : (
-          /* =====================================================
-             EMPTY STATE
-          ====================================================== */
 
           <div className="flex min-h-130 flex-col items-center justify-center rounded-3xl border border-gray-100 bg-white px-6 text-center shadow-sm">
-            {/* Icon */}
 
             <div className="relative">
               <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-red-50 text-red-400">
@@ -255,7 +244,6 @@ const Favorites = () => {
               </div>
             </div>
 
-            {/* Text */}
 
             <h2 className="mt-7 text-2xl font-bold text-gray-900">
               មិនទាន់មានបន្ទប់ដែលអ្នកចូលចិត្តទេ
@@ -270,7 +258,6 @@ const Favorites = () => {
               here. You can compare your favorite rooms later.
             </p>
 
-            {/* Button */}
 
             <Link
               to="/rooms"
@@ -295,7 +282,6 @@ const Favorites = () => {
               ស្វែងរកបន្ទប់
             </Link>
 
-            {/* Small info */}
 
             <div className="mt-8 flex items-center gap-2 text-xs text-gray-400">
               <Heart size={14} className="text-red-400" />
@@ -386,7 +372,6 @@ const FavoriteRoomCard = ({ room, onRemove }) => {
       </div>
 
       <div className="flex flex-1 flex-col p-5">
-        {/* Title + Rating */}
 
         <div className="flex min-h-13.75 items-start justify-between gap-3">
           <div className="min-w-0">
@@ -419,7 +404,6 @@ const FavoriteRoomCard = ({ room, onRemove }) => {
           </div>
         </div>
 
-        {/* Location */}
 
         <div className="mt-3 flex items-center gap-2">
           <MapPin size={16} className="shrink-0 text-blue-500" />
@@ -429,7 +413,6 @@ const FavoriteRoomCard = ({ room, onRemove }) => {
           </span>
         </div>
 
-        {/* Room information */}
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-gray-50 px-3 py-2">
@@ -449,7 +432,6 @@ const FavoriteRoomCard = ({ room, onRemove }) => {
           </div>
         </div>
 
-        {/* Bottom */}
 
         <div className="mt-auto border-t border-gray-100 pt-5">
           <div className="flex items-center justify-between gap-3">

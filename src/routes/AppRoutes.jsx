@@ -41,7 +41,6 @@ const AdminSettings = lazy(() => import("../components/pages/admin/AdminSettings
 const AppRoutes = () => (
   <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
     <Routes>
-    {/* ================= CLIENT ================= */}
 
     <Route path="/" element={<ClientLayouts />}>
       <Route index element={<Home />} />
@@ -77,7 +76,6 @@ const AppRoutes = () => (
     </Route>
     <Route path="*" element={<NotFound />} />
 
-    {/* ================= AUTH ================= */}
 
     <Route path="/auth" element={<AuthLayout />}>
       <Route path="login" element={<Login />} />
@@ -85,7 +83,6 @@ const AppRoutes = () => (
       <Route path="reset-password" element={<ResetPassword />} />
       <Route path="register" element={<Register />} />
     </Route>
-    {/* ================= Landlord ===============*/}
     <Route
       path="/landlord"
       element={

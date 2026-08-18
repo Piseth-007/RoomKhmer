@@ -47,9 +47,6 @@ export default function LandlordRooms() {
     loadRooms();
   }, []);
 
-  // ============================================================
-  // FILTER ROOMS
-  // ============================================================
 
   const filteredRooms = useMemo(() => {
     return rooms.filter((room) => {
@@ -64,7 +61,6 @@ export default function LandlordRooms() {
     });
   }, [rooms, search, statusFilter]);
 
-  // ============================================================
   const handleDelete = async (id) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this room?",
@@ -87,9 +83,6 @@ export default function LandlordRooms() {
     }
   };
 
-  // ============================================================
-  // STATISTICS
-  // ============================================================
 
   const totalRooms = rooms.length;
 
@@ -103,9 +96,6 @@ export default function LandlordRooms() {
 
   return (
     <div className="space-y-6">
-      {/* ======================================================
-          HEADER
-      ======================================================= */}
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
@@ -125,9 +115,6 @@ export default function LandlordRooms() {
         </Link>
       </div>
 
-      {/* ======================================================
-          STATISTICS
-      ======================================================= */}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <RoomStat
@@ -159,13 +146,9 @@ export default function LandlordRooms() {
         />
       </div>
 
-      {/* ======================================================
-          FILTER BAR
-      ======================================================= */}
 
       <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row">
-          {/* Search */}
 
           <div className="relative flex-1">
             <Search
@@ -182,7 +165,6 @@ export default function LandlordRooms() {
             />
           </div>
 
-          {/* Status */}
 
           <div className="relative">
             <Filter
@@ -211,9 +193,6 @@ export default function LandlordRooms() {
         </div>
       </div>
 
-      {/* ======================================================
-          ROOM LIST
-      ======================================================= */}
 
       {filteredRooms.length > 0 ? (
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
@@ -254,7 +233,6 @@ function RoomCard({ room, openMenu, setOpenMenu, onDelete }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md">
       <div className="flex flex-col sm:flex-row">
-        {/* Image */}
 
         <div className="relative h-52 w-full shrink-0 sm:h-auto sm:w-48">
           <img
@@ -263,14 +241,12 @@ function RoomCard({ room, openMenu, setOpenMenu, onDelete }) {
             className="h-full w-full object-cover"
           />
 
-          {/* Status */}
 
           <div className="absolute left-3 top-3">
             <RoomStatus status={room.status} />
           </div>
         </div>
 
-        {/* Content */}
 
         <div className="flex flex-1 flex-col p-5">
           <div className="flex items-start justify-between gap-3">
@@ -286,7 +262,6 @@ function RoomCard({ room, openMenu, setOpenMenu, onDelete }) {
               </div>
             </div>
 
-            {/* More */}
 
             <div className="relative">
               <button
@@ -332,7 +307,6 @@ function RoomCard({ room, openMenu, setOpenMenu, onDelete }) {
             </div>
           </div>
 
-          {/* Room Type */}
 
           <div className="mt-4 flex items-center justify-between">
             <span className="rounded-lg bg-gray-50 px-3 py-1.5 text-xs text-gray-500">
@@ -345,7 +319,6 @@ function RoomCard({ room, openMenu, setOpenMenu, onDelete }) {
             </p>
           </div>
 
-          {/* Footer */}
 
           <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
             <div className="flex items-center gap-1.5 text-xs text-gray-400">
@@ -368,9 +341,6 @@ function RoomCard({ room, openMenu, setOpenMenu, onDelete }) {
   );
 }
 
-/* ============================================================
-   STATUS
-============================================================ */
 
 function RoomStatus({ status }) {
   const config = {
@@ -419,9 +389,6 @@ function RoomStatus({ status }) {
   );
 }
 
-/* ============================================================
-   EMPTY
-============================================================ */
 
 function EmptyRooms() {
   return (

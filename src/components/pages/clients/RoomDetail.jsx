@@ -191,7 +191,6 @@ const RoomDetail = () => {
           
 
           <div>
-            {/* Main image */}
 
             <div className="group relative overflow-hidden rounded-2xl bg-gray-100">
               <img
@@ -207,7 +206,6 @@ const RoomDetail = () => {
                 </div>
               )}
 
-              {/* Favorite */}
 
               <button
                 type="button"
@@ -230,7 +228,6 @@ const RoomDetail = () => {
                 <Heart size={20} className={isFavorite ? "fill-current" : ""} />
               </button>
 
-              {/* Previous */}
 
               {room.images.length > 1 && (
                 <button
@@ -261,7 +258,6 @@ const RoomDetail = () => {
               </button>
             </div>
 
-            {/* Thumbnail row */}
 
             <div className="mt-3 grid grid-cols-4 gap-3">
               {room.images.slice(0, 4).map((image, index) => (
@@ -293,7 +289,6 @@ const RoomDetail = () => {
 
           <aside>
             <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm lg:sticky lg:top-24">
-              {/* Badge */}
 
               {room.featured && (
                 <span className="inline-flex rounded-full bg-blue-50 px-3 py-1.5 text-[11px] font-semibold text-blue-600">
@@ -301,7 +296,6 @@ const RoomDetail = () => {
                 </span>
               )}
 
-              {/* Title */}
 
               <h1 className="mt-4 text-2xl font-bold leading-tight text-gray-900">
                 {room.name}
@@ -309,7 +303,6 @@ const RoomDetail = () => {
 
               <p className="mt-1 text-sm text-gray-400">{room.type}</p>
 
-              {/* Rating */}
 
               <div className="mt-4 flex items-center gap-2">
                 <div className="flex items-center gap-1">
@@ -325,7 +318,6 @@ const RoomDetail = () => {
                 </span>
               </div>
 
-              {/* Location */}
 
               <div className="mt-5 flex items-start gap-3 rounded-xl bg-gray-50 p-3">
                 <MapPin size={19} className="mt-0.5 shrink-0 text-blue-600" />
@@ -339,7 +331,6 @@ const RoomDetail = () => {
                 </div>
               </div>
 
-              {/* Price */}
 
               <div className="mt-6 border-y border-gray-100 py-5">
                 <span className="text-3xl font-bold tracking-tight text-gray-900">
@@ -349,7 +340,6 @@ const RoomDetail = () => {
                 <span className="ml-1 text-sm text-gray-400">/ month</span>
               </div>
 
-              {/* Basic information */}
 
               <div className="grid grid-cols-2 gap-3 py-5">
                 <div className="rounded-xl bg-gray-50 p-3">
@@ -388,7 +378,6 @@ const RoomDetail = () => {
                 </button>
               </div>
 
-              {/* Safety */}
 
               <div className="mt-5 flex gap-3 rounded-xl bg-emerald-50 p-3">
                 <ShieldCheck
@@ -447,7 +436,6 @@ const RoomDetail = () => {
               </div>
             </section>
 
-            {/* RULES */}
 
             <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
               <h2 className="text-xl font-bold text-gray-900">
@@ -484,7 +472,6 @@ const RoomDetail = () => {
                 </div>
               </div>
 
-              {/* Map placeholder */}
 
               <div className="relative mt-5 flex h-75 items-center justify-center overflow-hidden rounded-2xl bg-gray-100">
                 <div className="absolute inset-0 opacity-40">
@@ -522,7 +509,6 @@ const RoomDetail = () => {
             <X size={22} />
           </button>
 
-          {/* Image */}
 
           <div className="flex h-full items-center justify-center">
             <img
@@ -532,7 +518,6 @@ const RoomDetail = () => {
             />
           </div>
 
-          {/* Previous */}
 
           <button
             type="button"
@@ -542,7 +527,6 @@ const RoomDetail = () => {
             <ChevronLeft size={24} />
           </button>
 
-          {/* Next */}
 
           <button
             type="button"
@@ -552,7 +536,6 @@ const RoomDetail = () => {
             <ChevronRight size={24} />
           </button>
 
-          {/* Counter */}
 
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-xs text-white backdrop-blur">
             {activeImage + 1} / {room.images.length}

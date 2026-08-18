@@ -5,7 +5,6 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
       <div className="text-center max-w-lg">
-        {/* 404 */}
         <h1 className="text-[120px] md:text-[160px] font-extrabold leading-none text-blue-600">
           404
         </h1>
@@ -19,7 +18,6 @@ export default function NotFound() {
           moved.
         </p>
 
-        {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <Link
             to="/"

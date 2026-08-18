@@ -15,19 +15,14 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Firebase Authentication
 export const auth = getAuth(app);
 
-// Firestore Database
 export const db = getFirestore(app);
 
-// Google Authentication
 export const googleProvider = new GoogleAuthProvider();
 
-// Firebase Storage
 export const storage = getStorage(app);
 
 export default app;

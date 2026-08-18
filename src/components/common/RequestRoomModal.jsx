@@ -34,9 +34,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
     return null;
   }
 
-  // =========================
-  // HANDLE INPUT
-  // =========================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -80,9 +77,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
       const totalRent = monthlyRent * rentalMonths;
 
       const requestData = {
-        // =========================
-        // TENANT
-        // =========================
 
         tenantId: user.uid,
 
@@ -92,15 +86,9 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
 
         tenantPhone: form.phone.trim(),
 
-        // =========================
-        // LANDLORD
-        // =========================
 
         landlordId,
 
-        // =========================
-        // ROOM
-        // =========================
 
         roomId: room.id,
 
@@ -110,9 +98,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
 
         roomLocation: room.location || "",
 
-        // =========================
-        // RENTAL
-        // =========================
 
         moveInDate: form.moveInDate,
 
@@ -120,9 +105,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
 
         totalRent,
 
-        // =========================
-        // REQUEST
-        // =========================
 
         message: form.message.trim(),
 
@@ -160,9 +142,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
     }
   };
 
-  // =========================
-  // CLOSE
-  // =========================
 
   const handleClose = () => {
     if (loading) return;
@@ -212,9 +191,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
           shadow-2xl
         "
       >
-        {/* =========================
-            HEADER
-        ========================= */}
 
         <div className="sticky top-0 z-10 border-b border-gray-100 bg-white px-6 py-5 sm:px-7">
           <div className="flex items-start justify-between gap-4">
@@ -255,14 +231,10 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
           </div>
         </div>
 
-        {/* =========================
-            CONTENT
-        ========================= */}
 
         <div className="p-6 sm:p-7">
           {!submitted ? (
             <>
-              {/* ROOM SUMMARY */}
 
               {room && (
                 <div className="mb-6 flex gap-3 rounded-2xl bg-slate-50 p-3">
@@ -291,7 +263,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
                 </div>
               )}
 
-              {/* ERROR */}
 
               {error && (
                 <div className="mb-5 rounded-xl border border-red-100 bg-red-50 p-3">
@@ -299,10 +270,8 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
                 </div>
               )}
 
-              {/* FORM */}
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* NAME */}
 
                 <div>
                   <label
@@ -346,7 +315,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
                   </div>
                 </div>
 
-                {/* PHONE + EMAIL */}
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
@@ -434,7 +402,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
                   </div>
                 </div>
 
-                {/* MOVE-IN DATE */}
 
                 <div>
                   <label
@@ -499,7 +466,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
                   </select>
                 </div>
 
-                {/* MESSAGE */}
 
                 <div>
                   <div className="flex items-center justify-between">
@@ -551,7 +517,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
                   </div>
                 </div>
 
-                {/* INFORMATION */}
 
                 <div className="rounded-xl bg-blue-50 p-3.5">
                   <div className="flex gap-3">
@@ -564,7 +529,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
                   </div>
                 </div>
 
-                {/* BUTTONS */}
 
                 <div className="flex gap-3 pt-1">
                   <button
@@ -621,7 +585,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
               </form>
             </>
           ) : (
-            /* SUCCESS */
 
             <div className="flex min-h-105 flex-col items-center justify-center text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
@@ -665,9 +628,6 @@ const RequestRoomModal = ({ isOpen, onClose, room }) => {
   );
 };
 
-/* =========================================================
-   SECURITY ICON
-========================================================= */
 
 const ShieldIcon = () => {
   return (

@@ -13,11 +13,6 @@ import {
 
 import { auth } from "../../../firebase/config";
 
-// Screens this page can be in:
-//   "verifying" -> checking the oobCode from the email link is still valid
-//   "invalid"   -> code missing / expired / already used
-//   "form"      -> code is valid, show the new-password form
-//   "success"   -> password was changed
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -35,9 +30,6 @@ const ResetPassword = () => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ==========================================================
-  // VERIFY THE LINK AS SOON AS THE PAGE LOADS
-  // ==========================================================
 
   useEffect(() => {
     if (!oobCode) {
@@ -56,9 +48,6 @@ const ResetPassword = () => {
       });
   }, [oobCode]);
 
-  // ==========================================================
-  // SUBMIT NEW PASSWORD
-  // ==========================================================
 
   const friendlyError = (code) => {
     if (code === "auth/weak-password") {
@@ -117,9 +106,6 @@ const ResetPassword = () => {
     <div className="flex w-full items-center justify-center">
       <div className="w-full max-w-md">
         <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
-          {/* =================================================
-              VERIFYING
-          ================================================== */}
 
           {status === "verifying" && (
             <div className="py-10 text-center">
@@ -137,9 +123,6 @@ const ResetPassword = () => {
             </div>
           )}
 
-          {/* =================================================
-              INVALID / EXPIRED
-          ================================================== */}
 
           {status === "invalid" && (
             <div className="py-3 text-center">
@@ -175,9 +158,6 @@ const ResetPassword = () => {
             </div>
           )}
 
-          {/* =================================================
-              FORM
-          ================================================== */}
 
           {status === "form" && (
             <>
@@ -211,7 +191,6 @@ const ResetPassword = () => {
               )}
 
               <form onSubmit={handleSubmit} className="mt-7 space-y-5">
-                {/* New password */}
 
                 <div>
                   <label
@@ -250,7 +229,6 @@ const ResetPassword = () => {
                   </div>
                 </div>
 
-                {/* Confirm password */}
 
                 <div>
                   <label
@@ -304,9 +282,6 @@ const ResetPassword = () => {
             </>
           )}
 
-          {/* =================================================
-              SUCCESS
-          ================================================== */}
 
           {status === "success" && (
             <div className="py-3 text-center">

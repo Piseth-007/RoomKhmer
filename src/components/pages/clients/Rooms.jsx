@@ -25,20 +25,6 @@ const defaultFilters = {
   facilities: [],
 };
 
-/*
- * ============================================================
- * NORMALIZE TEXT
- * ============================================================
- *
- * Makes:
- *
- * Tuol Kork
- * Toul Kork
- * tuol kork
- * TOUL KORK
- *
- * match each other.
- */
 
 const normalizeText = (value) => {
   return String(value || "")
@@ -48,11 +34,6 @@ const normalizeText = (value) => {
     .replace(/^tuol\b/, "toul");
 };
 
-/*
- * ============================================================
- * TIMESTAMP
- * ============================================================
- */
 
 const getTimestampValue = (value) => {
   if (!value) {
@@ -76,11 +57,6 @@ const getTimestampValue = (value) => {
   return Number.isNaN(parsed) ? 0 : parsed;
 };
 
-/*
- * ============================================================
- * AMENITIES
- * ============================================================
- */
 
 const getAmenities = (room) => {
   if (Array.isArray(room.amenities)) {
@@ -96,24 +72,10 @@ const getAmenities = (room) => {
   return [];
 };
 
-/*
- * ============================================================
- * ROOMS PAGE
- * ============================================================
- */
 
 const Rooms = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  /*
-   * Get location from URL
-   *
-   * /rooms?location=Sen%20Sok
-   *
-   * becomes:
-   *
-   * Sen Sok
-   */
 
   const urlLocation = searchParams.get("location") || "All Locations";
 
@@ -137,17 +99,6 @@ const Rooms = () => {
 
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  /*
-   * ============================================================
-   * SYNC URL -> FILTER
-   * ============================================================
-   *
-   * This handles:
-   *
-   * /rooms?location=Sen%20Sok
-   *
-   * and selects Sen Sok automatically.
-   */
 
   useEffect(() => {
     const location = searchParams.get("location") || "All Locations";
@@ -164,11 +115,6 @@ const Rooms = () => {
     });
   }, [searchParams]);
 
-  /*
-   * ============================================================
-   * SYNC FILTER -> URL
-   * ============================================================
-   */
 
   useEffect(() => {
     const currentUrlLocation = searchParams.get("location") || "All Locations";
@@ -190,21 +136,6 @@ const Rooms = () => {
     });
   }, [filters.location, searchParams, setSearchParams]);
 
-  /*
-   * ============================================================
-   * LOAD ROOMS FROM FIRESTORE
-   * ============================================================
-   *
-   * Root collection:
-   *
-   * rooms
-   *
-   * No where()
-   * No query()
-   * No collectionGroup()
-   *
-   * Approved rooms are filtered in React.
-   */
 
   useEffect(() => {
     let mounted = true;
@@ -252,11 +183,6 @@ const Rooms = () => {
     };
   }, []);
 
-  /*
-   * ============================================================
-   * FAVORITE
-   * ============================================================
-   */
 
   const handleFavorite = (roomId) => {
     setFavorites((previous) => {
@@ -268,11 +194,6 @@ const Rooms = () => {
     });
   };
 
-  /*
-   * ============================================================
-   * CLEAR FILTERS
-   * ============================================================
-   */
 
   const handleClearFilters = () => {
     setFilters({
@@ -292,18 +213,10 @@ const Rooms = () => {
     });
   };
 
-  /*
-   * ============================================================
-   * FILTER + SEARCH + SORT
-   * ============================================================
-   */
 
   const filteredRooms = useMemo(() => {
     let result = [...rooms];
 
-    /*
-     * SEARCH
-     */
 
     const searchValue = search.trim().toLowerCase();
 
@@ -333,9 +246,6 @@ const Rooms = () => {
       });
     }
 
-    /*
-     * LOCATION
-     */
 
     if (filters.location !== "All Locations") {
       const selectedLocation = normalizeText(filters.location);
@@ -345,9 +255,6 @@ const Rooms = () => {
       });
     }
 
-    /*
-     * PRICE
-     */
 
     result = result.filter((room) => {
       const price = Number(room.price || 0);
@@ -355,9 +262,6 @@ const Rooms = () => {
       return price <= Number(filters.maxPrice);
     });
 
-    /*
-     * ROOM TYPE
-     */
 
     if (filters.roomType !== "All Types") {
       const selectedType = normalizeText(filters.roomType);
@@ -367,9 +271,6 @@ const Rooms = () => {
       });
     }
 
-    /*
-     * FACILITIES
-     */
 
     if (filters.facilities.length > 0) {
       result = result.filter((room) => {
@@ -383,9 +284,6 @@ const Rooms = () => {
       });
     }
 
-    /*
-     * SORT
-     */
 
     if (sortBy === "price-low") {
       result.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
@@ -409,11 +307,6 @@ const Rooms = () => {
     return result;
   }, [rooms, search, filters, sortBy]);
 
-  /*
-   * ============================================================
-   * ACTIVE FILTER COUNT
-   * ============================================================
-   */
 
   const activeFilterCount =
     (filters.location !== "All Locations" ? 1 : 0) +
@@ -421,21 +314,12 @@ const Rooms = () => {
     (filters.roomType !== "All Types" ? 1 : 0) +
     filters.facilities.length;
 
-  /*
-   * ============================================================
-   * RENDER
-   * ============================================================
-   */
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* ======================================================
-          HEADER
-      ======================================================= */}
 
       <section className="border-b border-gray-100 bg-white">
         <div className="mx-auto max-w-7xl px-4 pb-8 pt-10 sm:px-6 lg:px-8">
-          {/* Breadcrumb */}
 
           <div className="mb-5 flex items-center gap-2 text-xs text-gray-400">
             <Link to="/" className="transition hover:text-blue-600">
@@ -447,7 +331,6 @@ const Rooms = () => {
             <span className="font-medium text-gray-600">Rooms</span>
           </div>
 
-          {/* Heading */}
 
           <div className="max-w-2xl">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
@@ -464,7 +347,6 @@ const Rooms = () => {
             </p>
           </div>
 
-          {/* Search */}
 
           <div className="mt-7">
             <RoomSearch
@@ -477,15 +359,9 @@ const Rooms = () => {
         </div>
       </section>
 
-      {/* ======================================================
-          MAIN
-      ======================================================= */}
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[270px_1fr]">
-          {/* ==================================================
-              DESKTOP FILTER
-          =================================================== */}
 
           <aside className="hidden lg:block">
             <div className="sticky top-24">
@@ -497,12 +373,8 @@ const Rooms = () => {
             </div>
           </aside>
 
-          {/* ==================================================
-              ROOMS
-          =================================================== */}
 
           <section>
-            {/* Top controls */}
 
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -522,7 +394,6 @@ const Rooms = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Mobile filter */}
 
                 <button
                   type="button"
@@ -538,7 +409,6 @@ const Rooms = () => {
                   )}
                 </button>
 
-                {/* Sort */}
 
                 <div className="relative">
                   <ArrowUpDown
@@ -570,9 +440,6 @@ const Rooms = () => {
               </div>
             </div>
 
-            {/* ==================================================
-                ACTIVE FILTERS
-            =================================================== */}
 
             {(search || activeFilterCount > 0) && (
               <div className="mb-6 flex flex-wrap items-center gap-2">
@@ -655,9 +522,6 @@ const Rooms = () => {
               </div>
             )}
 
-            {/* ==================================================
-                LOADING
-            =================================================== */}
 
             {loading && (
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -682,9 +546,6 @@ const Rooms = () => {
               </div>
             )}
 
-            {/* ==================================================
-                ERROR
-            =================================================== */}
 
             {!loading && error && (
               <div className="flex min-h-100 flex-col items-center justify-center rounded-2xl border border-red-100 bg-white px-6 text-center">
@@ -710,9 +571,6 @@ const Rooms = () => {
               </div>
             )}
 
-            {/* ==================================================
-                ROOM GRID
-            =================================================== */}
 
             {!loading && !error && filteredRooms.length > 0 && (
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -727,9 +585,6 @@ const Rooms = () => {
               </div>
             )}
 
-            {/* ==================================================
-                EMPTY
-            =================================================== */}
 
             {!loading && !error && filteredRooms.length === 0 && (
               <div className="flex min-h-100 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white px-6 text-center">
@@ -760,9 +615,6 @@ const Rooms = () => {
         </div>
       </main>
 
-      {/* ======================================================
-          MOBILE FILTER
-      ======================================================= */}
 
       {isMobileFilterOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">

@@ -39,9 +39,6 @@ export default function LandlordNavbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ============================================================
-  // LOAD LANDLORD PROFILE
-  // ============================================================
 
   useEffect(() => {
     let unsubscribeAuth;
@@ -96,9 +93,6 @@ export default function LandlordNavbar() {
     };
   }, []);
 
-  // ============================================================
-  // CLOSE DROPDOWNS WHEN CLICKING OUTSIDE
-  // ============================================================
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -121,9 +115,6 @@ export default function LandlordNavbar() {
     };
   }, []);
 
-  // ============================================================
-  // ESCAPE KEY
-  // ============================================================
 
   useEffect(() => {
     const handleEscape = (event) => {
@@ -140,10 +131,6 @@ export default function LandlordNavbar() {
     };
   }, []);
 
-  // ============================================================
-  // DEMO NOTIFICATIONS
-  // Replace this with Firestore notifications later.
-  // ============================================================
 
   useEffect(() => {
     setNotifications([
@@ -166,9 +153,6 @@ export default function LandlordNavbar() {
     ]);
   }, []);
 
-  // ============================================================
-  // LOGOUT
-  // ============================================================
 
   const handleLogout = async () => {
     try {
@@ -189,9 +173,6 @@ export default function LandlordNavbar() {
     }
   };
 
-  // ============================================================
-  // NOTIFICATION
-  // ============================================================
 
   const unreadCount = notifications.filter((item) => item.unread).length;
 
@@ -204,9 +185,6 @@ export default function LandlordNavbar() {
     );
   };
 
-  // ============================================================
-  // ACTIVE ROUTE
-  // ============================================================
 
   const isActive = (path) => {
     return location.pathname === path;
@@ -215,9 +193,6 @@ export default function LandlordNavbar() {
   return (
     <header className="sticky top-0 z-40 h-16 border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur sm:h-17">
       <div className="flex h-full items-center justify-between px-3 sm:px-5 lg:px-7">
-        {/* =====================================================
-            LEFT
-        ====================================================== */}
 
         <div className="min-w-0 pl-12 lg:pl-0">
           <div className="flex items-center gap-2">
@@ -235,14 +210,8 @@ export default function LandlordNavbar() {
           </p>
         </div>
 
-        {/* =====================================================
-            RIGHT
-        ====================================================== */}
 
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* ===================================================
-              NOTIFICATIONS
-          ==================================================== */}
 
           <div ref={notificationRef} className="relative">
             <button
@@ -273,7 +242,6 @@ export default function LandlordNavbar() {
               )}
             </button>
 
-            {/* Notification dropdown */}
 
             {notificationOpen && (
               <div className="absolute right-0 top-12 w-[calc(100vw-24px)] max-w-sm overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl sm:w-80">
@@ -329,9 +297,6 @@ export default function LandlordNavbar() {
 
           <div className="mx-1 hidden h-7 w-px bg-gray-200 sm:block" />
 
-          {/* ===================================================
-              PROFILE
-          ==================================================== */}
 
           <div ref={profileRef} className="relative">
             <button
@@ -347,7 +312,6 @@ export default function LandlordNavbar() {
               aria-expanded={profileOpen}
               aria-label="Open profile menu"
             >
-              {/* Avatar */}
 
               <Avatar
                 photoURL={landlord.photoURL}
@@ -355,7 +319,6 @@ export default function LandlordNavbar() {
                 size="small"
               />
 
-              {/* Desktop profile information */}
 
               <div className="hidden min-w-0 text-left md:block">
                 <p className="max-w-32.5 truncate text-xs font-semibold text-gray-800 lg:max-w-42.5 lg:text-sm">
@@ -375,13 +338,9 @@ export default function LandlordNavbar() {
               />
             </button>
 
-            {/* =================================================
-                PROFILE DROPDOWN
-            ================================================== */}
 
             {profileOpen && (
               <div className="absolute right-0 top-12 w-[calc(100vw-24px)] max-w-xs overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl sm:w-72">
-                {/* Profile header */}
 
                 <div className="border-b border-gray-100 bg-gray-50/70 p-4">
                   <div className="flex items-center gap-3">
@@ -408,7 +367,6 @@ export default function LandlordNavbar() {
                   </div>
                 </div>
 
-                {/* Menu */}
 
                 <div className="p-2">
                   <ProfileMenuItem
@@ -438,7 +396,6 @@ export default function LandlordNavbar() {
                   />
                 </div>
 
-                {/* Logout */}
 
                 <div className="border-t border-gray-100 p-2">
                   <button
@@ -466,9 +423,6 @@ export default function LandlordNavbar() {
   );
 }
 
-// ============================================================
-// AVATAR
-// ============================================================
 
 function Avatar({ photoURL, name, size = "small" }) {
   const sizes = {
@@ -500,9 +454,6 @@ function Avatar({ photoURL, name, size = "small" }) {
   );
 }
 
-// ============================================================
-// PROFILE MENU ITEM
-// ============================================================
 
 function ProfileMenuItem({
   to,
@@ -543,9 +494,6 @@ function ProfileMenuItem({
   );
 }
 
-// ============================================================
-// NOTIFICATION ITEM
-// ============================================================
 
 function NotificationItem({ notification }) {
   const isPayment = notification.type === "payment";

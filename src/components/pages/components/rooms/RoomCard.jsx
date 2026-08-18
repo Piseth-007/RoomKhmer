@@ -57,9 +57,6 @@ const RoomCard = ({ room, onFavorite }) => {
     }
   };
 
-  // =========================
-  // AMENITY ICON
-  // =========================
   const getAmenityIcon = (amenity) => {
     switch (amenity) {
       case "wifi":
@@ -85,9 +82,6 @@ const RoomCard = ({ room, onFavorite }) => {
     }
   };
 
-  // =========================
-  // AMENITY LABEL
-  // =========================
   const getAmenityLabel = (amenity) => {
     const labels = {
       wifi: "WiFi",
@@ -101,7 +95,6 @@ const RoomCard = ({ room, onFavorite }) => {
     return labels[amenity] || amenity;
   };
 
-  // Only display enabled amenities
   const enabledAmenities = Object.entries(room.amenities || {})
     .filter(([, enabled]) => enabled === true)
     .map(([name]) => name);
@@ -125,9 +118,6 @@ const RoomCard = ({ room, onFavorite }) => {
         hover:shadow-xl
       "
     >
-      {/* =========================
-          IMAGE
-      ========================== */}
       <div className="relative h-57.5 shrink-0 overflow-hidden sm:h-60">
         <Link to={`/rooms/${room.id}`} className="block h-full">
           {room.images?.[0] ? (
@@ -150,7 +140,6 @@ const RoomCard = ({ room, onFavorite }) => {
           )}
         </Link>
 
-        {/* Gradient */}
         <div
           className="
             pointer-events-none
@@ -163,7 +152,6 @@ const RoomCard = ({ room, onFavorite }) => {
           "
         />
 
-        {/* Featured */}
         {room.featured && (
           <span
             className="
@@ -184,7 +172,6 @@ const RoomCard = ({ room, onFavorite }) => {
           </span>
         )}
 
-        {/* Approved / Verified */}
         {room.status === "approved" && (
           <div
             className="
@@ -206,7 +193,6 @@ const RoomCard = ({ room, onFavorite }) => {
           </div>
         )}
 
-        {/* Favorite */}
         <button
           type="button"
           onClick={handleFavorite}
@@ -243,11 +229,7 @@ const RoomCard = ({ room, onFavorite }) => {
         </button>
       </div>
 
-      {/* =========================
-          CONTENT
-      ========================== */}
       <div className="flex flex-1 flex-col p-5">
-        {/* Title + Rating */}
         <div
           className="
             flex
@@ -286,7 +268,6 @@ const RoomCard = ({ room, onFavorite }) => {
             )}
           </div>
 
-          {/* Rating */}
           {room.rating && (
             <div
               className="
@@ -310,7 +291,6 @@ const RoomCard = ({ room, onFavorite }) => {
           )}
         </div>
 
-        {/* Location */}
         <div className="mt-3 flex items-center gap-2">
           <MapPin
             size={17}
@@ -323,9 +303,6 @@ const RoomCard = ({ room, onFavorite }) => {
           </span>
         </div>
 
-        {/* =========================
-            BASIC INFO
-        ========================== */}
         <div className="mt-4 flex min-h-9 flex-wrap gap-2">
           {room.type && (
             <span
@@ -396,9 +373,6 @@ const RoomCard = ({ room, onFavorite }) => {
           )}
         </div>
 
-        {/* =========================
-            AMENITIES
-        ========================== */}
         <div className="mt-3 min-h-18">
           <div className="flex flex-wrap gap-2">
             {enabledAmenities.slice(0, 4).map((amenity) => {
@@ -431,9 +405,6 @@ const RoomCard = ({ room, onFavorite }) => {
           </div>
         </div>
 
-        {/* =========================
-            PRICE
-        ========================== */}
         <div
           className="
             mt-auto

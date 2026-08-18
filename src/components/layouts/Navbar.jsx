@@ -141,7 +141,6 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 shadow-sm backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Logo */}
         <Link
           to="/"
           onClick={closeMenu}
@@ -162,7 +161,6 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
         <nav className="hidden items-center lg:flex">
           {navLinks.map((link) => (
             <NavLink
@@ -198,9 +196,7 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Desktop Actions */}
         <div className="hidden items-center gap-1 lg:flex">
-          {/* Location */}
           <Link
             to="/locations"
             className="hidden items-center gap-1.5 rounded-xl px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 hover:text-blue-600 xl:flex"
@@ -210,7 +206,6 @@ export default function Navbar() {
             <span>ភ្នំពេញ</span>
           </Link>
 
-          {/* Search */}
           <Link
             to="/rooms"
             aria-label="Search rooms"
@@ -219,7 +214,6 @@ export default function Navbar() {
             <Search size={18} />
           </Link>
 
-          {/* Favorites */}
           <Link
             to="/favorites"
             aria-label="Favorites"
@@ -230,7 +224,6 @@ export default function Navbar() {
 
           <div className="mx-2 h-7 w-px bg-gray-200" />
 
-          {/* User */}
           {isLoggedIn ? (
             <div ref={profileRef} className="relative">
               <button
@@ -257,7 +250,6 @@ export default function Navbar() {
                 />
               </button>
 
-              {/* Profile Dropdown */}
               {isProfileOpen && (
                 <div className="absolute right-0 top-12 w-72 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl">
                   <div className="bg-linear-to-r from-blue-50 to-white p-4">
@@ -281,7 +273,6 @@ export default function Navbar() {
                   </div>
 
                   <div className="p-2">
-                    {/* Profile */}
                     <Link
                       to="/profile"
                       onClick={closeProfile}
@@ -300,7 +291,6 @@ export default function Navbar() {
                       </div>
                     </Link>
 
-                    {/* Bookings */}
                     <Link
                       to="/bookings"
                       onClick={closeProfile}
@@ -319,7 +309,6 @@ export default function Navbar() {
                       </div>
                     </Link>
 
-                    {/* Favorites */}
                     <Link
                       to="/favorites"
                       onClick={closeProfile}
@@ -339,7 +328,6 @@ export default function Navbar() {
                     </Link>
                   </div>
 
-                  {/* Logout */}
                   <div className="border-t border-gray-100 p-2">
                     <button
                       type="button"
@@ -382,7 +370,6 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Button */}
         <button
           type="button"
           onClick={() => setIsOpen((previous) => !previous)}
@@ -394,11 +381,9 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {isOpen && (
         <div className="border-t border-gray-100 bg-white lg:hidden">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
-            {/* Mobile User */}
             {isLoggedIn && (
               <div className="mb-4 flex items-center gap-3 rounded-2xl bg-linear-to-r from-blue-50 to-white p-4">
                 <Avatar size="large" photo={user.photo} name={user.name} />
@@ -413,7 +398,6 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Mobile Search */}
             <Link
               to="/rooms"
               onClick={closeMenu}
@@ -423,7 +407,6 @@ export default function Navbar() {
               <span>ស្វែងរកបន្ទប់...</span>
             </Link>
 
-            {/* Navigation */}
             <nav className="space-y-1">
               {navLinks.map((link) => (
                 <NavLink
@@ -465,7 +448,6 @@ export default function Navbar() {
                 </NavLink>
               ))}
 
-              {/* Favorites */}
               <NavLink
                 to="/favorites"
                 onClick={closeMenu}
@@ -486,7 +468,6 @@ export default function Navbar() {
                 </div>
               </NavLink>
 
-              {/* Profile */}
               {isLoggedIn && (
                 <>
                   <NavLink
@@ -509,7 +490,6 @@ export default function Navbar() {
                     </div>
                   </NavLink>
 
-                  {/* Bookings */}
                   <NavLink
                     to="/bookings"
                     onClick={closeMenu}
@@ -533,7 +513,6 @@ export default function Navbar() {
               )}
             </nav>
 
-            {/* Mobile Auth */}
             <div className="mt-4 border-t border-gray-100 pt-4">
               {isLoggedIn ? (
                 <button

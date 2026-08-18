@@ -26,9 +26,6 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 
 import { db } from "../../../firebase/config";
 
-// ============================================================
-// POPULAR LOCATIONS
-// ============================================================
 
 const locations = [
   {
@@ -58,9 +55,6 @@ const locations = [
   },
 ];
 
-// ============================================================
-// WHY ROOMKHMER
-// ============================================================
 
 const benefits = [
   {
@@ -91,9 +85,6 @@ const benefits = [
   },
 ];
 
-// ============================================================
-// HOW IT WORKS
-// ============================================================
 
 const steps = [
   {
@@ -127,16 +118,10 @@ const steps = [
   },
 ];
 
-// ============================================================
-// FALLBACK IMAGE
-// ============================================================
 
 const FALLBACK_ROOM_IMAGE =
   "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1000&q=80";
 
-// ============================================================
-// GET ROOM IMAGE
-// ============================================================
 
 const getRoomImage = (room) => {
   if (Array.isArray(room.images) && room.images.length > 0) {
@@ -158,9 +143,6 @@ const getRoomImage = (room) => {
   return FALLBACK_ROOM_IMAGE;
 };
 
-// ============================================================
-// GET FACILITY ICON
-// ============================================================
 
 const getFacilityIcon = (facility) => {
   const value = String(facility).toLowerCase();
@@ -192,31 +174,24 @@ const getFacilityIcon = (facility) => {
   return CheckCircle2;
 };
 
-// ============================================================
-// CONVERT FIREBASE CREATED AT TO DATE
-// ============================================================
 
 const getCreatedDate = (createdAt) => {
   if (!createdAt) {
     return null;
   }
 
-  // Firestore Timestamp
   if (createdAt && typeof createdAt.toDate === "function") {
     return createdAt.toDate();
   }
 
-  // JavaScript Date
   if (createdAt instanceof Date) {
     return createdAt;
   }
 
-  // Firebase timestamp-like object
   if (typeof createdAt === "object" && typeof createdAt.seconds === "number") {
     return new Date(createdAt.seconds * 1000);
   }
 
-  // String
   if (typeof createdAt === "string") {
     const date = new Date(createdAt);
 
@@ -225,7 +200,6 @@ const getCreatedDate = (createdAt) => {
     }
   }
 
-  // Number
   if (typeof createdAt === "number") {
     const date = new Date(createdAt);
 
@@ -237,9 +211,6 @@ const getCreatedDate = (createdAt) => {
   return null;
 };
 
-// ============================================================
-// GET CREATED TIME
-// ============================================================
 
 const getCreatedTime = (createdAt) => {
   const date = getCreatedDate(createdAt);
@@ -251,9 +222,6 @@ const getCreatedTime = (createdAt) => {
   return date.getTime();
 };
 
-// ============================================================
-// FORMAT PRICE
-// ============================================================
 
 const formatPrice = (price) => {
   const numericPrice = Number(price);
@@ -265,9 +233,6 @@ const formatPrice = (price) => {
   return numericPrice.toLocaleString();
 };
 
-// ============================================================
-// HOME
-// ============================================================
 
 export default function Home() {
   const navigate = useNavigate();
@@ -280,9 +245,6 @@ export default function Home() {
 
   const [roomsError, setRoomsError] = useState("");
 
-  // ==========================================================
-  // SEARCH
-  // ==========================================================
 
   const handleSearch = (event) => {
     event.preventDefault();
@@ -297,13 +259,6 @@ export default function Home() {
     navigate(`/rooms?location=${encodeURIComponent(value)}`);
   };
 
-  // ==========================================================
-  // LOAD FEATURED ROOMS
-  //
-  // IMPORTANT:
-  // No orderBy() is used here.
-  // Therefore, no composite Firestore index is required.
-  // ==========================================================
 
   useEffect(() => {
     let mounted = true;
@@ -315,8 +270,6 @@ export default function Home() {
 
         const roomsRef = collection(db, "rooms");
 
-        // Only filter by status.
-        // Firestore automatically supports this simple query.
         const roomsQuery = query(roomsRef, where("status", "==", "available"));
 
         const snapshot = await getDocs(roomsQuery);
@@ -330,12 +283,10 @@ export default function Home() {
           ...doc.data(),
         }));
 
-        // Sort newest first in React
         const sortedRooms = rooms.sort(
           (a, b) => getCreatedTime(b.createdAt) - getCreatedTime(a.createdAt),
         );
 
-        // Only display newest 3 rooms
         const latestRooms = sortedRooms.slice(0, 3);
 
         setFeaturedRooms(latestRooms);
@@ -359,9 +310,6 @@ export default function Home() {
     };
   }, []);
 
-  // ==========================================================
-  // RETRY
-  // ==========================================================
 
   const handleRetry = () => {
     window.location.reload();
@@ -369,9 +317,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* =====================================================
-          HERO
-      ====================================================== */}
 
       <section className="relative overflow-hidden bg-slate-50">
         <div className="pointer-events-none absolute -right-40 -top-40 h-96 w-96 rounded-full bg-blue-100/60 blur-3xl" />
@@ -380,7 +325,6 @@ export default function Home() {
 
         <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:px-8 lg:pb-24 lg:pt-20">
           <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-            {/* HERO CONTENT */}
 
             <div>
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-1.5 text-xs font-medium text-blue-600 shadow-sm">
@@ -400,7 +344,6 @@ export default function Home() {
                 ឬកន្លែងធ្វើការរបស់អ្នក។
               </p>
 
-              {/* SEARCH */}
 
               <form
                 onSubmit={handleSearch}
@@ -442,7 +385,6 @@ export default function Home() {
                   </button>
                 </div>
 
-                {/* QUICK FILTERS */}
 
                 <div className="mt-2 flex flex-wrap gap-2 border-t border-gray-100 px-3 pt-3">
                   <Link
@@ -477,7 +419,6 @@ export default function Home() {
                 </div>
               </form>
 
-              {/* STATS */}
 
               <div className="mt-8 flex flex-wrap gap-6 sm:gap-7">
                 <div>
@@ -504,7 +445,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* HERO IMAGE */}
 
             <div className="relative hidden lg:block">
               <div className="relative mx-auto max-w-lg">
@@ -564,9 +504,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* =====================================================
-          POPULAR LOCATIONS
-      ====================================================== */}
 
       <section className="py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -637,13 +574,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* =====================================================
-          FEATURED ROOMS
-      ====================================================== */}
 
       <section className="bg-slate-50 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* HEADER */}
 
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
@@ -672,9 +605,6 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* =================================================
-              LOADING STATE
-          ================================================== */}
 
           {roomsLoading && (
             <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -705,9 +635,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* =================================================
-              ERROR STATE
-          ================================================== */}
 
           {!roomsLoading && roomsError && (
             <div className="mt-8 rounded-2xl border border-red-100 bg-red-50 p-8 text-center">
@@ -732,9 +659,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* =================================================
-              EMPTY STATE
-          ================================================== */}
 
           {!roomsLoading && !roomsError && featuredRooms.length === 0 && (
             <div className="mt-8 rounded-2xl border border-gray-100 bg-white px-6 py-12 text-center">
@@ -760,9 +684,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* =================================================
-              FIREBASE ROOMS
-          ================================================== */}
 
           {!roomsLoading && !roomsError && featuredRooms.length > 0 && (
             <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -782,7 +703,6 @@ export default function Home() {
                     key={room.id}
                     className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                   >
-                    {/* IMAGE */}
 
                     <div className="relative aspect-4/3 overflow-hidden">
                       <img
@@ -794,14 +714,12 @@ export default function Home() {
 
                       <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 transition group-hover:opacity-100" />
 
-                      {/* NEW */}
 
                       <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
                         <CheckCircle2 size={12} />
                         New
                       </span>
 
-                      {/* FAVORITE */}
 
                       <button
                         type="button"
@@ -812,10 +730,8 @@ export default function Home() {
                       </button>
                     </div>
 
-                    {/* CONTENT */}
 
                     <div className="p-5">
-                      {/* NAME */}
 
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
@@ -842,7 +758,6 @@ export default function Home() {
                         )}
                       </div>
 
-                      {/* LOCATION */}
 
                       <div className="mt-3 flex items-center gap-1.5 text-sm text-gray-500">
                         <MapPin size={15} className="shrink-0 text-blue-500" />
@@ -852,7 +767,6 @@ export default function Home() {
                         </span>
                       </div>
 
-                      {/* ROOM DETAILS */}
 
                       <div className="mt-4 flex flex-wrap gap-2">
                         {room.bedrooms && (
@@ -876,7 +790,6 @@ export default function Home() {
                         )}
                       </div>
 
-                      {/* AMENITIES */}
 
                       {facilities.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-2">
@@ -904,7 +817,6 @@ export default function Home() {
                         </div>
                       )}
 
-                      {/* FOOTER */}
 
                       <div className="mt-5 flex items-end justify-between border-t border-gray-100 pt-4">
                         <div>
@@ -944,9 +856,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* =====================================================
-          WHY ROOMKHMER
-      ====================================================== */}
 
       <section className="py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -1004,9 +913,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* =====================================================
-          HOW IT WORKS
-      ====================================================== */}
 
       <section className="bg-slate-50 py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -1066,9 +972,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* =====================================================
-          LANDLORD CTA
-      ====================================================== */}
 
       <section className="py-16 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -1109,9 +1012,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* =====================================================
-          FINAL CTA
-      ====================================================== */}
 
       <section className="border-t border-gray-100 bg-white py-16">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">

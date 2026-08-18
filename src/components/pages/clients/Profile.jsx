@@ -67,11 +67,6 @@ export default function Profile() {
     location: "",
   });
 
-  /*
-   * ============================================================
-   * LOAD PROFILE
-   * ============================================================
-   */
 
   useEffect(() => {
     let mounted = true;
@@ -92,11 +87,6 @@ export default function Profile() {
         setLoading(true);
         setError("");
 
-        /*
-         * ----------------------------------------------------
-         * FIRESTORE USER
-         * ----------------------------------------------------
-         */
 
         const userRef = doc(db, "users", firebaseUser.uid);
 
@@ -104,11 +94,6 @@ export default function Profile() {
 
         const firestoreUser = userSnapshot.exists() ? userSnapshot.data() : {};
 
-        /*
-         * ----------------------------------------------------
-         * PROFILE DATA
-         * ----------------------------------------------------
-         */
 
         const profileData = {
           name: firestoreUser.name || firebaseUser.displayName || "User",
@@ -134,11 +119,6 @@ export default function Profile() {
           });
         }
 
-        /*
-         * ----------------------------------------------------
-         * FAVORITES
-         * ----------------------------------------------------
-         */
 
         try {
           const savedFavorites = JSON.parse(
@@ -156,19 +136,6 @@ export default function Profile() {
           }
         }
 
-        /*
-         * ----------------------------------------------------
-         * BOOKINGS
-         * ----------------------------------------------------
-         *
-         * Only query the current user's bookings.
-         *
-         * This matches the Firestore security rule:
-         *
-         * resource.data.tenantId == request.auth.uid
-         *
-         * ----------------------------------------------------
-         */
 
         const bookingsQuery = query(
           collection(db, "bookings"),
@@ -197,11 +164,6 @@ export default function Profile() {
     };
   }, [navigate]);
 
-  /*
-   * ============================================================
-   * EDIT FORM
-   * ============================================================
-   */
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -212,11 +174,6 @@ export default function Profile() {
     }));
   };
 
-  /*
-   * ============================================================
-   * SAVE PROFILE
-   * ============================================================
-   */
 
   const handleSaveProfile = async () => {
     const currentUser = auth.currentUser;
@@ -237,21 +194,11 @@ export default function Profile() {
       setError("");
       setSuccess("");
 
-      /*
-       * ----------------------------------------------------
-       * UPDATE FIREBASE AUTH
-       * ----------------------------------------------------
-       */
 
       await updateProfile(currentUser, {
         displayName: editForm.name.trim(),
       });
 
-      /*
-       * ----------------------------------------------------
-       * UPDATE FIRESTORE
-       * ----------------------------------------------------
-       */
 
       const userRef = doc(db, "users", currentUser.uid);
 
@@ -273,11 +220,6 @@ export default function Profile() {
         },
       );
 
-      /*
-       * ----------------------------------------------------
-       * UPDATE LOCAL STATE
-       * ----------------------------------------------------
-       */
 
       setUser((previous) => ({
         ...previous,
@@ -299,11 +241,6 @@ export default function Profile() {
     }
   };
 
-  /*
-   * ============================================================
-   * LOGOUT
-   * ============================================================
-   */
 
   const handleLogout = async () => {
     try {
@@ -317,11 +254,6 @@ export default function Profile() {
     }
   };
 
-  /*
-   * ============================================================
-   * EDIT MODAL
-   * ============================================================
-   */
 
   const openEditProfile = () => {
     setEditForm({
@@ -335,11 +267,6 @@ export default function Profile() {
     setEditOpen(true);
   };
 
-  /*
-   * ============================================================
-   * LOADING
-   * ============================================================
-   */
 
   if (loading) {
     return (
@@ -367,18 +294,10 @@ export default function Profile() {
     );
   }
 
-  /*
-   * ============================================================
-   * PAGE
-   * ============================================================
-   */
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6">
       <div className="mx-auto max-w-5xl">
-        {/* ======================================================
-            HEADER
-        ======================================================= */}
 
         <div className="mb-8">
           <div className="flex items-center gap-3">
@@ -398,9 +317,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* ======================================================
-            ERROR
-        ======================================================= */}
 
         {error && (
           <div className="mb-6 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -408,9 +324,6 @@ export default function Profile() {
           </div>
         )}
 
-        {/* ======================================================
-            SUCCESS
-        ======================================================= */}
 
         {success && (
           <div className="mb-6 rounded-xl border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-600">
@@ -418,14 +331,10 @@ export default function Profile() {
           </div>
         )}
 
-        {/* ======================================================
-            PROFILE CARD
-        ======================================================= */}
 
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-5">
-              {/* Avatar */}
 
               {user.photoURL ? (
                 <img
@@ -439,7 +348,6 @@ export default function Profile() {
                 </div>
               )}
 
-              {/* User */}
 
               <div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -468,7 +376,6 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Edit */}
 
             <button
               type="button"
@@ -481,12 +388,8 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* ======================================================
-            STATISTICS
-        ======================================================= */}
 
         <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          {/* Bookings */}
 
           <button
             type="button"
@@ -511,7 +414,6 @@ export default function Profile() {
             />
           </button>
 
-          {/* Favorites */}
 
           <button
             type="button"
@@ -537,9 +439,6 @@ export default function Profile() {
           </button>
         </div>
 
-        {/* ======================================================
-            PERSONAL INFORMATION
-        ======================================================= */}
 
         <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <div className="mb-6">
@@ -579,9 +478,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* ======================================================
-            ACCOUNT SETTINGS
-        ======================================================= */}
 
         <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold text-gray-900">Account Settings</h2>
@@ -591,7 +487,6 @@ export default function Profile() {
           </p>
 
           <div className="mt-4 divide-y divide-gray-100">
-            {/* Notifications */}
 
             <SettingItem
               icon={<Bell size={21} />}
@@ -600,7 +495,6 @@ export default function Profile() {
               onClick={() => navigate("/settings")}
             />
 
-            {/* Password */}
 
             <SettingItem
               icon={<Lock size={21} />}
@@ -609,7 +503,6 @@ export default function Profile() {
               onClick={() => navigate("/settings")}
             />
 
-            {/* Logout */}
 
             <button
               type="button"
@@ -632,14 +525,10 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* ========================================================
-          EDIT PROFILE MODAL
-      ========================================================= */}
 
       {editOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
-            {/* Modal header */}
 
             <div className="flex items-center justify-between">
               <div>
@@ -662,10 +551,8 @@ export default function Profile() {
               </button>
             </div>
 
-            {/* Form */}
 
             <div className="mt-6 space-y-5">
-              {/* Name */}
 
               <FormField
                 icon={<User size={18} />}
@@ -676,7 +563,6 @@ export default function Profile() {
                 placeholder="Enter your full name"
               />
 
-              {/* Phone */}
 
               <FormField
                 icon={<Phone size={18} />}
@@ -687,7 +573,6 @@ export default function Profile() {
                 placeholder="Enter your phone number"
               />
 
-              {/* Location */}
 
               <FormField
                 icon={<MapPin size={18} />}
@@ -699,7 +584,6 @@ export default function Profile() {
               />
             </div>
 
-            {/* Actions */}
 
             <div className="mt-7 flex gap-3">
               <button
@@ -737,11 +621,6 @@ export default function Profile() {
   );
 }
 
-/*
- * ============================================================
- * INFO ITEM
- * ============================================================
- */
 
 function InfoItem({ icon, label, value }) {
   return (
@@ -759,11 +638,6 @@ function InfoItem({ icon, label, value }) {
   );
 }
 
-/*
- * ============================================================
- * SETTING ITEM
- * ============================================================
- */
 
 function SettingItem({ icon, title, description, onClick }) {
   return (
@@ -788,11 +662,6 @@ function SettingItem({ icon, title, description, onClick }) {
   );
 }
 
-/*
- * ============================================================
- * FORM FIELD
- * ============================================================
- */
 
 function FormField({ icon, label, name, value, onChange, placeholder }) {
   return (

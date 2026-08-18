@@ -14,7 +14,6 @@ const RoomSearch = ({ search, setSearch, onSearch, onOpenFilter }) => {
   return (
     <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
       <form onSubmit={handleSubmit} className="flex flex-col gap-2 lg:flex-row">
-        {/* ================= SEARCH ================= */}
 
         <div className="flex min-h-12 flex-1 items-center gap-3 rounded-xl bg-gray-50 px-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-blue-600 shadow-sm">
@@ -48,7 +47,6 @@ const RoomSearch = ({ search, setSearch, onSearch, onOpenFilter }) => {
           )}
         </div>
 
-        {/* ================= LOCATION ================= */}
 
         <button
           type="button"
@@ -67,7 +65,6 @@ const RoomSearch = ({ search, setSearch, onSearch, onOpenFilter }) => {
           </div>
         </button>
 
-        {/* ================= FILTER MOBILE ================= */}
 
         <button
           type="button"
@@ -78,7 +75,6 @@ const RoomSearch = ({ search, setSearch, onSearch, onOpenFilter }) => {
           Filters
         </button>
 
-        {/* ================= SEARCH BUTTON ================= */}
 
         <button
           type="submit"

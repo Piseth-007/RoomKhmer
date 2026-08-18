@@ -56,11 +56,6 @@ export default function AdminDashboard() {
           return;
         }
 
-        /*
-         * =====================================================
-         * USERS
-         * =====================================================
-         */
 
         const usersSnapshot = await getDocs(collection(db, "users"));
 
@@ -71,11 +66,6 @@ export default function AdminDashboard() {
 
         setUsers(usersData);
 
-        /*
-         * =====================================================
-         * ROOMS
-         * =====================================================
-         */
 
         const roomsSnapshot = await getDocs(collection(db, "rooms"));
 
@@ -86,11 +76,6 @@ export default function AdminDashboard() {
 
         setRooms(roomsData);
 
-        /*
-         * =====================================================
-         * BOOKINGS
-         * =====================================================
-         */
 
         const bookingsSnapshot = await getDocs(collection(db, "bookings"));
 
@@ -101,15 +86,6 @@ export default function AdminDashboard() {
 
         setBookings(bookingsData);
 
-        /*
-         * =====================================================
-         * PAYMENTS
-         *
-         * This is the important fix.
-         *
-         * Revenue comes from payments, not bookings.
-         * =====================================================
-         */
 
         const paymentsSnapshot = await getDocs(collection(db, "payments"));
 
@@ -143,11 +119,6 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  /*
-   * ============================================================
-   * USER STATISTICS
-   * ============================================================
-   */
 
   const totalUsers = users.length;
 
@@ -159,11 +130,6 @@ export default function AdminDashboard() {
     (user) => user.role === "tenant" || user.role === "student",
   ).length;
 
-  /*
-   * ============================================================
-   * ROOM STATISTICS
-   * ============================================================
-   */
 
   const totalRooms = rooms.length;
 
@@ -173,11 +139,6 @@ export default function AdminDashboard() {
     (room) => room.status === "approved" || room.status === "active",
   ).length;
 
-  /*
-   * ============================================================
-   * BOOKING STATISTICS
-   * ============================================================
-   */
 
   const totalBookings = bookings.length;
 
@@ -192,13 +153,6 @@ export default function AdminDashboard() {
     (booking) => booking.status === "pending",
   ).length;
 
-  /*
-   * ============================================================
-   * PAYMENT STATISTICS
-   *
-   * Only status === "paid" counts as revenue.
-   * ============================================================
-   */
 
   const paidPayments = payments.filter((payment) => payment.status === "paid");
 
@@ -216,13 +170,6 @@ export default function AdminDashboard() {
     0,
   );
 
-  /*
-   * ============================================================
-   * MONTHLY DATA
-   *
-   * Uses payment date.
-   * ============================================================
-   */
 
   const monthlyData = useMemo(() => {
     const now = new Date();
@@ -274,11 +221,6 @@ export default function AdminDashboard() {
     return months;
   }, [paidPayments]);
 
-  /*
-   * ============================================================
-   * CHART
-   * ============================================================
-   */
 
   const chartData = useMemo(() => {
     if (period === "3months") {
@@ -294,11 +236,6 @@ export default function AdminDashboard() {
 
   const maxRevenue = Math.max(...chartData.map((item) => item.revenue), 1);
 
-  /*
-   * ============================================================
-   * PENDING ROOMS
-   * ============================================================
-   */
 
   const pendingRoomsData = useMemo(() => {
     return rooms
@@ -324,11 +261,6 @@ export default function AdminDashboard() {
       }));
   }, [rooms]);
 
-  /*
-   * ============================================================
-   * RECENT BOOKINGS
-   * ============================================================
-   */
 
   const recentBookings = useMemo(() => {
     return [...bookings]
@@ -361,18 +293,10 @@ export default function AdminDashboard() {
       }));
   }, [bookings]);
 
-  /*
-   * ============================================================
-   * RECENT ACTIVITIES
-   * ============================================================
-   */
 
   const activities = useMemo(() => {
     const result = [];
 
-    /*
-     * USERS
-     */
 
     users
       .filter((user) => user.createdAt)
@@ -399,9 +323,6 @@ export default function AdminDashboard() {
         });
       });
 
-    /*
-     * ROOMS
-     */
 
     rooms
       .filter((room) => room.createdAt)
@@ -423,9 +344,6 @@ export default function AdminDashboard() {
         });
       });
 
-    /*
-     * BOOKINGS
-     */
 
     bookings
       .filter((booking) => booking.createdAt)
@@ -447,9 +365,6 @@ export default function AdminDashboard() {
         });
       });
 
-    /*
-     * PAYMENTS
-     */
 
     paidPayments
       .filter(
@@ -485,11 +400,6 @@ export default function AdminDashboard() {
     return result.sort((a, b) => b.timestamp - a.timestamp).slice(0, 6);
   }, [users, rooms, bookings, paidPayments]);
 
-  /*
-   * ============================================================
-   * LOADING
-   * ============================================================
-   */
 
   if (loading) {
     return (
@@ -505,11 +415,6 @@ export default function AdminDashboard() {
     );
   }
 
-  /*
-   * ============================================================
-   * RETURN
-   * ============================================================
-   */
 
   return (
     <div className="space-y-6">
@@ -1041,11 +946,6 @@ export default function AdminDashboard() {
   );
 }
 
-/*
- * ============================================================
- * PAYMENT AMOUNT
- * ============================================================
- */
 
 function getPaymentAmount(payment) {
   return Number(
@@ -1057,11 +957,6 @@ function getPaymentAmount(payment) {
   );
 }
 
-/*
- * ============================================================
- * FIREBASE TIMESTAMP
- * ============================================================
- */
 
 function getTimestamp(value) {
   if (!value) {
@@ -1093,11 +988,6 @@ function getTimestamp(value) {
   return 0;
 }
 
-/*
- * ============================================================
- * FIREBASE DATE
- * ============================================================
- */
 
 function getDate(value) {
   const timestamp = getTimestamp(value);
@@ -1109,11 +999,6 @@ function getDate(value) {
   return new Date(timestamp);
 }
 
-/*
- * ============================================================
- * FORMAT DATE
- * ============================================================
- */
 
 function formatDate(value) {
   const date = getDate(value);
@@ -1129,11 +1014,6 @@ function formatDate(value) {
   });
 }
 
-/*
- * ============================================================
- * RELATIVE TIME
- * ============================================================
- */
 
 function formatRelativeTime(value) {
   const timestamp = getTimestamp(value);
@@ -1169,11 +1049,6 @@ function formatRelativeTime(value) {
   return formatDate(value);
 }
 
-/*
- * ============================================================
- * ADMIN STAT
- * ============================================================
- */
 
 function AdminStat({ title, value, description, icon, iconClass }) {
   return (
@@ -1197,11 +1072,6 @@ function AdminStat({ title, value, description, icon, iconClass }) {
   );
 }
 
-/*
- * ============================================================
- * MINI STAT
- * ============================================================
- */
 
 function MiniStat({ icon, label, value, description, className, urgent }) {
   return (
@@ -1229,11 +1099,6 @@ function MiniStat({ icon, label, value, description, className, urgent }) {
   );
 }
 
-/*
- * ============================================================
- * OVERVIEW ROW
- * ============================================================
- */
 
 function OverviewRow({ icon, label, value, percentage, className }) {
   return (
@@ -1264,11 +1129,6 @@ function OverviewRow({ icon, label, value, percentage, className }) {
   );
 }
 
-/*
- * ============================================================
- * BOOKING STATUS
- * ============================================================
- */
 
 function BookingStatus({ status }) {
   const config = {
@@ -1324,11 +1184,6 @@ function BookingStatus({ status }) {
   );
 }
 
-/*
- * ============================================================
- * ACTIVITY ITEM
- * ============================================================
- */
 
 function ActivityItem({ activity, last }) {
   const iconConfig = {

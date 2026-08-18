@@ -49,9 +49,6 @@ export default function LandlordBookings() {
 
   const [error, setError] = useState("");
 
-  // ============================================================
-  // LOAD DATA
-  // ============================================================
 
   useEffect(() => {
     let unsubscribe;
@@ -227,9 +224,6 @@ export default function LandlordBookings() {
     };
   }, []);
 
-  // ============================================================
-  // MERGE DATA
-  // ============================================================
 
   const allBookings = useMemo(() => {
     const bookingIds = new Set(bookings.map((booking) => booking.id));
@@ -312,9 +306,6 @@ export default function LandlordBookings() {
     );
   }, [requests, bookings, payments]);
 
-  // ============================================================
-  // FILTER
-  // ============================================================
 
   const filteredBookings = useMemo(() => {
     return allBookings.filter((booking) => {
@@ -335,9 +326,6 @@ export default function LandlordBookings() {
     });
   }, [allBookings, search, status]);
 
-  // ============================================================
-  // STATISTICS
-  // ============================================================
 
   const pendingCount = allBookings.filter(
     (item) => item.source === "request" && item.status === "pending",
@@ -355,25 +343,16 @@ export default function LandlordBookings() {
     (item) => item.status === "cancelled" || item.status === "rejected",
   ).length;
 
-  // ============================================================
-  // EARNINGS
-  // ============================================================
 
   const earnings = payments
     .filter((payment) => payment.status === "paid")
     .reduce((total, payment) => total + Number(payment.amount || 0), 0);
 
-  // ============================================================
-  // PENDING AMOUNT
-  // ============================================================
 
   const pendingAmount = payments
     .filter((payment) => payment.status === "pending")
     .reduce((total, payment) => total + Number(payment.amount || 0), 0);
 
-  // ============================================================
-  // ACCEPT REQUEST
-  // ============================================================
 
   const acceptRequest = async (request) => {
     try {
@@ -441,9 +420,6 @@ export default function LandlordBookings() {
 
       const bookingRef = doc(collection(db, "bookings"));
 
-      // ------------------------------------------------------
-      // REQUEST
-      // ------------------------------------------------------
 
       batch.update(doc(db, "roomRequests", request.id), {
         status: "accepted",
@@ -453,9 +429,6 @@ export default function LandlordBookings() {
         updatedAt: serverTimestamp(),
       });
 
-      // ------------------------------------------------------
-      // BOOKING
-      // ------------------------------------------------------
 
       batch.set(bookingRef, {
         requestId: request.id,
@@ -495,9 +468,6 @@ export default function LandlordBookings() {
         updatedAt: serverTimestamp(),
       });
 
-      // ------------------------------------------------------
-      // MONTHLY PAYMENTS
-      // ------------------------------------------------------
 
       for (let i = 0; i < rentalMonths; i++) {
         const periodStart = addMonths(startDate, i);
@@ -547,9 +517,6 @@ export default function LandlordBookings() {
         });
       }
 
-      // ------------------------------------------------------
-      // ROOM
-      // ------------------------------------------------------
 
       if (request.roomId) {
         batch.update(doc(db, "rooms", request.roomId), {
@@ -559,9 +526,6 @@ export default function LandlordBookings() {
         });
       }
 
-      // ------------------------------------------------------
-      // COMMIT
-      // ------------------------------------------------------
 
       await batch.commit();
 
@@ -581,9 +545,6 @@ export default function LandlordBookings() {
     }
   };
 
-  // ============================================================
-  // REJECT REQUEST
-  // ============================================================
 
   const rejectRequest = async (request) => {
     try {
@@ -638,9 +599,6 @@ export default function LandlordBookings() {
     }
   };
 
-  // ============================================================
-  // MARK PAYMENT PAID
-  // ============================================================
 
   const markPaymentPaid = async (payment) => {
     try {
@@ -705,9 +663,6 @@ export default function LandlordBookings() {
     }
   };
 
-  // ============================================================
-  // COMPLETE BOOKING
-  // ============================================================
 
   const completeBooking = async (booking) => {
     try {
@@ -773,9 +728,6 @@ export default function LandlordBookings() {
     }
   };
 
-  // ============================================================
-  // CANCEL BOOKING
-  // ============================================================
 
   const cancelBooking = async (booking) => {
     try {
@@ -841,9 +793,6 @@ export default function LandlordBookings() {
     }
   };
 
-  // ============================================================
-  // RELOAD
-  // ============================================================
 
   const reloadLandlordData = async () => {
     const user = auth.currentUser;
@@ -989,9 +938,6 @@ export default function LandlordBookings() {
     }
   };
 
-  // ============================================================
-  // LOADING
-  // ============================================================
 
   if (loading) {
     return (
@@ -1005,9 +951,6 @@ export default function LandlordBookings() {
     );
   }
 
-  // ============================================================
-  // UI
-  // ============================================================
 
   return (
     <div className="space-y-6">
@@ -1432,9 +1375,6 @@ export default function LandlordBookings() {
   );
 }
 
-// ============================================================
-// STAT
-// ============================================================
 
 function BookingStat({ title, value, icon, className }) {
   return (
@@ -1452,9 +1392,6 @@ function BookingStat({ title, value, icon, className }) {
   );
 }
 
-// ============================================================
-// STATUS
-// ============================================================
 
 function BookingStatus({ status }) {
   const config = {
@@ -1510,9 +1447,6 @@ function BookingStatus({ status }) {
   );
 }
 
-// ============================================================
-// MENU
-// ============================================================
 
 function BookingMenu({
   booking,
@@ -1613,9 +1547,6 @@ function BookingMenu({
   );
 }
 
-// ============================================================
-// DATE
-// ============================================================
 
 function parseDate(value) {
   if (!value) {
@@ -1645,9 +1576,6 @@ function parseDate(value) {
   return null;
 }
 
-// ============================================================
-// ADD MONTHS
-// ============================================================
 
 function addMonths(date, months) {
   const result = new Date(date);
@@ -1657,9 +1585,6 @@ function addMonths(date, months) {
   return result;
 }
 
-// ============================================================
-// FIRESTORE DATE
-// ============================================================
 
 function formatDateForFirestore(date) {
   const year = date.getFullYear();
@@ -1671,9 +1596,6 @@ function formatDateForFirestore(date) {
   return `${year}-${month}-${day}`;
 }
 
-// ============================================================
-// DISPLAY DATE
-// ============================================================
 
 function formatDateValue(value) {
   if (!value) {
@@ -1693,9 +1615,6 @@ function formatDateValue(value) {
   });
 }
 
-// ============================================================
-// TIMESTAMP
-// ============================================================
 
 function getTime(value) {
   if (!value) {
@@ -1715,9 +1634,6 @@ function getTime(value) {
   return Number.isNaN(date.getTime()) ? 0 : date.getTime();
 }
 
-// ============================================================
-// STATUS FILTER
-// ============================================================
 
 function normalizeStatus(status) {
   return status;

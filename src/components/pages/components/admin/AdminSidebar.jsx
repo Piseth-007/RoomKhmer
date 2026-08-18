@@ -96,9 +96,6 @@ export default function AdminSidebar() {
           isOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
       >
-        {/* ==================================================
-            LOGO
-        ================================================== */}
 
         <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-gray-100 px-5">
           <Link
@@ -128,9 +125,6 @@ export default function AdminSidebar() {
           </button>
         </div>
 
-        {/* ==================================================
-            NAVIGATION
-        ================================================== */}
 
         <nav className="flex-1 overflow-hidden px-3 py-5">
           <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-400">
@@ -182,9 +176,6 @@ export default function AdminSidebar() {
           </div>
         </nav>
 
-        {/* ==================================================
-            BOTTOM
-        ================================================== */}
 
         <div className="shrink-0 border-t border-gray-100 p-3">
           <NavLink

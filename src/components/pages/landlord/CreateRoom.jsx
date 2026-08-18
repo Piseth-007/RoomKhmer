@@ -59,7 +59,6 @@ export default function CreateRoom() {
       [name]: value,
     }));
 
-    // Remove error when user starts typing
     if (errors[name]) {
       setErrors((current) => ({
         ...current,
@@ -296,9 +295,6 @@ export default function CreateRoom() {
         </div>
       </div>
 
-      {/* ======================================================
-          APPROVAL NOTICE
-      ======================================================= */}
 
       <div className="mb-6 flex gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-4">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
@@ -317,14 +313,8 @@ export default function CreateRoom() {
         </div>
       </div>
 
-      {/* ======================================================
-          FORM
-      ======================================================= */}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* ====================================================
-            ROOM IMAGES
-        ===================================================== */}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
@@ -333,7 +323,6 @@ export default function CreateRoom() {
             subtitle="Upload clear photos of your room"
           />
 
-          {/* Upload */}
 
           <label
             className={`mt-6 flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition ${
@@ -367,7 +356,6 @@ export default function CreateRoom() {
             <p className="mt-2 text-xs text-red-500">{errors.images}</p>
           )}
 
-          {/* Preview */}
 
           {images.length > 0 && (
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
@@ -382,7 +370,6 @@ export default function CreateRoom() {
                     className="h-full w-full object-cover"
                   />
 
-                  {/* Main */}
 
                   {index === 0 && (
                     <span className="absolute left-2 top-2 rounded-full bg-blue-600 px-2 py-1 text-[9px] font-semibold text-white">
@@ -390,7 +377,6 @@ export default function CreateRoom() {
                     </span>
                   )}
 
-                  {/* Remove */}
 
                   <button
                     type="button"
@@ -405,9 +391,6 @@ export default function CreateRoom() {
           )}
         </section>
 
-        {/* ====================================================
-            BASIC INFORMATION
-        ===================================================== */}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
@@ -417,7 +400,6 @@ export default function CreateRoom() {
           />
 
           <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-            {/* Room Name */}
 
             <FormField
               label="Room Name"
@@ -435,7 +417,6 @@ export default function CreateRoom() {
               />
             </FormField>
 
-            {/* Room Type */}
 
             <FormField label="Room Type" required error={errors.type}>
               <select
@@ -458,7 +439,6 @@ export default function CreateRoom() {
               </select>
             </FormField>
 
-            {/* Price */}
 
             <FormField label="Monthly Rent" required error={errors.price}>
               <div className="relative">
@@ -479,7 +459,6 @@ export default function CreateRoom() {
               </div>
             </FormField>
 
-            {/* Location */}
 
             <FormField label="Location" required error={errors.location}>
               <div className="relative">
@@ -513,7 +492,6 @@ export default function CreateRoom() {
               </div>
             </FormField>
 
-            {/* Address */}
 
             <FormField label="Full Address" className="md:col-span-2">
               <input
@@ -526,7 +504,6 @@ export default function CreateRoom() {
               />
             </FormField>
 
-            {/* Description */}
 
             <FormField
               label="Description"
@@ -546,9 +523,6 @@ export default function CreateRoom() {
           </div>
         </section>
 
-        {/* ====================================================
-            ROOM DETAILS
-        ===================================================== */}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
@@ -592,9 +566,6 @@ export default function CreateRoom() {
           </div>
         </section>
 
-        {/* ====================================================
-            AMENITIES
-        ===================================================== */}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
@@ -654,9 +625,6 @@ export default function CreateRoom() {
           </div>
         </section>
 
-        {/* ====================================================
-            RULES
-        ===================================================== */}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
           <SectionHeader
@@ -679,9 +647,6 @@ export default function CreateRoom() {
           />
         </section>
 
-        {/* ====================================================
-            SUBMIT
-        ===================================================== */}
 
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Link
@@ -714,9 +679,6 @@ export default function CreateRoom() {
   );
 }
 
-/* ============================================================
-   SECTION HEADER
-============================================================ */
 
 function SectionHeader({ icon, title, subtitle }) {
   return (
@@ -734,9 +696,6 @@ function SectionHeader({ icon, title, subtitle }) {
   );
 }
 
-/* ============================================================
-   FORM FIELD
-============================================================ */
 
 function FormField({
   label,
@@ -760,9 +719,6 @@ function FormField({
   );
 }
 
-/* ============================================================
-   NUMBER FIELD
-============================================================ */
 
 function NumberField({ label, name, value, onChange, placeholder }) {
   return (
@@ -780,9 +736,6 @@ function NumberField({ label, name, value, onChange, placeholder }) {
   );
 }
 
-/* ============================================================
-   AMENITY
-============================================================ */
 
 function Amenity({ name, label, icon, checked, onChange }) {
   return (
@@ -814,9 +767,6 @@ function Amenity({ name, label, icon, checked, onChange }) {
   );
 }
 
-/* ============================================================
-   INPUT CLASS
-============================================================ */
 
 function inputClass(error = false) {
   return `h-11 w-full rounded-xl border bg-white px-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 ${

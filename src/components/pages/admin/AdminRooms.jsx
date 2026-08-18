@@ -52,31 +52,18 @@ export default function AdminRooms() {
 
   const [page, setPage] = useState(1);
 
-  // ============================================================
-  // LOAD ROOMS + LANDLORD USERS
-  // ============================================================
 
   const loadRooms = async () => {
     try {
       setLoading(true);
       setError("");
 
-      // --------------------------------------------------------
-      // LOAD ROOMS
-      // --------------------------------------------------------
 
       const roomsSnapshot = await getDocs(collection(db, "rooms"));
 
-      // --------------------------------------------------------
-      // LOAD USERS
-      // Admin can read all users according to your rules.
-      // --------------------------------------------------------
 
       const usersSnapshot = await getDocs(collection(db, "users"));
 
-      // --------------------------------------------------------
-      // CREATE USER MAP
-      // --------------------------------------------------------
 
       const usersMap = new Map();
 
@@ -89,9 +76,6 @@ export default function AdminRooms() {
         });
       });
 
-      // --------------------------------------------------------
-      // CREATE ROOM DATA
-      // --------------------------------------------------------
 
       const roomData = roomsSnapshot.docs
         .map((roomDoc) => {
@@ -102,16 +86,6 @@ export default function AdminRooms() {
 
           const landlordUser = usersMap.get(landlordId);
 
-          // --------------------------------------------------
-          // FIND LANDLORD NAME
-          //
-          // Priority:
-          // 1. users/{landlordId}.name
-          // 2. users/{landlordId}.displayName
-          // 3. room.landlordName
-          // 4. room.ownerName
-          // 5. room.landlord
-          // --------------------------------------------------
 
           const landlordName =
             landlordUser?.name ||
@@ -189,17 +163,11 @@ export default function AdminRooms() {
     loadRooms();
   }, []);
 
-  // ============================================================
-  // RESET PAGE
-  // ============================================================
 
   useEffect(() => {
     setPage(1);
   }, [search, status, location]);
 
-  // ============================================================
-  // FILTER ROOMS
-  // ============================================================
 
   const filteredRooms = useMemo(() => {
     const queryText = search.toLowerCase().trim();
@@ -234,9 +202,6 @@ export default function AdminRooms() {
     });
   }, [rooms, search, status, location]);
 
-  // ============================================================
-  // COUNTS
-  // ============================================================
 
   const allCount = rooms.length;
 
@@ -258,9 +223,6 @@ export default function AdminRooms() {
     (room) => room.status === "rejected",
   ).length;
 
-  // ============================================================
-  // LOCATIONS
-  // ============================================================
 
   const locations = useMemo(() => {
     return [
@@ -268,9 +230,6 @@ export default function AdminRooms() {
     ].sort();
   }, [rooms]);
 
-  // ============================================================
-  // PAGINATION
-  // ============================================================
 
   const totalPages = Math.max(1, Math.ceil(filteredRooms.length / PAGE_SIZE));
 
@@ -281,9 +240,6 @@ export default function AdminRooms() {
     safePage * PAGE_SIZE,
   );
 
-  // ============================================================
-  // UPDATE ROOM STATUS
-  // ============================================================
 
   const updateStatus = async (id, newStatus) => {
     try {
@@ -297,8 +253,6 @@ export default function AdminRooms() {
         throw new Error("Room not found.");
       }
 
-      // Admin only approves or rejects
-      // from this page.
 
       if (!["approved", "rejected"].includes(newStatus)) {
         throw new Error("Invalid room status.");
@@ -333,9 +287,6 @@ export default function AdminRooms() {
     }
   };
 
-  // ============================================================
-  // DELETE ROOM
-  // ============================================================
 
   const deleteRoom = async (id) => {
     const room = rooms.find((item) => item.id === id);
@@ -365,9 +316,6 @@ export default function AdminRooms() {
     }
   };
 
-  // ============================================================
-  // CLEAR FILTERS
-  // ============================================================
 
   const clearFilters = () => {
     setSearch("");
@@ -376,9 +324,6 @@ export default function AdminRooms() {
     setPage(1);
   };
 
-  // ============================================================
-  // LOADING
-  // ============================================================
 
   if (loading) {
     return (
@@ -392,13 +337,9 @@ export default function AdminRooms() {
     );
   }
 
-  // ============================================================
-  // PAGE
-  // ============================================================
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -425,7 +366,6 @@ export default function AdminRooms() {
         )}
       </div>
 
-      {/* ERROR */}
 
       {error && (
         <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-4">
@@ -439,7 +379,6 @@ export default function AdminRooms() {
         </div>
       )}
 
-      {/* STATUS FILTER */}
 
       <div className="overflow-x-auto">
         <div className="flex min-w-max gap-2 rounded-xl border border-gray-100 bg-white p-1.5 shadow-sm">
@@ -492,7 +431,6 @@ export default function AdminRooms() {
         </div>
       </div>
 
-      {/* SEARCH */}
 
       <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row">
@@ -543,7 +481,6 @@ export default function AdminRooms() {
         </div>
       </div>
 
-      {/* DESKTOP TABLE */}
 
       <div className="hidden overflow-visible rounded-2xl border border-gray-100 bg-white shadow-sm lg:block">
         <div className="overflow-x-auto overflow-y-visible">
@@ -592,7 +529,6 @@ export default function AdminRooms() {
         />
       </div>
 
-      {/* MOBILE */}
 
       <div className="space-y-4 lg:hidden">
         {paginatedRooms.map((room) => (
@@ -608,7 +544,6 @@ export default function AdminRooms() {
         ))}
       </div>
 
-      {/* MOBILE PAGINATION */}
 
       {paginatedRooms.length > 0 && (
         <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3 lg:hidden">
@@ -641,7 +576,6 @@ export default function AdminRooms() {
         </div>
       )}
 
-      {/* EMPTY */}
 
       {filteredRooms.length === 0 && (
         <div className="rounded-2xl border border-gray-100 bg-white py-16 text-center shadow-sm">
@@ -662,9 +596,6 @@ export default function AdminRooms() {
   );
 }
 
-// ============================================================
-// ROOM TABLE ROW
-// ============================================================
 
 function RoomTableRow({
   room,
@@ -680,7 +611,6 @@ function RoomTableRow({
 
   return (
     <tr className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
-      {/* ROOM */}
 
       <td className="px-5 py-4">
         <div className="flex items-center gap-3">
@@ -703,7 +633,6 @@ function RoomTableRow({
         </div>
       </td>
 
-      {/* LANDLORD */}
 
       <td className="px-5 py-4">
         <div className="flex items-center gap-2">
@@ -731,7 +660,6 @@ function RoomTableRow({
         </div>
       </td>
 
-      {/* LOCATION */}
 
       <td className="px-5 py-4">
         <div className="flex items-center gap-1.5 text-xs text-gray-600">
@@ -741,7 +669,6 @@ function RoomTableRow({
         </div>
       </td>
 
-      {/* DETAILS */}
 
       <td className="px-5 py-4">
         <div className="flex items-center gap-3 text-[10px] text-gray-500">
@@ -761,7 +688,6 @@ function RoomTableRow({
         <p className="mt-1 text-[9px] text-gray-400">{room.type}</p>
       </td>
 
-      {/* PRICE */}
 
       <td className="px-5 py-4">
         <p className="text-sm font-bold text-gray-800">
@@ -771,13 +697,11 @@ function RoomTableRow({
         <p className="text-[9px] text-gray-400">/ month</p>
       </td>
 
-      {/* STATUS */}
 
       <td className="px-5 py-4">
         <RoomStatus status={room.status} />
       </td>
 
-      {/* ACTION */}
 
       <td className="px-5 py-4">
         <div className="flex items-center gap-2">
@@ -819,9 +743,6 @@ function RoomTableRow({
   );
 }
 
-// ============================================================
-// MOBILE ROOM CARD
-// ============================================================
 
 function RoomMobileCard({
   room,
@@ -872,7 +793,6 @@ function RoomMobileCard({
           </p>
         </div>
 
-        {/* LANDLORD */}
 
         <div className="mt-4 flex items-center gap-2">
           {room.landlordPhoto ? (
@@ -898,7 +818,6 @@ function RoomMobileCard({
           </div>
         </div>
 
-        {/* DETAILS */}
 
         <div className="mt-4 flex items-center gap-4 border-y border-gray-100 py-3 text-xs text-gray-500">
           <span className="flex items-center gap-1.5">
@@ -912,7 +831,6 @@ function RoomMobileCard({
           </span>
         </div>
 
-        {/* ACTIONS */}
 
         <div className="mt-4 flex gap-2">
           <Link
@@ -954,9 +872,6 @@ function RoomMobileCard({
   );
 }
 
-// ============================================================
-// ACTION MENU
-// ============================================================
 
 function RoomActionMenu({ room, busy, updateStatus, deleteRoom }) {
   return (
@@ -1000,9 +915,6 @@ function RoomActionMenu({ room, busy, updateStatus, deleteRoom }) {
   );
 }
 
-// ============================================================
-// STATUS TAB
-// ============================================================
 
 function StatusTab({
   label,
@@ -1058,9 +970,6 @@ function StatusTab({
   );
 }
 
-// ============================================================
-// ROOM STATUS
-// ============================================================
 
 function RoomStatus({ status }) {
   const config = {
@@ -1110,9 +1019,6 @@ function RoomStatus({ status }) {
   );
 }
 
-// ============================================================
-// TABLE HEAD
-// ============================================================
 
 function TableHead({ children }) {
   return (
@@ -1122,9 +1028,6 @@ function TableHead({ children }) {
   );
 }
 
-// ============================================================
-// TABLE FOOTER
-// ============================================================
 
 function TableFooter({ page, totalPages, count, total, onPrevious, onNext }) {
   return (
@@ -1161,9 +1064,6 @@ function TableFooter({ page, totalPages, count, total, onPrevious, onNext }) {
   );
 }
 
-// ============================================================
-// NORMALIZE IMAGES
-// ============================================================
 
 function normalizeImages(images, image, photoURL) {
   if (Array.isArray(images)) {
@@ -1185,9 +1085,6 @@ function normalizeImages(images, image, photoURL) {
   return [];
 }
 
-// ============================================================
-// NORMALIZE ROOM STATUS
-// ============================================================
 
 function normalizeRoomStatus(status) {
   const value = String(status || "")
@@ -1214,7 +1111,6 @@ function normalizeRoomStatus(status) {
     return "rejected";
   }
 
-  // Legacy status
   if (value === "active") {
     return "approved";
   }
@@ -1222,9 +1118,6 @@ function normalizeRoomStatus(status) {
   return "pending";
 }
 
-// ============================================================
-// FIRESTORE TIMESTAMP
-// ============================================================
 
 function getTimestamp(value) {
   if (!value) {
@@ -1256,9 +1149,6 @@ function getTimestamp(value) {
   return 0;
 }
 
-// ============================================================
-// FIREBASE ERROR
-// ============================================================
 
 function getFirebaseError(error, fallback) {
   if (!error) {

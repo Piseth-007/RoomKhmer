@@ -116,7 +116,6 @@ const About = () => {
           </div>
 
           <div className="grid items-center gap-12 lg:grid-cols-2">
-            {/* Text */}
 
             <div>
               <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600">
@@ -221,7 +220,6 @@ const About = () => {
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2">
-          {/* Image */}
 
           <div className="relative order-2 lg:order-1">
             <div className="overflow-hidden rounded-3xl">
@@ -232,7 +230,6 @@ const About = () => {
               />
             </div>
 
-            {/* Decorative card */}
 
             <div className="absolute -bottom-6 -right-4 hidden w-52 rounded-2xl bg-white p-5 shadow-xl sm:block">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
@@ -249,7 +246,6 @@ const About = () => {
             </div>
           </div>
 
-          {/* Content */}
 
           <div className="order-1 lg:order-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-blue-600">
@@ -279,7 +275,6 @@ const About = () => {
               </p>
             </div>
 
-            {/* Points */}
 
             <div className="mt-7 space-y-3">
               {[
@@ -322,7 +317,6 @@ const About = () => {
           </div>
 
           <div className="relative mt-12 grid gap-8 md:grid-cols-3">
-            {/* Connecting line */}
 
             <div className="absolute left-[20%] right-[20%] top-12 hidden h-px bg-gray-200 md:block" />
 
@@ -355,14 +349,10 @@ const About = () => {
         </div>
       </section>
 
-      {/* =====================================================
-          VALUES
-      ====================================================== */}
 
       <section className="bg-slate-50">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
-            {/* Heading */}
 
             <div>
               <span className="text-xs font-semibold uppercase tracking-wider text-blue-600">
@@ -414,14 +404,10 @@ const About = () => {
         </div>
       </section>
 
-      {/* =====================================================
-          CTA
-      ====================================================== */}
 
       <section className="bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <div className="relative overflow-hidden rounded-3xl bg-blue-600 px-6 py-12 text-center sm:px-10 sm:py-16">
-            {/* Decorative circles */}
 
             <div className="pointer-events-none absolute -left-20 -top-20 h-56 w-56 rounded-full bg-white/10" />
 
@@ -470,11 +456,6 @@ const About = () => {
   );
 };
 
-/*
-|--------------------------------------------------------------------------
-| Simple icon component for the "Connect" step
-|--------------------------------------------------------------------------
-*/
 
 const MessageCircleIcon = (props) => {
   return (

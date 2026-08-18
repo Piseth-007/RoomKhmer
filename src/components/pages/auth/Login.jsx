@@ -81,19 +81,15 @@ const Login = () => {
   return (
     <div className="mx-auto flex w-full max-w-md items-center justify-center">
       <div className="w-full">
-        {/* ================= LOGIN CARD ================= */}
 
         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
-          {/* ================= HEADER ================= */}
 
           <div className="mb-8 text-center">
-            {/* Icon */}
 
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
               <LogIn size={27} strokeWidth={2} />
             </div>
 
-            {/* Title */}
 
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">
               សូមស្វាគមន៍មកវិញ
@@ -108,7 +104,6 @@ const Login = () => {
             </p>
           </div>
 
-          {/* ================= ERROR ================= */}
 
           {error && (
             <div className="mb-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -116,10 +111,8 @@ const Login = () => {
             </div>
           )}
 
-          {/* ================= FORM ================= */}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* ================= EMAIL ================= */}
 
             <div>
               <label
@@ -151,7 +144,6 @@ const Login = () => {
               </div>
             </div>
 
-            {/* ================= PASSWORD ================= */}
 
             <div>
               <div className="mb-2 flex items-center justify-between">
@@ -203,7 +195,6 @@ const Login = () => {
               </div>
             </div>
 
-            {/* ================= REMEMBER ME ================= */}
 
             <div className="flex items-center">
               <label className="flex cursor-pointer items-center gap-2">
@@ -221,7 +212,6 @@ const Login = () => {
               </label>
             </div>
 
-            {/* ================= LOGIN BUTTON ================= */}
 
             <button
               type="submit"
@@ -242,7 +232,6 @@ const Login = () => {
             </button>
           </form>
 
-          {/* ================= DIVIDER ================= */}
 
           <div className="my-6 flex items-center gap-4">
             <div className="h-px flex-1 bg-gray-100" />
@@ -252,7 +241,6 @@ const Login = () => {
             <div className="h-px flex-1 bg-gray-100" />
           </div>
 
-          {/* ================= GOOGLE LOGIN ================= */}
 
           <button
             type="button"
@@ -260,7 +248,6 @@ const Login = () => {
             disabled={isSubmitting}
             className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {/* Google SVG */}
             <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
               <path
                 fill="#4285F4"
@@ -285,7 +272,6 @@ const Login = () => {
             Continue with Google
           </button>
 
-          {/* ================= REGISTER ================= */}
 
           <p className="mt-7 text-center text-sm text-gray-500">
             មិនទាន់មានគណនី?
@@ -298,7 +284,6 @@ const Login = () => {
           </p>
         </div>
 
-        {/* ================= TERMS ================= */}
 
         <p className="mt-5 text-center text-xs leading-5 text-gray-400">
           By continuing, you agree to our{" "}
