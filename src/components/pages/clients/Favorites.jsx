@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-
 import {
   ArrowRight,
   Heart,
@@ -9,45 +8,181 @@ import {
   Search,
   Star,
   Trash2,
+  LoaderCircle,
+  AlertCircle,
 } from "lucide-react";
-
-import { rooms } from "../../../data/rooms";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../../firebase/config";
 
 const FAVORITES_KEY = "roomkhmer_favorites";
 
 const Favorites = () => {
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    try {
-      const savedFavorites =
-        JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
-
-      setFavoriteIds(savedFavorites);
-    } catch (error) {
-      console.error("Failed to load favorites:", error);
-
-      setFavoriteIds([]);
-    }
+    loadFavorites();
   }, []);
 
+  const loadFavorites = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      let savedFavorites = [];
+
+      try {
+        savedFavorites = JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
+      } catch {
+        savedFavorites = [];
+      }
+
+      const normalizedIds = savedFavorites.map((id) => String(id));
+
+      setFavoriteIds(normalizedIds);
+
+      if (normalizedIds.length === 0) {
+        setRooms([]);
+        setLoading(false);
+        return;
+      }
+
+      const roomsSnapshot = await getDocs(collection(db, "rooms"));
+
+      const firestoreRooms = roomsSnapshot.docs
+        .map((roomDoc) => ({
+          id: roomDoc.id,
+          ...roomDoc.data(),
+        }))
+        .filter((room) => {
+          return room.status === "approved" || room.status === "available";
+        });
+
+      const matchedRooms = firestoreRooms.filter((room) =>
+        normalizedIds.includes(String(room.id)),
+      );
+
+      setRooms(matchedRooms);
+    } catch (err) {
+      console.error("Failed to load favorite rooms:", err);
+
+      setError(getErrorMessage(err));
+      setRooms([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const favoriteRooms = useMemo(() => {
-    return rooms.filter((room) => favoriteIds.includes(room.id));
-  }, [favoriteIds]);
+    const roomMap = new Map(rooms.map((room) => [String(room.id), room]));
+
+    return favoriteIds.map((id) => roomMap.get(String(id))).filter(Boolean);
+  }, [favoriteIds, rooms]);
 
   const removeFavorite = (roomId) => {
-    const updatedFavorites = favoriteIds.filter((id) => id !== roomId);
+    const updatedFavorites = favoriteIds.filter(
+      (id) => String(id) !== String(roomId),
+    );
 
     setFavoriteIds(updatedFavorites);
+
+    setRooms((currentRooms) =>
+      currentRooms.filter((room) => String(room.id) !== String(roomId)),
+    );
 
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedFavorites));
   };
 
   const clearAllFavorites = () => {
     setFavoriteIds([]);
-
+    setRooms([]);
     localStorage.removeItem(FAVORITES_KEY);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <div className="mx-auto flex min-h-[600px] max-w-7xl items-center justify-center px-4 sm:px-6 lg:px-8">
+          <div className="rounded-3xl border border-gray-100 bg-white px-10 py-12 text-center shadow-sm">
+            <LoaderCircle
+              size={38}
+              className="mx-auto animate-spin text-blue-600"
+            />
+
+            <h2 className="mt-5 text-xl font-bold text-gray-900">
+              Loading favorite rooms
+            </h2>
+
+            <p className="mt-2 text-sm text-gray-500">
+              Please wait while we load your saved rooms.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <section className="bg-white">
+          <div className="mx-auto max-w-7xl px-4 pb-12 pt-10 sm:px-6 lg:px-8">
+            <div className="mb-8 flex items-center gap-2 text-xs text-gray-400">
+              <Link to="/" className="transition hover:text-blue-600">
+                Home
+              </Link>
+
+              <span>/</span>
+
+              <span className="font-medium text-gray-600">Favorites</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-500">
+                <Heart size={23} strokeWidth={1.8} />
+              </div>
+
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                  បន្ទប់ដែលអ្នកចូលចិត្ត
+                </h1>
+
+                <p className="mt-1 text-sm font-medium text-blue-600">
+                  Favorite Rooms
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="rounded-3xl border border-red-100 bg-white px-6 py-16 text-center shadow-sm">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-500">
+              <AlertCircle size={30} />
+            </div>
+
+            <h2 className="mt-5 text-xl font-bold text-gray-900">
+              Unable to load favorite rooms
+            </h2>
+
+            <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">
+              {error}
+            </p>
+
+            <button
+              type="button"
+              onClick={loadFavorites}
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -91,7 +226,6 @@ const Favorites = () => {
               </p>
             </div>
 
-
             {favoriteRooms.length > 0 && (
               <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 shadow-sm">
                 <p className="text-xs text-gray-400">Saved rooms</p>
@@ -123,22 +257,7 @@ const Favorites = () => {
               <div className="flex items-center gap-2">
                 <Link
                   to="/rooms"
-                  className="
-                    inline-flex
-                    h-10
-                    items-center
-                    gap-2
-                    rounded-xl
-                    border
-                    border-gray-200
-                    bg-white
-                    px-4
-                    text-xs
-                    font-semibold
-                    text-gray-700
-                    transition
-                    hover:bg-gray-50
-                  "
+                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 text-xs font-semibold text-gray-700 transition hover:bg-gray-50"
                 >
                   <Search size={15} />
                   Find More Rooms
@@ -147,29 +266,13 @@ const Favorites = () => {
                 <button
                   type="button"
                   onClick={clearAllFavorites}
-                  className="
-                    inline-flex
-                    h-10
-                    items-center
-                    gap-2
-                    rounded-xl
-                    border
-                    border-red-100
-                    bg-red-50
-                    px-4
-                    text-xs
-                    font-semibold
-                    text-red-500
-                    transition
-                    hover:bg-red-100
-                  "
+                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 text-xs font-semibold text-red-500 transition hover:bg-red-100"
                 >
                   <Trash2 size={15} />
                   Clear All
                 </button>
               </div>
             </div>
-
 
             <div className="grid items-stretch gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {favoriteRooms.map((room) => (
@@ -180,7 +283,6 @@ const Favorites = () => {
                 />
               ))}
             </div>
-
 
             <section className="mt-14 overflow-hidden rounded-3xl bg-gray-900">
               <div className="flex flex-col gap-7 px-6 py-10 sm:px-10 lg:flex-row lg:items-center lg:justify-between">
@@ -207,22 +309,7 @@ const Favorites = () => {
 
                 <Link
                   to="/rooms"
-                  className="
-                    inline-flex
-                    h-11
-                    shrink-0
-                    items-center
-                    justify-center
-                    gap-2
-                    rounded-xl
-                    bg-white
-                    px-5
-                    text-sm
-                    font-semibold
-                    text-gray-900
-                    transition
-                    hover:bg-gray-100
-                  "
+                  className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
                 >
                   Browse Rooms
                   <ArrowRight size={16} />
@@ -231,9 +318,7 @@ const Favorites = () => {
             </section>
           </>
         ) : (
-
-          <div className="flex min-h-130 flex-col items-center justify-center rounded-3xl border border-gray-100 bg-white px-6 text-center shadow-sm">
-
+          <div className="flex min-h-[520px] flex-col items-center justify-center rounded-3xl border border-gray-100 bg-white px-6 text-center shadow-sm">
             <div className="relative">
               <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-red-50 text-red-400">
                 <Heart size={34} strokeWidth={1.5} />
@@ -243,7 +328,6 @@ const Favorites = () => {
                 <Search size={12} />
               </div>
             </div>
-
 
             <h2 className="mt-7 text-2xl font-bold text-gray-900">
               មិនទាន់មានបន្ទប់ដែលអ្នកចូលចិត្តទេ
@@ -258,30 +342,13 @@ const Favorites = () => {
               here. You can compare your favorite rooms later.
             </p>
 
-
             <Link
               to="/rooms"
-              className="
-                mt-7
-                inline-flex
-                h-11
-                items-center
-                gap-2
-                rounded-xl
-                bg-blue-600
-                px-6
-                text-sm
-                font-semibold
-                text-white
-                shadow-sm
-                transition
-                hover:bg-blue-700
-              "
+              className="mt-7 inline-flex h-11 items-center gap-2 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
             >
               <Search size={17} />
               ស្វែងរកបន្ទប់
             </Link>
-
 
             <div className="mt-8 flex items-center gap-2 text-xs text-gray-400">
               <Heart size={14} className="text-red-400" />
@@ -295,42 +362,42 @@ const Favorites = () => {
 };
 
 const FavoriteRoomCard = ({ room, onRemove }) => {
+  const image = getRoomImage(room);
+
+  const roomName = room.name || room.title || "Room";
+
+  const location = room.location || "Unknown location";
+
+  const price = Number(room.price) || 0;
+
+  const roomType = room.type || room.roomType || "Room";
+
+  const bathroom = room.bathrooms || room.bathroom || "N/A";
+
+  const rating = room.rating || 0;
+
+  const city = room.city || "Phnom Penh";
+
+  const isVerified = room.status === "approved" || room.verified === true;
+
   return (
-    <article
-      className="
-        group
-        flex
-        h-full
-        flex-col
-        overflow-hidden
-        rounded-2xl
-        border
-        border-gray-100
-        bg-white
-        shadow-sm
-        transition-all
-        duration-300
-        hover:-translate-y-1
-        hover:shadow-xl
-      "
-    >
-      <div className="relative h-57.5 shrink-0 overflow-hidden">
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+      <div className="relative h-[230px] shrink-0 overflow-hidden">
         <Link to={`/rooms/${room.id}`} className="block h-full">
-          <img
-            src={room.images?.[0] || room.image}
-            alt={room.title}
-            className="
-              h-full
-              w-full
-              object-cover
-              transition-transform
-              duration-500
-              group-hover:scale-105
-            "
-          />
+          {image ? (
+            <img
+              src={image}
+              alt={roomName}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400">
+              <Home size={45} />
+            </div>
+          )}
         </Link>
 
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/30 via-transparent to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
 
         {room.featured && (
           <span className="absolute left-4 top-4 rounded-full bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
@@ -341,30 +408,13 @@ const FavoriteRoomCard = ({ room, onRemove }) => {
         <button
           type="button"
           onClick={() => onRemove(room.id)}
-          aria-label={`Remove ${room.title} from favorites`}
-          className="
-            absolute
-            right-4
-            top-4
-            flex
-            h-10
-            w-10
-            items-center
-            justify-center
-            rounded-full
-            bg-white/95
-            text-red-500
-            shadow-md
-            backdrop-blur
-            transition
-            hover:scale-105
-            hover:bg-red-50
-          "
+          aria-label={`Remove ${roomName} from favorites`}
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-red-500 shadow-md backdrop-blur transition hover:scale-105 hover:bg-red-50"
         >
           <Heart size={19} className="fill-current" />
         </button>
 
-        {room.verified && (
+        {isVerified && (
           <div className="absolute bottom-4 left-4 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-semibold text-emerald-600 shadow-sm">
             Verified
           </div>
@@ -372,54 +422,46 @@ const FavoriteRoomCard = ({ room, onRemove }) => {
       </div>
 
       <div className="flex flex-1 flex-col p-5">
-
-        <div className="flex min-h-13.75 items-start justify-between gap-3">
+        <div className="flex min-h-[55px] items-start justify-between gap-3">
           <div className="min-w-0">
             <Link
               to={`/rooms/${room.id}`}
-              className="
-                line-clamp-2
-                text-base
-                font-semibold
-                leading-[1.45]
-                text-gray-900
-                transition
-                hover:text-blue-600
-              "
+              className="line-clamp-2 text-base font-semibold leading-[1.45] text-gray-900 transition hover:text-blue-600"
             >
-              {room.title}
+              {roomName}
             </Link>
 
             <p className="mt-1 truncate text-xs text-gray-400">
-              {room.englishTitle}
+              {room.englishTitle || room.type || "Room"}
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1 pt-1">
-            <Star size={15} className="fill-yellow-500 text-yellow-500" />
+          {rating > 0 && (
+            <div className="flex shrink-0 items-center gap-1 pt-1">
+              <Star size={15} className="fill-yellow-500 text-yellow-500" />
 
-            <span className="text-xs font-semibold text-gray-700">
-              {room.rating}
-            </span>
-          </div>
+              <span className="text-xs font-semibold text-gray-700">
+                {rating}
+              </span>
+            </div>
+          )}
         </div>
-
 
         <div className="mt-3 flex items-center gap-2">
           <MapPin size={16} className="shrink-0 text-blue-500" />
 
           <span className="truncate text-xs text-gray-500">
-            {room.location}, {room.city}
+            {location}
+            {city ? `, ${city}` : ""}
           </span>
         </div>
-
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-gray-50 px-3 py-2">
             <p className="text-[10px] text-gray-400">Room Type</p>
 
             <p className="mt-0.5 truncate text-xs font-semibold text-gray-700">
-              {room.roomType}
+              {roomType}
             </p>
           </div>
 
@@ -427,17 +469,16 @@ const FavoriteRoomCard = ({ room, onRemove }) => {
             <p className="text-[10px] text-gray-400">Bathroom</p>
 
             <p className="mt-0.5 truncate text-xs font-semibold text-gray-700">
-              {room.bathroom}
+              {bathroom}
             </p>
           </div>
         </div>
-
 
         <div className="mt-auto border-t border-gray-100 pt-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <span className="text-xl font-bold tracking-tight text-gray-900">
-                ${room.price}
+                ${price}
               </span>
 
               <span className="ml-1 text-[11px] text-gray-400">/ month</span>
@@ -445,21 +486,7 @@ const FavoriteRoomCard = ({ room, onRemove }) => {
 
             <Link
               to={`/rooms/${room.id}`}
-              className="
-                inline-flex
-                h-10
-                items-center
-                gap-1.5
-                rounded-xl
-                bg-blue-50
-                px-4
-                text-xs
-                font-semibold
-                text-blue-600
-                transition
-                hover:bg-blue-600
-                hover:text-white
-              "
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-blue-50 px-4 text-xs font-semibold text-blue-600 transition hover:bg-blue-600 hover:text-white"
             >
               View Room
               <ArrowRight size={15} />
@@ -470,5 +497,33 @@ const FavoriteRoomCard = ({ room, onRemove }) => {
     </article>
   );
 };
+
+function getRoomImage(room) {
+  if (!room) {
+    return "";
+  }
+
+  if (Array.isArray(room.images) && room.images.length > 0) {
+    return room.images[0];
+  }
+
+  if (typeof room.image === "string") {
+    return room.image;
+  }
+
+  return "";
+}
+
+function getErrorMessage(error) {
+  if (error?.code === "permission-denied") {
+    return "You do not have permission to read rooms from Firestore.";
+  }
+
+  if (error?.code === "unauthenticated") {
+    return "Please sign in to view your favorite rooms.";
+  }
+
+  return error?.message || "Unable to load favorite rooms.";
+}
 
 export default Favorites;
